@@ -1,5 +1,5 @@
 import * as wppconnect from '@wppconnect-team/wppconnect';
-import { Repository } from 'typeorm';
+import { Repository, LessThan } from 'typeorm';
 import { Contact } from './entities/contact.entity';
 import { Conversation } from './entities/conversation.entity';
 import { Message } from './entities/message.entity';
@@ -15,20 +15,12 @@ export async function OnMessageUpsert(
     message: any,
 ) {
     try {
-        try {
-            const contacts = (await client.getAllContacts()) || [];
-        } catch (e) { }
-
+        
     } catch (e) {
-        console.error('Failed to process incoming message', e);
+        console.error('[OnMessageUpsert] Failed to process incoming message', e);
     }
 }
 
 export async function OnPresenceChanged(client: wppconnect.Whatsapp, presence: wppconnect.PresenceEvent, contactRepo: Repository<Contact>) {
     console.debug(`[WPP:PRESENCE] ${presence.id} is now ${presence.isOnline}`);
-    try {
-        await contactRepo.update({ lid: presence.id }, { online: presence.isOnline });
-    } catch (e) {
-        console.error('Failed to update contact presence', e);
-    }
 }

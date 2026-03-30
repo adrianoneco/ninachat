@@ -46,33 +46,26 @@ export function useConversations() {
         return conv.assignedUserId === user.id;
       });
 
-      // enrich conversations by resolving contact via conv.user (match contacts.lid or contacts.serialized)
-      let visible = visibleRaw as any[];
-      try {
-        const contacts = await api.fetchContacts();
-        visible = visibleRaw.map((conv: any) => {
-          try {
-            // Match por lid, phone, serialized ou contact_id
-            const match = contacts.find((c: any) =>
-              (conv.lid && c.lid && c.lid === conv.lid) ||
-              (conv.phone && c.phone && c.phone === conv.phone) ||
-              (conv.serialized && c.serialized && c.serialized === conv.serialized) ||
-              (conv.contact_id && c.id && c.id === conv.contact_id)
-            );
-            if (!match) return conv;
-            return {
-              ...conv,
-              contactId: match.id || conv.contactId,
-              contactName: match.name  || conv.contactName,
-              contactPhone: match.phone || conv.contactPhone,
-              contactAvatar: match.picture_url || conv.contactAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent((match.name||'U'))}&background=0ea5e9&color=fff`,
-              contactEmail: match.email || conv.contactEmail,
-            };
-          } catch (e) { return conv; }
-        });
-      } catch (e) {
-        visible = visibleRaw as any[];
-      }
+      // Enrich conversations with contact data already returned from backend
+      // The backend now returns contact directly via relations
+      const visible = visibleRaw.map((conv: any) => {
+        const contact = conv.contact;
+        if (!contact) return conv;
+        
+        // Use profile_picture_url or picture_url from contact
+        const profilePic = contact.profile_picture_url || contact.picture_url || null;
+        const name = contact.name || contact.call_name || null;
+        const avatarUrl = profilePic || (name ? `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0ea5e9&color=fff` : null);
+        
+        return {
+          ...conv,
+          contactId: contact.id || conv.contactId,
+          contactName: name || conv.contactName,
+          contactPhone: contact.phone_number || contact.phone || conv.contactPhone,
+          contactAvatar: avatarUrl || conv.contactAvatar,
+          contactEmail: contact.email || conv.contactEmail,
+        };
+      });
 
       setConversations(visible);
     } catch (err) {

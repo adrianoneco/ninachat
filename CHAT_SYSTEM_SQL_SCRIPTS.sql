@@ -112,8 +112,8 @@ CREATE INDEX idx_contacts_created_at ON public.contacts(created_at DESC);
 CREATE TABLE public.conversations (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     
-    -- Relacionamento
-    contact_id UUID NOT NULL REFERENCES public.contacts(id) ON DELETE CASCADE,
+    -- Relacionamento (agora opcional para permitir conversas sem contato linked)
+    contact_id UUID REFERENCES public.contacts(id) ON DELETE SET NULL,
     
     -- Status e atribuição
     status conversation_status NOT NULL DEFAULT 'nina',
