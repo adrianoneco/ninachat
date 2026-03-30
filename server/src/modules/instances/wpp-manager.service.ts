@@ -12,9 +12,8 @@ import path from 'path';
 import { uploadDirToS3 } from '../../lib/s3.client';
 import * as wppconnect from '@wppconnect-team/wppconnect';
 import { OnMessageUpsert, OnPresenceChanged } from '../../socket-events';
-import normalizeContacts from '../../utils/contacts-normalizer';
 import _fs from 'fs';
-import { ContactItem } from '../../utils/contacts-normalizer';
+import { ContactItem } from '../../interfaces';
 
 const logger = new Logger('WppManager');
 
@@ -270,21 +269,72 @@ export class WppManagerService {
         const contact = (await client.getAllContacts()).filter((c: any) => c.id.server === 'c.us' || c.id.server === 'lid');
 
         console.log(`Fetched ${contact.length} contacts, normalizing and saving...`);
-         console.log(contact);
 
-        const _contacts_ = {};
-        contact.forEach((c: any) => {
-            fs.writeFileSync(`${contactsPath}/${c.id}.json`, JSON.stringify(c, null, 4));
+        const contacts: any = {};
+
+        contact.map((c: any) => {
+          if (!contacts[c.name]) {
+            contacts[c.name] = [];
+          }
+
+          const _item: any = {
+            lid: c.id._serialized,
+            name: c.name || c.pushname || null,
+            number: c.id.user || null,
+            isBusiness: !!c.isBusiness,
+            type: c.id.server,
+            serialized: c.id._serialized,
+            profilePicUrl: c.profilePicThumbOb.eurl
+          };
+
+          console.log(c);
+
+          if (c.id._serialized !== '0@c.us') {
+            contacts[c.name].push(_item);
+          }
+        });
+
+        await Promise.all(
+          Object.entries(contacts).map(async ([name, group]) => {
+            const item: any = {};
+
+            (group as any[]).forEach((elem) => {
+              if (elem.type === 'c.us') {
+                item.name = elem.name;
+                item.number = elem.number;
+                item.isBusiness = elem.isBusiness;
+                item.type = elem.type;
+                item.profilePicUrl = elem.profilePicUrl;
+                item.senderId = elem.serialized;
+              } else {
+                item.lid = elem.lid;
+              }
+            });
 
             
+            return this.contactRepo
+              .createQueryBuilder()
+              .insert()
+              .into('contacts')
+              .values({
+                lid: `${item.lid}`,
+                serialized: `${item.senderId}`,
+                name: item.name,
+                phone: item.number,
+                picture_url: item.profilePicUrl
+              })
+              .orIgnore()
+              .execute();
+          })
+        );
 
 
-            // this.contactRepo.query(`INSERT INTO "contacts"("serialized", "name", "phone", "picture_url") VALUES('${c.number}@c.us', '${c.name}', '${c.number}', '${c.profilePicUrl}') ON CONFLICT DO NOTHING;`);
-          });
       } catch (e) {
         logger.warn(`Failed writing contacts snapshot: ${String(e)}`);
       }
     }
+
+
 
     // helper to update instance status in DB and emit updates
     setInstanceStatus = async (
@@ -487,7 +537,7 @@ export class WppManagerService {
     throw new Error('No send method available on client');
   }
 
-  // generic media/file sender: try multiple client methods for best-effort
+  // generic media/file sender: tcry multiple client methods for best-effort
   async sendMedia(
     sessionOrId: string,
     to: string,

@@ -52,9 +52,13 @@ export function useConversations() {
         const contacts = await api.fetchContacts();
         visible = visibleRaw.map((conv: any) => {
           try {
-            // Relacionamento correto: conversations.lid = contacts.lid
-            if (!conv.lid) return conv;
-            const match = contacts.find((c: any) => c.lid === conv.lid);
+            // Match por lid, phone, serialized ou contact_id
+            const match = contacts.find((c: any) =>
+              (conv.lid && c.lid && c.lid === conv.lid) ||
+              (conv.phone && c.phone && c.phone === conv.phone) ||
+              (conv.serialized && c.serialized && c.serialized === conv.serialized) ||
+              (conv.contact_id && c.id && c.id === conv.contact_id)
+            );
             if (!match) return conv;
             return {
               ...conv,

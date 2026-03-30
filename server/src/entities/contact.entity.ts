@@ -11,7 +11,7 @@ export class Contact {
   @Column({ nullable: false, unique: true })
   phone?: string;
 
-  @Column({ nullable: false, unique: true })
+  @Column({ nullable: false })
   lid?: string;
   
   @Column({ nullable: false, unique: true })
