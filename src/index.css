@@ -1,0 +1,330 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Force Dark Mode as default - App is 100% dark themed */
+    --background: 230 12% 6%; /* deep navy */
+    --foreground: 210 40% 98%;
+    --card: 230 12% 8%;
+    --card-foreground: 210 40% 98%;
+    --popover: 232 18% 10%;
+    --popover-foreground: 210 40% 98%;
+    /* Primary color set from provided image: RGB(30,95,116) -> HSL(195 59% 29%) */
+    --primary: 195 59% 29%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 28% 16%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 280 64% 46%; /* deeper accent */
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 230 12% 10%;
+    --input: 217 28% 18%; /* slightly lighter than background for inputs */
+    --ring: 195 59% 29%;
+    --radius: 0.75rem; /* slightly larger radius for a softer UI */
+    
+    /* Sidebar - Dark themed */
+    --sidebar-background: 230 12% 6%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 195 59% 29%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 280 24% 14%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 230 12% 10%;
+    --sidebar-ring: 262 78% 56%;
+  }
+
+  /* Dark class for compatibility - same values */
+  .dark {
+    --background: 230 12% 6%;
+    --foreground: 210 40% 98%;
+    --card: 230 12% 8%;
+    --card-foreground: 210 40% 98%;
+    --popover: 232 18% 10%;
+    --popover-foreground: 210 40% 98%;
+    /* Primary color (dark) */
+    --primary: 195 59% 29%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 28% 16%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 280 64% 46%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 230 12% 10%;
+    --input: 217 28% 18%;
+    --ring: 195 59% 29%;
+    --sidebar-background: 230 12% 6%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 195 59% 29%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 280 24% 14%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 230 12% 10%;
+    --sidebar-ring: 262 78% 56%;
+  }
+
+  /* Light theme variables */
+  .light {
+    --background: 0 0% 100%;
+    --foreground: 220 13% 16%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 13% 16%;
+    --popover: 220 13% 98%;
+    --popover-foreground: 220 13% 16%;
+    /* Primary color (light) tuned to the same hue for consistency */
+    --primary: 195 59% 29%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 217 33% 12%;
+    --secondary-foreground: 220 13% 16%;
+    --muted: 220 13% 98%;
+    --muted-foreground: 215 20.2% 35.1%;
+    --accent: 263 70% 50%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 13% 95%;
+    --input: 220 13% 98%;
+    --ring: 195 59% 29%;
+    --radius: 0.75rem;
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 220 13% 16%;
+    --sidebar-primary: 195 59% 29%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 217.2 32.6% 17.5%;
+    --sidebar-accent-foreground: 220 13% 16%;
+    --sidebar-border: 220 13% 95%;
+    --sidebar-ring: 187 85% 53%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+  }
+  
+  /* Smooth transitions for interactive elements */
+  button, a, input, textarea, select {
+    @apply transition-colors duration-200;
+  }
+}
+
+/* Global styled selects to keep a professional, consistent look */
+@layer base {
+  select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-color: hsl(var(--input));
+    color: hsl(var(--foreground));
+    border: 1px solid hsl(var(--border));
+    padding: 0.5rem 2.1rem 0.5rem 0.75rem; /* room for custom arrow */
+    border-radius: var(--radius);
+    font-size: 0.9rem;
+    line-height: 1.2;
+    background-repeat: no-repeat;
+    background-position: right 0.6rem center;
+    background-size: 1.1rem 1.1rem;
+  }
+
+  /* Arrow: light for dark theme */
+  .dark select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath fill='%23FFFFFF' d='M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z'/%3E%3C/svg%3E");
+  }
+
+  /* Arrow: dark for light theme */
+  .light select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath fill='%23000000' d='M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z'/%3E%3C/svg%3E");
+  }
+
+  select:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0,0,0,0.12);
+    ring-offset: 2px;
+  }
+
+  /* Disabled state */
+  select:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+/* Style native checkboxes to match the app's polished look */
+@layer base {
+  input[type="checkbox"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 6px;
+    border: 1px solid hsl(var(--border));
+    background: transparent;
+    display: inline-block;
+    vertical-align: middle;
+    position: relative;
+    cursor: pointer;
+    transition: background-color 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+  }
+
+  input[type="checkbox"]::after {
+    content: '';
+    position: absolute;
+    left: 3px;
+    top: 3px;
+    width: 10px;
+    height: 10px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    opacity: 0;
+    transition: opacity 0.12s ease, transform 0.12s ease;
+    transform: scale(.9);
+  }
+
+  /* Checked state shows a check icon and accent background */
+  input[type="checkbox"]:checked {
+    background: linear-gradient(180deg, hsl(var(--primary)) 0%, rgba(255,255,255,0.06) 100%);
+    border-color: hsl(var(--primary));
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25) inset;
+  }
+
+  .dark input[type="checkbox"]:checked::after {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23ffffff' d='M20.285 5.709a1 1 0 00-1.414-1.418L9 14.162l-3.87-3.87a1 1 0 10-1.415 1.415l4.577 4.577c.39.39 1.024.39 1.414 0L20.285 5.709z'/%3E%3C/svg%3E");
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .light input[type="checkbox"]:checked::after {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000000' d='M20.285 5.709a1 1 0 00-1.414-1.418L9 14.162l-3.87-3.87a1 1 0 10-1.415 1.415l4.577 4.577c.39.39 1.024.39 1.414 0L20.285 5.709z'/%3E%3C/svg%3E");
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  input[type="checkbox"]:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0,0,0,0.12);
+  }
+
+  /* Hide native checkboxes when they are part of custom switch primitives (Radix) to avoid duplicate visuals */
+  .peer input[type="checkbox"], .peer > input[type="checkbox"] {
+    display: none;
+  }
+
+  /* Ensure no native checkbox square appears anywhere (prefer using `Switch` component). */
+  input[type="checkbox"] {
+    display: none !important;
+  }
+}
+
+/* Dragging cursor for scrollable chip lists */
+.chips-scroll {
+  cursor: grab;
+}
+.chips-scroll.dragging {
+  cursor: grabbing;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Scrollbar Customization */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent; 
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted));
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground));
+}
+
+/* Focus ring styling */
+*:focus-visible {
+  @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+}
+
+@media (max-width: 640px) {
+  /* Improve touch targets on small screens */
+  button, .btn, .icon-button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  /* Smooth scrolling on iOS */
+  .custom-scrollbar {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Ensure composer is comfortably tall */
+  textarea {
+    font-size: 15px;
+  }
+}
+
+/* Bottom nav safe area fix to avoid content overlap */
+.mobile-bottom-nav {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Chips scroll: smooth horizontal scroll with snap and hidden scrollbar */
+.chips-scroll {
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+.chips-scroll > * {
+  scroll-snap-align: start;
+}
+
+/* hide scrollbar for chips (preserve touch scroll) */
+.chips-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+.chips-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.06);
+  border-radius: 9999px;
+}
+.chips-scroll::-webkit-scrollbar-track { background: transparent; }
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-lg font-medium text-white px-4 py-2;
+    background: hsl(var(--primary));
+    box-shadow: 0 8px 24px rgba(30,95,116,0.18);
+  }
+
+  .card-surface {
+    @apply rounded-lg p-4;
+    background-color: hsl(var(--card));
+    color: hsl(var(--card-foreground));
+    border: 1px solid hsl(var(--border));
+  }
+
+  .theme-input {
+    @apply rounded-md px-3 py-2 border;
+    background-color: hsl(var(--input));
+    color: hsl(var(--foreground));
+    border-color: hsl(var(--border));
+  }
+}
+  .control-thumb {
+    background-color: hsl(var(--card-foreground));
+    border: 1px solid hsl(var(--border));
+  }
