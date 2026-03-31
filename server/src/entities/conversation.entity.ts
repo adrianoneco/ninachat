@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Index, ManyToOne, JoinColumn, Relation } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Index, ManyToOne, JoinColumn } from 'typeorm';
 import { Contact } from './contact.entity';
 
 @Index(['contact_id'], { unique: false })
@@ -7,8 +7,14 @@ export class Conversation {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column({ nullable: true })
+  @Column({ nullable: false, unique: true })
+  chat_id!: string;
+
+  @Column({ nullable: false })
   contact_id!: string;
+
+  @Column({ nullable: false })
+  instance_id!: string;
 
   @ManyToOne(() => Contact, { nullable: true, eager: true })
   @JoinColumn({ name: 'contact_id' })
@@ -26,13 +32,13 @@ export class Conversation {
   @Column({ nullable: true })
   assigned_user_id!: string;
 
-  @Column({ type: 'simple-array', nullable: true })
+  @Column({ type: 'text', array: true, default: () => "'{}'" })
   tags!: string[];
 
-  @Column({ type: 'simple-json', nullable: true })
+  @Column({ type: 'jsonb', nullable: true, default: () => "'{}'::jsonb" })
   nina_context!: any;
 
-  @Column({ type: 'simple-json', nullable: true })
+  @Column({ type: 'jsonb', nullable: true, default: () => "'{}'::jsonb" })
   metadata!: any;
 
   @Column({ type: 'timestamptz', default: () => 'now()' })

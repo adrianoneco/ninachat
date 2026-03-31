@@ -385,9 +385,17 @@ const Contacts: React.FC = () => {
                   <tr key={contact.id} className="hover:bg-gray-200/40 dark:bg-slate-800/40 transition-colors group">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-300 to-gray-400 dark:from-slate-700 dark:to-slate-800 border border-gray-300 dark:border-slate-700 flex items-center justify-center text-sm font-bold text-primary shadow-inner">
-                          {(contact.name || contact.phone || '?').substring(0, 2).toUpperCase()}
-                        </div>
+                        {((contact.profile_picture_url || (contact.extra && contact.extra.profilePictureUrl))) ? (
+                          <img
+                            src={contact.profile_picture_url || (contact.extra && contact.extra.profilePictureUrl)}
+                            alt={contact.name || contact.phone || '?'}
+                            className="w-10 h-10 rounded-full object-cover border border-gray-300 dark:border-slate-700 shadow-inner"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-300 to-gray-400 dark:from-slate-700 dark:to-slate-800 border border-gray-300 dark:border-slate-700 flex items-center justify-center text-sm font-bold text-primary shadow-inner">
+                            {(contact.name || contact.phone || '?').substring(0, 2).toUpperCase()}
+                          </div>
+                        )}
                         <div>
                             <div className="font-semibold text-gray-700 dark:text-slate-200 group-hover:text-primary transition-colors">
                               {contact.name || 'Sem nome'}

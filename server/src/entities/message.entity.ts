@@ -1,24 +1,58 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Index } from 'typeorm';
 
+@Index(['conversation_id'], { unique: false })
 @Entity('messages')
 export class Message {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column({ nullable: true })
-  from?: string;
-
-  @Column({ nullable: true })
-  to?: string;
-
-  @Column({ nullable: true })
+  @Column({ nullable: false })
   conversation_id?: string;
 
-  @Column({ type: 'text', nullable: true })
-  body?: string;
+  @Column({ nullable: false, unique: true })
+  message_id?: string;
 
-  @Column({ type: 'simple-json', nullable: true })
-  raw?: any;
+  @Column({ nullable: true })
+  reply_to_id?: string;
+
+  @Column({ nullable: true })
+  whatsapp_message_id?: string;
+
+  @Column({ type: 'varchar', nullable: true })
+  type?: string;
+
+  @Column({ type: 'varchar', nullable: true })
+  from_type?: string;
+
+  @Column({ type: 'text', nullable: true })
+  content?: string;
+
+  @Column({ type: 'text', nullable: true })
+  media_url?: string;
+
+  @Column({ type: 'text', nullable: true })
+  media_type?: string;
+
+  @Column({ type: 'varchar', nullable: true })
+  status?: string;
+
+  @Column({ type: 'boolean', default: false })
+  processed_by_nina?: boolean;
+
+  @Column({ type: 'integer', nullable: true })
+  nina_response_time?: number;
+
+  @Column({ type: 'jsonb', nullable: true, default: () => "'{}'::jsonb" })
+  metadata?: any;
+
+  @Column({ type: 'timestamptz', default: () => 'now()' })
+  sent_at!: Date;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  delivered_at?: Date;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  read_at?: Date;
 
   @CreateDateColumn()
   created_at!: Date;

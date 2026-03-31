@@ -46,6 +46,7 @@ const Instances: React.FC = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingValue, setEditingValue] = useState<string>('');
   const [teamMembers, setTeamMembers] = useState<any[]>([]);
+  const [qrModal, setQrModal] = useState<{ session: string; qr: string } | null>(null);
   const [completedFilter, setCompletedFilter] = useState<'all'|'completed'|'incomplete'>('all');
 
   useEffect(() => {
@@ -97,7 +98,8 @@ const Instances: React.FC = () => {
       if (!session) return;
       const inst = instances.find(i => (i.wppconnect_session || i.id) === session);
       if (!inst) return;
-      // show a subtle notification; frontend detail view can show full QR if opened
+      const qrVal = payload?.qr || payload?.message || payload;
+      setQrModal({ session, qr: String(qrVal) });
       if (selectedId === inst.id) toast('QR recebido para ' + inst.name);
       else toast.success(`QR para ${inst.name}`);
     };
@@ -141,6 +143,7 @@ const Instances: React.FC = () => {
       socket.off('instance:updated', handleInstanceUpdated);
     };
   }, [instances, selectedId]);
+
 
   const save = async (list: Instance[]) => {
     setInstances(list);
@@ -377,6 +380,33 @@ const Instances: React.FC = () => {
           </div>
         </SheetContent>
       </Sheet>
+      {qrModal && (() => {
+        const inst = instances.find(i => (i.wppconnect_session || i.id) === qrModal.session);
+        const qrStr = qrModal.qr || '';
+        const isDataUrl = qrStr.startsWith('data:image');
+        const qrImgSrc = isDataUrl ? qrStr : `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrStr)}`;
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            <div className="absolute inset-0 bg-black/40" onClick={() => setQrModal(null)} />
+            <div className="relative bg-white dark:bg-slate-900 rounded-lg shadow-lg p-6 w-[360px] max-w-[95%] z-10">
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <div className="text-sm text-gray-500">Pareamento</div>
+                  <div className="text-lg font-bold">{inst?.name || qrModal.session}</div>
+                </div>
+                <button onClick={() => setQrModal(null)} className="text-sm text-gray-500">Fechar</button>
+              </div>
+              <div className="flex flex-col items-center gap-4">
+                <img src={qrImgSrc} alt="QR" className="w-64 h-64 object-contain bg-white p-2" />
+                <div className="flex gap-2">
+                  <Button onClick={() => { navigator.clipboard.writeText(qrStr || ''); toast.success('QR copiado'); }}>Copiar</Button>
+                  <a className="px-4 py-2 rounded bg-gray-100 text-sm" href={qrImgSrc} download={`qr-${qrModal.session}.png`}>Download</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })}
 
       <Sheet open={!!newChannel} onOpenChange={(open) => { if (!open) cancelCreate(); }}>
         <SheetContent side="right" className="w-full sm:max-w-2xl overflow-y-auto p-0">

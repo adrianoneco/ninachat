@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "kill-port 40000 40001 && dotenv -e .env -- concurrently --prefix-colors \"yellow,blue\" --names SERVER,CLIENT \"cd server && bun run build && bun run start:prod\" \"bun run start:client\"",
+    "dev": "sudo chmod -R 777 /data/wpp_data && kill-port 40000 40001 && dotenv -e .env -- concurrently --prefix-colors \"yellow,blue\" --names SERVER,CLIENT \"cd server && bun run build && bun run start:prod\" \"bun run start:client\"",
     "nina": "vite",
     "test": "vitest --run --include src/**",
     "start:server": "cd server && bun run start:dev",

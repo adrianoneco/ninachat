@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, OnApplicationShutdown } from '@nestjs/common';
 import { Wpp } from '../../lib/wpp';
 import { Instance } from '../../entities/instance.entity';
 import { EventsGateway } from '../../ws/events.gateway';
@@ -13,13 +13,15 @@ import { uploadDirToS3 } from '../../lib/s3.client';
 import * as wppconnect from '@wppconnect-team/wppconnect';
 import { OnMessageUpsert, OnPresenceChanged } from '../../socket-events';
 import _fs from 'fs';
-import { ContactItem } from '../../interfaces';
+import shouldIgnore from 'src/utils/shouldIgnore';
 
 const logger = new Logger('WppManager');
 
 @Injectable()
-export class WppManagerService {
+export class WppManagerService implements OnApplicationShutdown {
+  private shuttingDown = false;
   private instances: Map<string, any> = new Map();
+  private restartAttempts: Map<string, number> = new Map();
 
   constructor(
     private readonly events: EventsGateway,
@@ -32,54 +34,50 @@ export class WppManagerService {
     // so other modules can call Wpp.getInstances()
     // Use setImmediate so registration happens after construction
     setImmediate(() => Wpp.registerManager(this));
+
+    // register process signal handlers as redundancy to ensure puppeteer sessions close
+    const handle = (sig: string) => {
+      // allow async cleanup without multiple concurrent runs
+      this.handleProcessSignal(sig).catch((e) => logger.warn(`Error during shutdown handler: ${String(e)}`));
+    };
+    if (typeof process !== 'undefined' && process && process.on) {
+      process.on('SIGINT', () => handle('SIGINT'));
+      process.on('SIGTERM', () => handle('SIGTERM'));
+      process.on('SIGQUIT', () => handle('SIGQUIT'));
+    }
+  }
+
+  private async handleProcessSignal(signal?: string) {
+    if (this.shuttingDown) return;
+    this.shuttingDown = true;
+    try {
+      await this.onApplicationShutdown(signal);
+    } catch (e) {
+      logger.warn(`handleProcessSignal failed: ${String(e)}`);
+    }
   }
 
   async startInstance(instance: Instance) {
     const session = instance.wppconnect_session || instance.id;
-    const baseDataDir = process.env.DATA_DIR || 'data';
-    const sessionDir = path.resolve(process.cwd(), baseDataDir, session);
+    const baseDataDir = process.env.DATA_DIR || 'data/wpp_data';
+    const sessionDir = path.resolve(baseDataDir, session);
     const logs = new Logger('WhatsAppSession');
     logs.verbose &&
       logs.verbose(`[${instance.name}] using data basepath -> ${baseDataDir}`);
     const puppeteerDir = path.join(sessionDir, 'puppeteer');
-    const tokensDir = path.resolve(process.cwd(), `data/wpp_data//tokens`);
+    const tokensDir = path.join(sessionDir, 'tokens');
     const uploadsDir = path.join(sessionDir, 'uploads');
     await fs.ensureDir(puppeteerDir);
     await fs.ensureDir(tokensDir);
     await fs.ensureDir(uploadsDir);
 
-    // If session directory or tokens folder is missing/empty, force recreate clean session
+    // Apenas cria os diretórios se não existirem, nunca apaga sessão existente
     try {
-      const sessionExists = await fs.pathExists(sessionDir);
-      const tokensExist = await fs.pathExists(tokensDir);
-      let tokensNonEmpty = false;
-      if (tokensExist) {
-        const tfiles = await fs.readdir(tokensDir).catch(() => []);
-        tokensNonEmpty = tfiles && tfiles.length > 0;
-      }
-
-      if (!sessionExists || !tokensNonEmpty) {
-        logs.verbose &&
-          logs.verbose(
-            `[${instance.name}] sessionDir missing or tokens empty — recreating session dir ${sessionDir}`,
-          );
-        try {
-          if (await fs.pathExists(sessionDir)) {
-            await fs.remove(sessionDir).catch(() => { });
-          }
-        } catch (e) {
-          /* ignore */
-        }
-        await fs.ensureDir(puppeteerDir);
-        await fs.ensureDir(tokensDir);
-        await fs.ensureDir(uploadsDir);
-      }
+      await fs.ensureDir(puppeteerDir);
+      await fs.ensureDir(tokensDir);
+      await fs.ensureDir(uploadsDir);
     } catch (e) {
-      // non-fatal
-      logs.warn &&
-        logs.warn(
-          `[${instance.name}] Failed checking/creating session dirs: ${String(e)}`,
-        );
+      logs.warn && logs.warn(`[${instance.name}] Failed ensuring session dirs: ${String(e)}`);
     }
     // Cria logger customizado para esta sessão (already declared above)
     // placeholder for status updater; will be assigned below
@@ -104,10 +102,61 @@ export class WppManagerService {
           } else if (typeof value === 'string') {
             msg = value;
           }
+
+          // Try to detect QR payloads when logger receives an object containing QR/base64
+          const qrCandidate = (value && typeof value === 'object') ? (value.qr || value.qrcode || value.code || value.base64 || value.data || null) : null;
+
           if (msg) {
             logs.verbose(
               `[${instance.name}] [${String(prop).toUpperCase()}] ${msg}`,
             );
+          }
+
+          // If a QR-like payload was provided, emit a socket event so frontend can render it
+          try {
+            if (qrCandidate) {
+              const payload = { session, qr: qrCandidate, raw: value };
+              try {
+                this.events.emitTo(session, 'wpp:qr', payload);
+              } catch (e) {
+                logs.warn && logs.warn(`[${instance.name}] failed emitting wpp:qr: ${String(e)}`);
+              }
+              // also mark waiting state in DB
+              setInstanceStatus('waiting').catch(() => { });
+              await this.dbUpdater(instance.name, 'waiting');
+            } else if (typeof msg === 'string' && String(msg).toLowerCase().includes('qr')) {
+              // generic textual 'QR' message: emit lightweight notification with the message
+              try {
+                this.events.emitTo(session, 'wpp:qr', { session, qr: msg });
+              } catch (e) { }
+              setInstanceStatus('waiting').catch(() => { });
+              await this.dbUpdater(instance.name, 'waiting');
+            }
+            // detect script injection / execution context errors and try a restart
+            else if (typeof msg === 'string' && (String(msg).toLowerCase().includes('wapi.js failed') || String(msg).toLowerCase().includes('execution context was destroyed'))) {
+              try {
+                const attempts = this.restartAttempts.get(session) || 0;
+                if (attempts < 3) {
+                  this.restartAttempts.set(session, attempts + 1);
+                  logs.warn && logs.warn(`[${instance.name}] detected wapi/execcontext error, scheduling restart attempt ${attempts + 1}`);
+                  // schedule restart after short delay
+                  setTimeout(async () => {
+                    try {
+                      await this.restartInstance(instance).catch(() => { });
+                    } catch (e) {
+                      logs.warn && logs.warn(`[${instance.name}] restart attempt failed: ${String(e)}`);
+                    }
+                  }, 1500);
+                } else {
+                  logs.warn && logs.warn(`[${instance.name}] reached max restart attempts (${attempts}), not restarting`);
+                }
+              } catch (e) { }
+            }
+          } catch (e) {
+            // swallow emit/db errors
+          }
+
+          if (msg) {
             try {
               const s = String(msg).toLowerCase();
               if (s.includes('authenticated') || s.includes('auth')) {
@@ -120,9 +169,6 @@ export class WppManagerService {
               ) {
                 setInstanceStatus('disconnected').catch(() => { });
                 await this.dbUpdater(instance.name, 'disconnected');
-              } else if (s.includes('qr')) {
-                setInstanceStatus('waiting').catch(() => { });
-                await this.dbUpdater(instance.name, 'waiting');
               } else if (s.includes('ready')) {
                 setInstanceStatus('initialized').catch(() => { });
                 await this.dbUpdater(instance.name, 'initialized');
@@ -147,10 +193,7 @@ export class WppManagerService {
       deviceName: `WPP-${instance.name.toUpperCase()}`,
       puppeteerOptions: {
         headless: true,
-        userDataDir: path.resolve(
-          process.cwd(),
-          `data/wpp_data/${instance.id}/puppeteer`,
-        ),
+        userDataDir: path.resolve(path.join(sessionDir, 'puppeteer')),
         args: [
           '--no-sandbox',
           '--disable-setuid-sandbox',
@@ -170,10 +213,7 @@ export class WppManagerService {
       useChrome: false,
       logger: genericLogger as any,
       logQR: true,
-      folderNameToken: path.resolve(
-        process.env.DATA_DIR || 'data',
-        `data/wpp_data/${instance.id}/tokens`,
-      ),
+      folderNameToken: tokensDir,
     };
 
     try {
@@ -221,7 +261,7 @@ export class WppManagerService {
       /* ignore */
     }
 
-    fs.mkdirSync(`${process.env.DATA_DIR}/${instance.id}/logs`, {
+    fs.mkdirSync(path.join(baseDataDir, instance.id, 'logs'), {
       recursive: true,
     });
     logs.verbose(
@@ -313,17 +353,18 @@ export class WppManagerService {
     };
 
     // 📩 Messages
-    client.onMessage((msg) =>
-      OnMessageUpsert(
-        client,
-        { id: instance.id, name: instance.name },
-        this.contactRepo,
-        this.convRepo,
-        this.msgRepo,
-        msg,
-      ),
-    );
-    //client.onAnyMessage((msg) => OnMessageUpsert(client, msg));
+    client.onMessage((msg) => {
+      if (!shouldIgnore(msg.from)) {
+        OnMessageUpsert(
+          client,
+          { id: instance.id, name: instance.name },
+          this.contactRepo,
+          this.convRepo,
+          this.msgRepo,
+          msg,
+        );
+      }
+    });
 
     client.onAck((ack) => logEvent('onAck', ack));
     client.onMessageEdit((msg) => logEvent('onMessageEdit', msg));
@@ -413,11 +454,25 @@ export class WppManagerService {
     return this.instances.get(sessionOrId);
   }
 
+  // Close all running Puppeteer/WhatsApp clients when application is shutting down
+  async onApplicationShutdown(signal?: string) {
+    logger.log(`Application shutdown (${signal || 'unknown signal'}) - closing ${this.instances.size} instance(s)`);
+    const keys = Array.from(this.instances.keys());
+    for (const k of keys) {
+      try {
+        await this.stopInstance(k);
+        logger.log(`Closed instance ${k}`);
+      } catch (e) {
+        logger.warn(`Failed closing instance ${k}: ${String(e)}`);
+      }
+    }
+  }
+
   // Ensure session directories exist for an instance (safe to call before start)
   async ensureSessionDirs(instance: Instance) {
     const session = instance.wppconnect_session || instance.id;
-    const baseDataDir = process.env.DATA_DIR || 'data';
-    const sessionDir = path.resolve(process.cwd(), baseDataDir, session);
+    const baseDataDir = process.env.DATA_DIR || 'data/wpp_data';
+    const sessionDir = path.resolve(baseDataDir, session);
     const puppeteerDir = path.join(sessionDir, 'puppeteer');
     const tokensDir = path.join(sessionDir, 'tokens');
     const uploadsDir = path.join(sessionDir, 'uploads');
