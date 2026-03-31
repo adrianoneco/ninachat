@@ -9,6 +9,7 @@ import InstanceCard from './InstanceCard';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { toast } from 'sonner';
 import { connectSocket } from '@/lib/socket';
+import { api } from '@/services/api';
 
 type ChannelType = 'website' | 'api' | 'wppconnect';
 
@@ -104,13 +105,18 @@ const Instances: React.FC = () => {
       else toast.success(`QR para ${inst.name}`);
     };
 
-    const handleMessage = (payload: any) => {
+    const handleMessage = async (payload: any) => {
       const session = payload?.session;
       if (!session) return;
       const inst = instances.find(i => (i.wppconnect_session || i.id) === session);
       if (!inst) return;
       // notify user that a message arrived for this instance
       toast.success(`Mensagem recebida em ${inst.name}`);
+      try {
+        if (api && typeof api.processIncomingExternal === 'function') await api.processIncomingExternal(payload);
+      } catch (e) {
+        console.error('Failed processing incoming wpp message', e);
+      }
     };
 
     const handleGeneric = (payload: any) => {
@@ -124,6 +130,7 @@ const Instances: React.FC = () => {
 
     socket.on('wpp:qr', handleQr);
     socket.on('message:received', handleMessage);
+    socket.on('wpp:message', handleMessage);
     socket.on('wpp:event', handleGeneric);
     const handleInstanceUpdated = (payload: any) => {
       const updated = payload?.id ? payload : payload?.data ?? payload;

@@ -4,15 +4,16 @@ import { Instance } from '../../entities/instance.entity';
 import { InstancesService } from './instances.service';
 import { InstancesController } from './instances.controller';
 import { WppController } from './wpp.controller';
+import { MessagesSendController } from './messages-send.controller';
 import { EventsGateway } from '../../ws/events.gateway';
 import { WppManagerService } from './wpp-manager.service';
 import { Contact } from '../../entities/contact.entity';
-import { Conversation } from '../../entities/conversation.entity';
 import { Message } from '../../entities/message.entity';
+import { Conversation } from '../../entities/conversation.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Instance, Contact, Conversation, Message])],
-  controllers: [InstancesController, WppController],
+  imports: [TypeOrmModule.forFeature([Instance, Contact, Message, Conversation])],
+  controllers: [InstancesController, WppController, MessagesSendController],
   providers: [InstancesService, EventsGateway, WppManagerService],
   exports: [InstancesService, WppManagerService],
 })

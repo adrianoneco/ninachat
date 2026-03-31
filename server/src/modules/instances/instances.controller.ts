@@ -12,6 +12,11 @@ export class InstancesController {
     return this.svc.findAll();
   }
 
+  @Get('clients')
+  async listClients() {
+    return { clients: this.svc.listClientKeys() };
+  }
+
   @Post()
   async create(@Body() body: any) {
     // Accept either a single instance or an array (frontend sends full list on save).

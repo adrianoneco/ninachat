@@ -6,11 +6,11 @@ import { AppService } from './app.service';
 
 import { AuthModule } from './modules/auth/auth.module';
 import { ContactsModule } from './modules/contacts/contacts.module';
-import { ConversationsModule } from './modules/conversations/conversations.module';
 import { InstancesModule } from './modules/instances/instances.module';
 import { MessagesModule } from './modules/messages/messages.module';
 import { RolesModule } from './modules/roles/roles.module';
 import { UploadsModule } from './modules/uploads/uploads.module';
+import { ConversationsModule } from './modules/conversations/conversations.module';
 
 const imports = [ConfigModule.forRoot({ isGlobal: true })] as any[];
 
@@ -35,8 +35,8 @@ imports.push(
 imports.push(
   AuthModule,
   ContactsModule,
-  ConversationsModule,
   InstancesModule,
+  ConversationsModule,
   MessagesModule,
   RolesModule,
   UploadsModule,

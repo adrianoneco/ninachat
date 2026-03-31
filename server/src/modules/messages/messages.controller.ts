@@ -1,5 +1,6 @@
 import { Controller, Get, Post, Body, Param, Put, Delete, Query } from '@nestjs/common';
 import { MessagesService } from './messages.service';
+import { CreateMessageDto, UpdateMessageDto } from './dto';
 
 @Controller('messages')
 export class MessagesController {
@@ -12,8 +13,8 @@ export class MessagesController {
   }
 
   @Post()
-  async create(@Body() body: any) {
-    return this.svc.create(body);
+  async create(@Body() body: CreateMessageDto) {
+    return this.svc.create(body as any);
   }
 
   @Put(':id')

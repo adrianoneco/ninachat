@@ -562,6 +562,8 @@ export const api = {
     const id = generateId();
     const newMsg = {
       id,
+      // message_id used by server as unique external id
+      message_id: id,
       conversation_id: conversationId,
       direction: 'outbound',
       from_type: isHumanMode ? 'user' : 'nina',
@@ -578,6 +580,7 @@ export const api = {
   sendZApiButtons: async (conversationId: string, phone: string, buttons: { id: string; title: string }[], text?: string, imageUrl?: string | null) => {
     const newMsg = {
       id: generateId(),
+      message_id: generateId(),
       conversation_id: conversationId,
       direction: 'outbound',
       content: text || '',
@@ -596,27 +599,59 @@ export const api = {
       // Evolution normalization removed — expect payload to already be in a compatible shape
       const normalized = (payload as any) || {};
       const id = normalized.id || generateId();
-      const conversationId = normalized.to || normalized.from || generateId();
+      // Normalize phone-like identifiers to a digits-only form to avoid duplicates
+      const rawFrom = normalized.from || '';
+      const rawTo = normalized.to || '';
+      const normalizedFrom = typeof rawFrom === 'string' ? rawFrom.replace(/\D/g, '') : rawFrom;
+      const normalizedTo = typeof rawTo === 'string' ? rawTo.replace(/\D/g, '') : rawTo;
+
+      // Prefer an explicit conversation id (payload.to), otherwise try normalized phone (from)
+      const conversationId = normalized.to || (normalizedFrom ? String(normalizedFrom) : undefined) || generateId();
 
       const newMsg = {
         id,
+        message_id: id,
         conversation_id: conversationId,
         direction: 'inbound',
         content: normalized.content,
-        from: normalized.from,
-        to: normalized.to,
+        from: rawFrom,
+        to: rawTo,
         created_at: normalized.timestamp || new Date().toISOString(),
         provider: normalized.provider,
         raw: normalized.raw,
       };
       await apiPost('messages', newMsg);
 
+      // Ensure contact exists before creating a conversation
+      try {
+        if (normalizedFrom) {
+          const contacts = await apiGet<any[]>('contacts', []);
+          const digitsFrom = String(normalizedFrom).replace(/\D/g, '');
+          const existing = contacts.find((c: any) => String(c.phone_number || '').replace(/\D/g, '') === digitsFrom || String(c.whatsapp_id || '').replace(/\D/g, '') === digitsFrom);
+          if (!existing) {
+            // create minimal contact record
+            await apiPost('contacts', {
+              id: generateId(),
+              name: undefined,
+              phone_number: normalizedFrom,
+              whatsapp_id: normalizedFrom,
+              created_at: new Date().toISOString(),
+            });
+          }
+        }
+      } catch (e) {
+        console.error('Failed ensuring contact exists for incoming message', e);
+      }
+
       const conversations = await apiGet<any[]>('conversations', []);
-      const conv = conversations.find((c: any) => c.id === conversationId || c.contact_id === normalized.from);
+      // Try to match existing by explicit id or by normalized contact id (digits-only)
+      const conv = conversations.find((c: any) => c.id === conversationId || (c.contact_id && String(c.contact_id).replace(/\D/g, '') === String(normalizedFrom)));
       if (!conv) {
+        // create conversation using digits-only contact_id when possible
+        const contactIdToUse = normalizedFrom || conversationId;
         await apiPost('conversations', {
           id: conversationId,
-          contact_id: normalized.from,
+          contact_id: contactIdToUse,
           created_at: new Date().toISOString(),
           is_active: true,
           last_message_at: new Date().toISOString(),

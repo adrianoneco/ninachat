@@ -142,6 +142,15 @@ export class InstancesService implements OnModuleInit {
     return this.wpp.sendMessage(inst.wppconnect_session || inst.id, to, body);
   }
 
+  // Debug helper: list active client keys
+  listClientKeys() {
+    try {
+      return this.wpp.listClientKeys();
+    } catch (e) {
+      return [] as string[];
+    }
+  }
+
   // test helper: set status on an instance and notify Postgres + websocket
   async setStatusForTest(id: string, status: 'connected' | 'disconnected' | 'waiting') {
     const inst = await this.repo.findOneBy({ id } as any);

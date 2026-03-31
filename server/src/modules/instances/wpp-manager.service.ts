@@ -5,13 +5,13 @@ import { EventsGateway } from '../../ws/events.gateway';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Contact } from '../../entities/contact.entity';
-import { Conversation } from '../../entities/conversation.entity';
 import { Message } from '../../entities/message.entity';
+import { Conversation } from '../../entities/conversation.entity';
 import fs from 'fs-extra';
 import path from 'path';
 import { uploadDirToS3 } from '../../lib/s3.client';
 import * as wppconnect from '@wppconnect-team/wppconnect';
-import { OnMessageUpsert, OnPresenceChanged } from '../../socket-events';
+
 import _fs from 'fs';
 import shouldIgnore from 'src/utils/shouldIgnore';
 
@@ -27,8 +27,8 @@ export class WppManagerService implements OnApplicationShutdown {
     private readonly events: EventsGateway,
     @InjectRepository(Instance) private instanceRepo: Repository<Instance>,
     @InjectRepository(Contact) private contactRepo: Repository<Contact>,
-    @InjectRepository(Conversation) private convRepo: Repository<Conversation>,
     @InjectRepository(Message) private msgRepo: Repository<Message>,
+    @InjectRepository(Conversation) private convRepo: Repository<Conversation>,
   ) {
     // register this instance manager globally for convenience
     // so other modules can call Wpp.getInstances()
@@ -188,7 +188,7 @@ export class WppManagerService implements OnApplicationShutdown {
       },
     );
 
-    const options: wppconnect.CreateOptions = {
+    const options: any = {
       session: instance.name,
       deviceName: `WPP-${instance.name.toUpperCase()}`,
       puppeteerOptions: {
@@ -206,9 +206,10 @@ export class WppManagerService implements OnApplicationShutdown {
           '--mute-audio',
         ],
       },
+
       disableWelcome: true,
       autoClose: 0,
-      waitForLogin: true,
+      waitForLogin: false,
       headless: true,
       useChrome: false,
       logger: genericLogger as any,
@@ -268,7 +269,7 @@ export class WppManagerService implements OnApplicationShutdown {
       `[${instance.name}] Starting WhatsApp client with options: ${JSON.stringify(options)}`,
     );
     const client: wppconnect.Whatsapp = await wppconnect.create(options);
-    // diagnostic: log token/puppeteer dirs content after client creation
+
     try {
       const tlist2 = await fs.readdir(tokensDir).catch(() => []);
       logs.verbose(
@@ -328,6 +329,18 @@ export class WppManagerService implements OnApplicationShutdown {
     };
 
     this.instances.set(session, client);
+    // Also register client under common identifiers so API callers can use
+
+
+
+
+    try {
+      if (instance.name) this.instances.set(instance.name, client);
+      if (instance.id) this.instances.set(instance.id, client);
+      if (instance.wppconnect_session) this.instances.set(instance.wppconnect_session, client);
+    } catch (e) {
+      // non-fatal
+    }
 
     // Helper to safely log
     const logEvent = (
@@ -352,55 +365,150 @@ export class WppManagerService implements OnApplicationShutdown {
       }
     };
 
-    // 📩 Messages
-    client.onMessage((msg) => {
-      if (!shouldIgnore(msg.from)) {
-        OnMessageUpsert(
-          client,
-          { id: instance.id, name: instance.name },
-          this.contactRepo,
-          this.convRepo,
-          this.msgRepo,
-          msg,
-        );
+
+    client.onMessage(async (message: any) => {
+      try {
+        // Attempt to extract common fields from various wppconnect message shapes
+        const raw = message || {};
+        const rawFrom = raw.from || raw.author || raw.key?.remoteJid || raw.chatId || raw.sender || (raw?.message?.conversation ? raw.message.conversation : undefined) || null;
+        const msgBody = raw.body || raw.text || raw.message?.conversation || raw.message?.extendedTextMessage?.text || raw.message?.imageMessage?.caption || null;
+        const msgId = (raw.key && raw.key.id) || raw.id || raw.message?.key?.id || `msg-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        const timestamp = raw.t || raw.timestamp || raw.message?.timestamp || new Date().toISOString();
+        const digits = rawFrom ? String(rawFrom).replace(/\D/g, '') : null;
+
+        // Ensure contact exists
+        try {
+          let contact = null as any;
+          if (rawFrom) {
+            const variants: any[] = [];
+            variants.push({ whatsapp_id: rawFrom });
+            if (digits) {
+              variants.push({ whatsapp_id: digits });
+              variants.push({ phone_number: rawFrom });
+              variants.push({ phone_number: `+${digits}` });
+            } else {
+              variants.push({ phone_number: rawFrom });
+            }
+            for (const q of variants) {
+              try {
+                contact = await this.contactRepo.findOneBy(q as any);
+                if (contact) break;
+              } catch (e) { /* ignore per-attempt */ }
+            }
+          }
+          if (!contact && rawFrom) {
+            try {
+              contact = this.contactRepo.create({
+                name: message.sender.pushname || message.sender?.verifiedName || message.sender?.formattedName || rawFrom,
+                phone_number: message.from,
+                whatsapp_id: message.from,
+                created_at: new Date(),
+              } as any);
+              contact = await this.contactRepo.save(contact as any);
+            } catch (e) {
+              console.warn('[WppManager] failed creating contact', e);
+            }
+          }
+
+          // Ensure conversation exists (filter by whatsapp_id and instance id)
+          let conv = null as any;
+          try {
+            if (contact) {
+              conv = await this.convRepo.findOne({ where: { contact_id: contact.whatsapp_id || contact.phone_number, instance_id: instance.id } as any });
+              if (!conv && contact.phone_number) {
+                conv = await this.convRepo.findOne({ where: { contact_id: contact.phone_number, instance_id: instance.id } as any });
+              }
+            }
+            if (!conv) {
+              const convEnt = this.convRepo.create({
+                contact_id: contact ? (contact.whatsapp_id || contact.phone_number) : (digits || rawFrom),
+                instance_id: instance.id,
+                is_active: true,
+                last_message_at: new Date(),
+              } as any);
+              conv = await this.convRepo.save(convEnt as any);
+            }
+          } catch (e) {
+            console.warn('[WppManager] conversation upsert failed', e);
+          }
+
+          // Persist message into messages table
+          try {
+            const conversationId = (conv && conv.id) || digits || rawFrom || session || `conv-${Date.now()}`;
+            const msgEnt: any = {
+              conversation_id: conversationId,
+              message_id: String(msgId),
+              whatsapp_message_id: String(msgId),
+              type: msgBody ? 'text' : 'media',
+              from_type: 'whatsapp',
+              content: msgBody || null,
+              media_url: null,
+              status: 'received',
+              sent_at: new Date(timestamp),
+              metadata: raw,
+            };
+            const ent = this.msgRepo.create(msgEnt as any);
+            const saved = await this.msgRepo.save(ent as any);
+            // Emit created message event for frontend consumers
+            try {
+              this.events.emit('message:created', saved);
+              this.events.emitTo(session, 'message:created', saved);
+            } catch (e) { }
+          } catch (e) {
+            console.warn('[WppManager] failed saving incoming message', e);
+          }
+        } catch (e) {
+          console.warn('[WppManager] contact/message handling failed', e);
+        }
+
+        // Forward raw payload via websocket for frontend processing (SSE/hook will also process)
+        try {
+          const payload = {
+            id: msgId,
+            from: rawFrom,
+            to: session,
+            content: msgBody,
+            timestamp: new Date(timestamp).toISOString(),
+            provider: 'wppconnect',
+            raw,
+          };
+          this.events.emitTo(session, 'wpp:message', payload);
+        } catch (e) {
+          console.warn('[WppManager] failed emitting wpp:message payload', e);
+        }
+
+
+        // add or update conversation
+        try {
+          const conversation = await this.convRepo.findOneBy({ contact_id: rawFrom, instance_id: instance.id } as any);
+          if (conversation) {
+            this.convRepo.createQueryBuilder()
+              .insert("conversations")
+              .values({
+                contact_id: rawFrom,
+                instance_id: instance.id,
+                is_active: true
+              })
+              .execute();
+          } else {
+            this.convRepo.createQueryBuilder()
+              .update("conversations")
+              .set({ last_message_at: new Date() })
+              .where({ contact_id: rawFrom, instance_id: instance.id })
+              .execute();
+          }
+        } catch (e) {
+          console.warn('[WppManager] onMessage top-level handler error', e);
+        }
+      } catch (e) {
+        console.warn('[WppManager] onMessage handler error', e);
       }
     });
 
-    client.onAck((ack) => logEvent('onAck', ack));
-    client.onMessageEdit((msg) => logEvent('onMessageEdit', msg));
-
-    // 👥 Groups / Contacts
-    client.onAddedToGroup((chat) => logEvent('onAddedToGroup', chat));
-    client.onParticipantsChanged((event) =>
-      logEvent('onParticipantsChanged', event),
-    );
-
-    // 📞 Calls
-    client.onIncomingCall((call) => logEvent('onIncomingCall', call));
-
-    // 🔄 Connection / State
-    client.onStateChange((state) => { });
-
-    // 📱 Presence / Location
-    client.onPresenceChanged((presence) =>
-      OnPresenceChanged(client, presence, this.contactRepo),
-    );
-    client.onLiveLocation((location) => logEvent('onLiveLocation', location));
-
-    // 🧪 EXTRA (may not exist in all versions)
-    if (client.onPollResponse) {
-      client.onPollResponse((data) => logEvent('onPollResponse', data));
-    }
 
     // persist session_dir
     instance.session_dir = sessionDir;
     await this.instanceRepo.save(instance);
-
-    try {
-      await uploadDirToS3(uploadsDir, `${session}/uploads/`);
-    } catch (e) {
-      logger.warn('S3 upload failed: ' + (e as any).toString());
-    }
 
     this.events.emit('instance:started', {
       id: instance.id,
@@ -425,7 +533,15 @@ export class WppManagerService implements OnApplicationShutdown {
         await client.close();
       } catch (e) { }
     }
-    this.instances.delete(sessionOrId);
+    // Remove all map entries that reference this client (clean up multiple keys)
+    try {
+      for (const [k, v] of Array.from(this.instances.entries())) {
+        if (v === client) this.instances.delete(k as string);
+      }
+    } catch (e) {
+      // fallback: remove by provided key
+      this.instances.delete(sessionOrId);
+    }
     try {
       const inst =
         (await this.instanceRepo.findOneBy({
@@ -452,6 +568,14 @@ export class WppManagerService implements OnApplicationShutdown {
 
   getClient(sessionOrId: string) {
     return this.instances.get(sessionOrId);
+  }
+
+  listClientKeys() {
+    try {
+      return Array.from(this.instances.keys());
+    } catch (e) {
+      return [] as string[];
+    }
   }
 
   // Close all running Puppeteer/WhatsApp clients when application is shutting down
