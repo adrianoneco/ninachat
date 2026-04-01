@@ -5,7 +5,7 @@ import { ContactItem } from 'src/types/ContactItem';
 import fs from 'fs';
 import { formatBR } from 'src/utils/fomatNumber';
 
-export async function syncContacts(instance: { id: string, name: string }, client: wppconnect.Whatsapp, contactRepo: Repository<Contact>) {
+export async function syncContacts(instance: { id: string, name: string }, client: wppconnect.Whatsapp, contactRepo: Repository<Contact>): Promise<ContactItem[]> {
     const contacts = {} as { [key: string]: any[] };
     const _contacts_serialized: ContactItem[] = [];
 
@@ -63,14 +63,14 @@ export async function syncContacts(instance: { id: string, name: string }, clien
             .into('contacts')
             .values({
                 name: contact.name,
-                call_name: contact.verifiedName,
+                call_name: contact.name,
                 phone_number: contact.phone_number,
                 is_blocked: contact.isBlocked,
                 is_business: contact.isBusiness,
                 profile_picture_url: contact.avatar_url,
                 whatsapp_id: contact.id,
                 instance_id: instance.id,
-                phone_formated: contact.phone_formated,
+                phone_formated: formatBR(contact.phone_number),
             })
             .orUpdate(
                 [
@@ -89,4 +89,6 @@ export async function syncContacts(instance: { id: string, name: string }, clien
             .then(() => console.log(`Contact ${contact.name} (${contact.phone_number}) synced successfully.`))
             .catch((err) => console.error(`Failed to sync contact ${contact.name} (${contact.phone_number}):`, err));
     }
+
+    return _contacts_serialized;
 }

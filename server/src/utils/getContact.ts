@@ -1,36 +1,53 @@
 import * as wppconnect from '@wppconnect-team/wppconnect';
+import { formatIncompletePhoneNumber } from 'libphonenumber-js/max';
 import { ContactItem } from 'src/types/ContactItem';
+import { formatBR } from './fomatNumber';
 
-export async function getContact(id: string, client: wppconnect.Whatsapp): Promise<ContactItem | null> {
+export async function getContactByPushName(pushname: string, client: wppconnect.Whatsapp): Promise<ContactItem | null> {
     try {
-        const item = {};
+        const contacts = (await client.getAllContacts()).filter((c: any) => c.pushname === pushname).map((c: any) => {
+          if (c.server === 'c.us') {
+            return {
+              id: c.id._serialized,
+              name: c.name || c.pushname || null,
+              phone_number: c.id.user,
+              phone_formated: formatBR(c.id.user), // formatBR(c.id.user) || c.id.user, --- IGNORE ---
+              isBlocked: c.isBlocked || false,
+              isBusiness: c.isBusiness || false,
+              type: 'contact',
+              avatar_url: c.profilePicThumbObj?.eurl || null,
+              server: c.id.server
+            };
+          } else {
+            return {
+              id: c.id._serialized,
+              name: c.name || c.pushname || null,
+              verifiedName: c.verifiedName || null,
+              phone_number: c.id.user,
+              phone_formated: null,
+              isBlocked: c.isBlocked || false,
+              isBusiness: c.isBusiness || false,
+              type: c.id.server === 'g.us' ? 'group' : 'identity',
+              avatar_url: c.profilePicThumbObj?.eurl || null,
+              server: c.id.server,
+            };
+          }
+        });
 
-        const acceptedServers = ['c.us', 'lid', 'g.us'];
-        const profilePic = await client.getProfilePicFromServer(id);
-        const contact = await client.getContact(id);
-        console.log('Contact found:', contact.pushname);
+         const _contact: any = {
+          name: contacts.find((c: any) => c.server === 'c.us')?.name || null,
+          verifiedName: contacts.find((c: any) => c.server === 'c.us')?.verifiedName || null,
+          phone_number: contacts.find((c: any) => c.server === 'c.us')?.phone_number,
+          phone_formated: contacts.find((c: any) => c.server === 'c.us')?.phone_formated || null,
+          isBlocked: contacts.find((c: any) => c.server === 'c.us')?.isBlocked || false,
+          isBusiness: contacts.find((c: any) => c.server === 'c.us')?.isBusiness || false,
+          type: contacts.find((c: any) => c.server === 'c.us')?.type || null,
+          avatar_url: contacts.find((c: any) => c.server === 'c.us')?.avatar_url || contacts.find((c: any) => c.server === 'lid')?.avatar_url || contacts.find((c: any) => c.server === 'g.us')?.avatar_url || null,
+          server: contacts.find((c: any) => c.server === 'c.us')?.server,
+          whatsapp_id: contacts.find((c: any) => c.server === 'lid')?.id || contacts.find((c: any) => c.server === 'c.us')?.id || contacts.find((c: any) => c.server === 'g.us')?.id,
+        };
 
-
-        (await client.getAllContacts())
-            .filter((c: any) => acceptedServers.includes(c.id?.server))
-            .filter(c => c.pushname === contact.pushname || c.name === contact.name)
-            .forEach(async (c: any) => {
-                const contact = JSON.parse(JSON.stringify(c));
-
-                if (c.id.server === 'c.us') {
-                    item['name'] = contact.pushname || contact.name || '';
-                    item['phone_number'] = contact.id.user || '';
-                    item['whatsapp_id'] = contact.id._serialized || '';
-                    item['is_business'] = contact.isBusiness || false;
-                    item['profile_picture_url'] = profilePic.img;
-                    item['is_blocked'] = contact.isBlocked || false;
-                } else {
-                    item['id'] = contact.id._serialized;
-                }
-            });
-
-        return (item as ContactItem);
-
+        return _contact as ContactItem;
     } catch (e) {
         console.error('Error fetching contact:', e);
         return null;
