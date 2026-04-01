@@ -1,32 +1,19 @@
 import { useEffect } from 'react';
 import { connectSocket } from '@/lib/socket';
-import { api } from '@/services/api';
 
 export function useWppSocket(session?: string, serverUrl?: string) {
   useEffect(() => {
     const socket = connectSocket(serverUrl);
     if (!socket) return;
 
-    // join session room if provided
+    // Join session room so the client receives session-scoped socket events.
+    // Full message lifecycle (message:created, conversation:updated) is handled
+    // by useConversations — nothing extra needed here.
     if (session) {
       try { socket.emit('join', session); } catch (e) { }
     }
 
-    const handler = async (payload: any) => {
-      try {
-        if (api && typeof api.processIncomingExternal === 'function') {
-          await api.processIncomingExternal(payload);
-        }
-      } catch (e) {
-        console.error('Failed processing incoming wpp socket message', e);
-      }
-    };
-
-    socket.on('wpp:message', handler);
-
-    return () => {
-      try { socket.off('wpp:message', handler); } catch (e) { }
-    };
+    return () => {};
   }, [session, serverUrl]);
 }
 

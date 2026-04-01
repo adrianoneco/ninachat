@@ -69,9 +69,7 @@ const Instances: React.FC = () => {
     };
     // initial fetch
     fetchInstances();
-    // poll every 5s as a fallback to keep UI in sync
-    const _interval = setInterval(fetchInstances, 5000);
-    return () => clearInterval(_interval);
+    // also fetch team members once
     (async () => {
       try {
         const res = await fetch(`${API_BASE}/team_members`);
@@ -87,6 +85,9 @@ const Instances: React.FC = () => {
         toast.error('Falha ao carregar membros da equipe — verifique o servidor');
       }
     })();
+    // poll every 5s as a fallback to keep UI in sync
+    const _interval = setInterval(fetchInstances, 5000);
+    return () => clearInterval(_interval);
   }, []);
 
   // Socket listeners for realtime WPPConnect events (QR, messages, contacts, conversations)
@@ -105,18 +106,13 @@ const Instances: React.FC = () => {
       else toast.success(`QR para ${inst.name}`);
     };
 
-    const handleMessage = async (payload: any) => {
+    const handleMessage = (payload: any) => {
       const session = payload?.session;
       if (!session) return;
       const inst = instances.find(i => (i.wppconnect_session || i.id) === session);
       if (!inst) return;
       // notify user that a message arrived for this instance
       toast.success(`Mensagem recebida em ${inst.name}`);
-      try {
-        if (api && typeof api.processIncomingExternal === 'function') await api.processIncomingExternal(payload);
-      } catch (e) {
-        console.error('Failed processing incoming wpp message', e);
-      }
     };
 
     const handleGeneric = (payload: any) => {
@@ -387,9 +383,9 @@ const Instances: React.FC = () => {
           </div>
         </SheetContent>
       </Sheet>
-      {qrModal && (() => {
-        const inst = instances.find(i => (i.wppconnect_session || i.id) === qrModal.session);
-        const qrStr = qrModal.qr || '';
+      {qrModal ? (() => {
+        const inst = instances.find(i => (i.wppconnect_session || i.id) === qrModal!.session);
+        const qrStr = qrModal!.qr || '';
         const isDataUrl = qrStr.startsWith('data:image');
         const qrImgSrc = isDataUrl ? qrStr : `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrStr)}`;
         return (
@@ -413,11 +409,11 @@ const Instances: React.FC = () => {
             </div>
           </div>
         );
-      })}
+      })() : null}
 
       <Sheet open={!!newChannel} onOpenChange={(open) => { if (!open) cancelCreate(); }}>
         <SheetContent side="right" className="w-full sm:max-w-2xl overflow-y-auto p-0">
-          {newChannel && (() => {
+          {newChannel ? (() => {
             const chInfo = CHANNEL_OPTIONS.find(c => c.id === newChannel);
             return (
               <>
@@ -450,13 +446,13 @@ const Instances: React.FC = () => {
                 </div>
               </>
             );
-          })()}
+          })() : null}
         </SheetContent>
       </Sheet>
 
       <Sheet open={!!selectedId} onOpenChange={(open) => { if (!open) { setSelectedId(null); setEditingId(null); setEditingValue(''); } }}>
         <SheetContent side="right" className="w-full sm:max-w-2xl overflow-y-auto p-0">
-          {selectedId && (() => {
+          {selectedId ? (() => {
             const inst = instances.find(i => i.id === selectedId)!;
             if (!inst) return null;
             const chInfo = CHANNEL_OPTIONS.find(c => c.id === inst.channel);
@@ -524,7 +520,7 @@ const Instances: React.FC = () => {
                 </div>
               </>
             );
-          })()}
+          })() : null}
         </SheetContent>
       </Sheet>
     </div>

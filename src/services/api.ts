@@ -6,6 +6,7 @@ import {
   Appointment,
   Deal,
   UIConversation,
+  UIMessage,
   KanbanColumn,
   Team,
   TeamFunction,
@@ -103,24 +104,32 @@ export const clearStagesCache = () => {};
 export const api = {
 
   // ── Dashboard ──────────────────────────────────────
-  fetchDashboardMetrics: async (days: number = 1): Promise<StatMetric[]> => {
-    const contacts = await apiGet<Contact[]>('contacts', []);
-    const deals = await apiGet<Deal[]>('deals', []);
+  fetchDashboardMetrics: async (days: number = 7): Promise<StatMetric[]> => {
+    try {
+      const data = await apiGet<StatMetric[]>(`reports/metrics?days=${days}`, []);
+      if (Array.isArray(data) && data.length > 0) return data;
+    } catch {}
+    // fallback to zero values
     return [
-      { label: 'Atendimentos', value: String(contacts.length), trend: '+12%', trendUp: true },
-      { label: 'Conversões', value: String(deals.filter(d => d.stage === 'won').length), trend: '+5%', trendUp: true },
-      { label: 'Tempo Médio', value: '3m 45s', trend: '-8%', trendUp: true },
-      { label: 'Novos Leads', value: String(contacts.length), trend: '+15%', trendUp: true },
+      { label: 'Atendimentos', value: '0', trend: '0%', trendUp: true },
+      { label: 'Conversões', value: '0', trend: '0%', trendUp: true },
+      { label: 'Tempo Médio', value: '—', trend: '', trendUp: true },
+      { label: 'Novos Leads', value: '0', trend: '0%', trendUp: true },
     ];
   },
 
   fetchChartData: async (days: number = 7): Promise<any[]> => {
+    try {
+      const data = await apiGet<any[]>(`reports/chart?days=${days}`, []);
+      if (Array.isArray(data) && data.length > 0) return data;
+    } catch {}
+    // fallback: empty zeroes
     const result = [];
     for (let i = days - 1; i >= 0; i--) {
       const date = new Date();
       date.setDate(date.getDate() - i);
       const name = days === 1 ? 'Hoje' : (days <= 7 ? getDayName(date) : `${date.getDate()}/${date.getMonth() + 1}`);
-      result.push({ name, chats: Math.floor(Math.random() * 20) + 5, sales: Math.floor(Math.random() * 5) });
+      result.push({ name, chats: 0, sales: 0 });
     }
     return result;
   },
@@ -464,43 +473,50 @@ export const api = {
 
   // ── Reports ────────────────────────────────────────
   fetchReport: async (opts?: { days?: number; instanceId?: string; agentId?: string }) => {
-    const status = [
-      { name: 'Abertas', value: 24 },
-      { name: 'Fechadas', value: 26 },
-      { name: 'Arquivadas', value: 0 },
-    ];
-    const media = [
-      { name: 'Texto', value: 1390 },
-      { name: 'Imagem', value: 152 },
-      { name: 'Áudio', value: 45 },
-      { name: 'Documento', value: 30 },
-    ];
-    const hourly: { hour: string; value: number }[] = [];
-    for (let h = 0; h < 24; h++) hourly.push({ hour: `${h}h`, value: Math.floor(Math.random() * 50) });
-    const weekdays = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'].map(d => ({ day: d, value: Math.floor(Math.random() * 600) }));
-    const team = await apiGet<TeamMember[]>('team_members', []);
-    const performance = team.map(t => ({ id: t.id, name: t.name, total: Math.floor(Math.random() * 200), closed: Math.floor(Math.random() * 200), avgResponseMinutes: Math.floor(Math.random() * 500) }));
-    return { statusDistribution: status, mediaDistribution: media, hourlyActivity: hourly, weekdayVolume: weekdays, agentPerformance: performance };
+    const days = opts?.days ?? 30;
+    const params = new URLSearchParams({ days: String(days) });
+    if (opts?.instanceId) params.set('instanceId', opts.instanceId);
+    if (opts?.agentId) params.set('agentId', opts.agentId);
+    try {
+      const data = await apiGet<any>(`reports/full?${params}`, null);
+      if (data) return data;
+    } catch {}
+    // fallback empty structure
+    return {
+      statusDistribution: [
+        { name: 'Abertas', value: 0 },
+        { name: 'Fechadas', value: 0 },
+        { name: 'Arquivadas', value: 0 },
+      ],
+      mediaDistribution: [
+        { name: 'Texto', value: 0 },
+        { name: 'Imagem', value: 0 },
+        { name: 'Áudio', value: 0 },
+        { name: 'Documento', value: 0 },
+      ],
+      hourlyActivity: Array.from({ length: 24 }, (_, h) => ({ hour: `${h}h`, value: 0 })),
+      weekdayVolume: ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'].map(day => ({ day, value: 0 })),
+      agentPerformance: [],
+    };
   },
 
   // ── Messages ───────────────────────────────────────
   updateMessage: async (messageId: string, newContent: string): Promise<any> => {
-    const messages = await apiGet<any[]>('messages', []);
-    const old = messages.find(m => m.id === messageId);
-    if (!old) throw new Error('Mensagem não encontrada');
-    const prevContent = old.content || '';
-    const prevEdited = old.edited_at || old.created_at || new Date().toISOString();
-    const edits = Array.isArray(old.edits) ? [...old.edits] : [];
-    edits.push({ content: prevContent, edited_at: prevEdited });
-    const updated = { ...old, content: newContent, edited_at: new Date().toISOString(), edits };
-    await apiPost('messages', updated);
-    return updated;
+    const res = await fetch(`${API_BASE}/messages/${encodeURIComponent(messageId)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: newContent }),
+    });
+    if (!res.ok) throw new Error('Falha ao editar mensagem');
+    return res.json();
   },
 
-  fetchConversationMessages: async (conversationId: string, limit: number = 10): Promise<any[]> => {
-    const messages = await apiGet<any[]>('messages', []);
-    const conv = messages.filter(m => m.conversation_id === conversationId).sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-    return conv.slice(-limit);
+  forwardMessage: async (messageId: string, targetConversationId: string): Promise<any> => {
+    return apiPost('messages/forward', { message_id: messageId, target_conversation_id: targetConversationId });
+  },
+
+  fetchConversationMessages: async (conversationId: string, limit: number = 50): Promise<any[]> => {
+    return apiGet<any[]>(`messages?conversation_id=${encodeURIComponent(conversationId)}&limit=${limit}`, []);
   },
 
   sendMessage: async (conversationId: string, content: string, isHumanModeParam?: boolean, attachments?: Array<{ dataUrl?: string; name?: string; type?: string }>): Promise<string> => {
@@ -663,38 +679,45 @@ export const api = {
     }
   },
 
-  markMessagesAsRead: async (_conversationId: string): Promise<void> => {},
+  markMessagesAsRead: async (conversationId: string): Promise<void> => {
+    try {
+      await apiPost('messages/mark-read', { conversation_id: conversationId });
+    } catch (e) {
+      console.warn('markMessagesAsRead failed', e);
+    }
+  },
 
   // ── Conversations ──────────────────────────────────
   fetchConversations: async (): Promise<UIConversation[]> => {
     try {
-      const convs = await apiGet<any[]>('conversations', []);
-      const msgs = await apiGet<any[]>('messages', []);
+      // Use pooled endpoint which already includes recent messages and contact status
+      const convs = await apiGet<any[]>('conversations/pool', []);
       const result: UIConversation[] = (convs || []).map((c) => {
-        const convMessages = (msgs || []).filter(m => m.conversation_id === c.id);
-        const sorted = convMessages.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+        const sorted = (c.messages || []).sort((a: any, b: any) => new Date(a.sent_at || a.created_at).getTime() - new Date(b.sent_at || b.created_at).getTime());
         const last = sorted[sorted.length - 1];
+        const contact = c.contact || {};
         return {
           id: c.id,
-          contactId: c.contact_id || c.id,
-          contactName: (c.contact && (c.contact.name || c.contact.call_name)) || c.contact_id || 'Contato',
-          contactPhone: (c.contact && c.contact.phone_number) || '',
-          contactAvatar: (c.contact && c.contact.profile_picture_url) || `https://ui-avatars.com/api/?name=${encodeURIComponent((c.contact && c.contact.name) || 'U')}&background=0ea5e9&color=fff`,
-          contactEmail: (c.contact && c.contact.email) || null,
+          contactId: contact.id || c.contact_id || c.id,
+          contactName: (contact && (contact.name || contact.call_name)) || c.contact_id || 'Contato',
+          contactPhone: contact.phone_number || '',
+          contactAvatar: contact.profile_picture_url || `https://ui-avatars.com/api/?name=${encodeURIComponent((contact && contact.name) || 'U')}&background=0ea5e9&color=fff`,
+          contactEmail: contact.email || null,
           status: c.status || 'nina',
           isActive: c.is_active !== false,
           assignedTeam: c.assigned_team || null,
           assignedUserId: c.assigned_user_id || null,
           assignedUserName: null,
+          instanceId: c.assigned_team || c.instance_id || null,
           lastMessage: last?.content || '',
-          lastMessageTime: last ? new Date(last.created_at).toLocaleString() : (c.last_message_at ? new Date(c.last_message_at).toLocaleString() : ''),
-          unreadCount: convMessages.filter(m => m.direction === 'inbound').length || 0,
+          lastMessageTime: last ? new Date(last.sent_at || last.created_at).toLocaleString() : (c.last_message_at ? new Date(c.last_message_at).toLocaleString() : ''),
+          unreadCount: c.unread_count || (c.messages || []).filter((m: any) => (m.direction === 'inbound' || m.from_type === 'whatsapp') && m.status !== 'read').length || 0,
           tags: c.tags || [],
           isGroup: c.isGroup || false,
           participants: c.participants || [],
-          messages: (sorted || []).map((m) => {
+          messages: (sorted || []).map((m: any) => {
             let msgType = MessageType.TEXT;
-            const media = (m.mediaUrl || '').toString().toLowerCase();
+            const media = (m.media_url || m.mediaUrl || '').toString().toLowerCase();
             const explicit = (m.type || '').toString().toLowerCase();
             const imageExt = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp'];
             const audioExt = ['.mp3', '.wav', '.ogg', '.m4a', '.aac'];
@@ -703,26 +726,23 @@ export const api = {
             return {
               id: m.id,
               content: m.content,
-              timestamp: new Date(m.created_at).toISOString(),
+              timestamp: new Date(m.sent_at || m.created_at).toISOString(),
               direction: m.direction === 'outbound' ? MessageDirection.OUTGOING : MessageDirection.INCOMING,
               type: msgType,
-              status: 'sent',
+              status: m.status || 'sent',
               fromType: (m.from_type as any) || (m.direction === 'outbound' ? 'nina' : 'user'),
-              mediaUrl: m.mediaUrl || null,
-              whatsappMessageId: m.whatsappMessageId || null,
-            };
+              mediaUrl: m.media_url || m.mediaUrl || null,
+              whatsappMessageId: m.whatsapp_message_id || m.whatsappMessageId || null,
+              edits: m.edits || undefined,
+              edited_at: m.edited_at || undefined,
+              created_at: m.created_at || m.sent_at || undefined,
+            } as UIMessage;
           }),
-          clientMemory: c.client_memory || {
-            last_updated: null,
-            lead_profile: { interests: [], lead_stage: 'new', objections: [], products_discussed: [], communication_style: 'unknown', qualification_score: 0 },
-            sales_intelligence: { pain_points: [], next_best_action: 'qualify', budget_indication: 'unknown', decision_timeline: 'unknown' },
-            interaction_summary: { response_pattern: 'unknown', last_contact_reason: '', total_conversations: 0, preferred_contact_time: 'unknown' },
-            conversation_history: [],
-          },
+          clientMemory: c.client_memory || null,
           notes: c.notes || null,
         } as UIConversation;
       });
-      return result.map(r => ({ ...r, slaViolated: Math.random() < 0.08, instanceId: r.assignedTeam || null, isGroup: r.isGroup || false, participants: r.participants || [] })) as UIConversation[];
+      return result as UIConversation[];
     } catch (err) {
       console.error('fetchConversations error', err);
       return [];

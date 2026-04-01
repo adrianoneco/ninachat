@@ -90,7 +90,9 @@ export interface Contact {
   notes?: string;
   blocked?: boolean;
   picture_url?: string;
+  profile_picture_url?: string;
   blocked_reason?: string;
+  extra?: Record<string, any>;
 }
 
 export interface StatMetric {

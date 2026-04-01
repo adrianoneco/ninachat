@@ -1,13 +1,17 @@
 import { IsNotEmpty, IsOptional, IsString, IsIn, IsObject } from 'class-validator';
 
 export class CreateMessageDto {
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  message_id!: string;
+  id?: string;
 
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  conversation_id!: string;
+  message_id?: string;
+
+  @IsOptional()
+  @IsString()
+  conversation_id?: string;
 
   @IsOptional()
   @IsString()
@@ -22,12 +26,47 @@ export class CreateMessageDto {
   content?: string;
 
   @IsOptional()
-  @IsIn(['inbound', 'outbound'])
+  @IsString()
   direction?: string;
+
+  @IsOptional()
+  @IsString()
+  from_type?: string;
+
+  @IsOptional()
+  @IsString()
+  type?: string;
+
+  @IsOptional()
+  @IsString()
+  status?: string;
+
+  @IsOptional()
+  @IsString()
+  provider?: string;
+
+  @IsOptional()
+  @IsString()
+  media_url?: string;
+
+  @IsOptional()
+  @IsString()
+  media_type?: string;
+
+  @IsOptional()
+  @IsString()
+  created_at?: string;
+
+  @IsOptional()
+  @IsObject()
+  payload?: any;
 
   @IsOptional()
   @IsObject()
   metadata?: any;
+
+  @IsOptional()
+  raw?: any;
 }
 
 export class UpdateMessageDto {
@@ -42,4 +81,10 @@ export class UpdateMessageDto {
   @IsOptional()
   @IsString()
   status?: string;
+
+  @IsOptional()
+  edited_at?: string;
+
+  @IsOptional()
+  edits?: any;
 }

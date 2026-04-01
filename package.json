@@ -4,13 +4,14 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "sudo chmod -R 777 /data/wpp_data && kill-port 40000 40001 && dotenv -e .env -- concurrently --prefix-colors \"yellow,blue\" --names SERVER,CLIENT \"cd server && bun run build && bun run start:prod\" \"bun run start:client\"",
+    "dev": "sudo mkdir -p /data/wpp_data && sudo chmod -R 777 /data/wpp_data && npx kill-port 40000 40001 && npx dotenv -e .env -- concurrently --prefix-colors \"yellow,blue\" --names SERVER,CLIENT \"cd server && bun run build && bun run start:prod\" \"bun run start:client\"",
     "nina": "vite",
     "test": "vitest --run --include src/**",
     "start:server": "cd server && bun run start:dev",
     "start:client": "vite --host --port 40000",
     "build": "vite build && cd server && bun run build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "install:all": "npx concurrently --prefix-colors \"yellow,blue\" --names SERVER,CLIENT \"cd server && bun install --force && bun run build\" \"bun install --force && bun run build\""
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",

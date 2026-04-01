@@ -6,23 +6,18 @@ export class Message {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column({ nullable: false })
+  @Column({ type: 'uuid', nullable: true })
   conversation_id?: string;
 
-  @Column({ nullable: false, unique: true })
+  @Column({ type: 'text', nullable: true, unique: true })
   message_id?: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'text', nullable: true })
   reply_to_id?: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'text', nullable: true })
   whatsapp_message_id?: string;
 
-  @Column({ type: 'varchar', nullable: true })
-  type?: string;
-
-  @Column({ type: 'varchar', nullable: true })
-  from_type?: string;
 
   @Column({ type: 'text', nullable: true })
   content?: string;
@@ -33,17 +28,34 @@ export class Message {
   @Column({ type: 'text', nullable: true })
   media_type?: string;
 
-  @Column({ type: 'varchar', nullable: true })
+  @Column({ type: 'varchar', default: 'text', nullable: true })
+  type?: string;
+
+  @Column({ type: 'varchar', default: 'user', nullable: true })
+  from_type?: string;
+  @Column({ type: 'varchar', default: 'sent', nullable: true })
   status?: string;
 
   @Column({ type: 'boolean', default: false })
-  processed_by_nina?: boolean;
+  processed_by_nina!: boolean;
 
   @Column({ type: 'integer', nullable: true })
   nina_response_time?: number;
 
-  @Column({ type: 'jsonb', nullable: true, default: () => "'{}'::jsonb" })
-  metadata?: any;
+  @Column({ type: 'varchar', nullable: true })
+  direction?: string;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  edited_at?: Date;
+
+  @Column({ type: 'jsonb', nullable: true })
+  edits?: any;
+
+  @Column({ type: 'jsonb', nullable: true })
+  payload?: any;
+
+  @Column({ type: 'jsonb', default: () => "'{}'::jsonb" })
+  metadata!: any;
 
   @Column({ type: 'timestamptz', default: () => 'now()' })
   sent_at!: Date;

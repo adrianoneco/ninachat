@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { api } from '@/services/api';
+import { connectSocket } from '@/lib/socket';
 import { useAuth } from '@/hooks/useAuth';
 import { useCompanySettings } from '@/hooks/useCompanySettings';
 // storage fallback removed; use backend API
@@ -80,6 +81,46 @@ export function useConversations() {
     fetchConversations();
   }, [fetchConversations]);
 
+  // Subscribe to realtime socket events to refresh conversations
+  useEffect(() => {
+    const socket = connectSocket();
+    if (!socket) return;
+
+    const handler = async () => {
+      try {
+        await fetchConversations();
+      } catch (e) {
+        console.error('Failed refreshing conversations on socket event', e);
+      }
+    };
+
+    try {
+      socket.on('message:created', handler);
+      socket.on('message:updated', handler);
+      socket.on('message:deleted', handler);
+      socket.on('wpp:message', handler);
+      socket.on('conversation:created', handler);
+      socket.on('conversation:updated', handler);
+      socket.on('contact:updated', handler);
+      socket.on('messages:read', handler);
+    } catch (e) {
+      // ignore
+    }
+
+    return () => {
+      try {
+        socket.off('message:created', handler);
+        socket.off('message:updated', handler);
+        socket.off('message:deleted', handler);
+        socket.off('wpp:message', handler);
+        socket.off('conversation:created', handler);
+        socket.off('conversation:updated', handler);
+        socket.off('contact:updated', handler);
+        socket.off('messages:read', handler);
+      } catch (e) {}
+    };
+  }, [fetchConversations]);
+
   const sendMessage = useCallback(async (conversationId: string, content: string, attachments?: Array<{ dataUrl?: string; name?: string; type?: string }>) => {
     if ((!content || !content.trim()) && !(attachments && attachments.length > 0)) return;
     try {
@@ -121,6 +162,11 @@ export function useConversations() {
     setConversations(prev => prev.map(conv => 
       conv.id === conversationId ? { ...conv, unreadCount: 0 } : conv
     ));
+    try {
+      await api.markMessagesAsRead(conversationId);
+    } catch (e) {
+      console.warn('markAsRead failed', e);
+    }
   }, []);
 
   const assignConversation = useCallback(async (conversationId: string, userId: string | null) => {

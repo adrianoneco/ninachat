@@ -7,7 +7,8 @@ import {
   Tag, Bot, User, Pause, Brain, Plus, TrendingUp, Heart,
   Sparkles, RefreshCw, Pencil, FileText, XCircle, CheckCircle, Menu, ChevronLeft, ChevronRight,
   Download, ZoomIn, ZoomOut, ChevronDown,
-  Copy, Share2, Trash2, AtSign, CornerUpLeft
+  Copy, Share2, Trash2, AtSign, CornerUpLeft,
+  Image, Video, Music, Sticker, File
 } from 'lucide-react';
 
 import { Pin, Star, Flag } from 'lucide-react';
@@ -36,6 +37,7 @@ const ChatInterface: React.FC = () => {
   const editingModalRef = useRef<HTMLTextAreaElement | null>(null);
   const [attachments, setAttachments] = useState<Array<{ id: string; dataUrl: string; name?: string; type?: string }>>([]);
   const [showAttachPopup, setShowAttachPopup] = useState(false);
+  const [showAttachGrid, setShowAttachGrid] = useState(false);
   const [pastedPreview, setPastedPreview] = useState<string | null>(null);
   const [showProfileInfo, setShowProfileInfo] = useState(true);
   const [isListOpen, setIsListOpen] = useState(false);
@@ -108,6 +110,11 @@ const ChatInterface: React.FC = () => {
   const [previewDoc, setPreviewDoc] = useState<{ url: string; name?: string } | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const imageInputRef = useRef<HTMLInputElement | null>(null);
+  const videoInputRef = useRef<HTMLInputElement | null>(null);
+  const audioInputRef = useRef<HTMLInputElement | null>(null);
+  const stickerInputRef = useRef<HTMLInputElement | null>(null);
+  const docInputRef = useRef<HTMLInputElement | null>(null);
   const inputWrapperRef = useRef<HTMLDivElement | null>(null);
   const iconsRef = useRef<HTMLDivElement | null>(null);
   const sendBtnRef = useRef<HTMLButtonElement | null>(null);
@@ -455,10 +462,11 @@ const ChatInterface: React.FC = () => {
 
   const handleForward = async (msg: UIMessage) => {
     if (!msg) return;
-    // Mock implementation: in future open contact selector / forward flow
     try {
-      // For now just notify user — real implementation would open a forward dialog
-      toast.success('Mensagem encaminhada (mock)');
+      const target = window.prompt('ID da conversa de destino:');
+      if (!target) return;
+      await api.forwardMessage(msg.id, target.trim());
+      toast.success('Mensagem encaminhada');
     } catch (err) {
       console.error('forward failed', err);
       toast.error('Falha ao encaminhar');
@@ -820,6 +828,7 @@ const ChatInterface: React.FC = () => {
     const attachPayload = attachments.map(a => ({ dataUrl: a.dataUrl, name: a.name, type: a.type }));
     setInputText('');
     setAttachments([]);
+    setShowAttachGrid(false);
     await sendMessage(activeChat.id, content, attachPayload.length > 0 ? attachPayload : undefined);
   };
 
@@ -939,7 +948,18 @@ const ChatInterface: React.FC = () => {
   };
 
   const handleAttachClick = () => {
-    fileInputRef.current?.click();
+    setShowAttachGrid(prev => !prev);
+  };
+
+  const handleAttachGridSelect = (type: 'image' | 'video' | 'audio' | 'sticker' | 'document') => {
+    setShowAttachGrid(false);
+    switch (type) {
+      case 'image': imageInputRef.current?.click(); break;
+      case 'video': videoInputRef.current?.click(); break;
+      case 'audio': audioInputRef.current?.click(); break;
+      case 'sticker': stickerInputRef.current?.click(); break;
+      case 'document': docInputRef.current?.click(); break;
+    }
   };
 
   const handleFileInput = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -956,7 +976,9 @@ const ChatInterface: React.FC = () => {
       }
     }
     if (picked.length > 0) setAttachments(prev => [...picked, ...prev]);
-    // reset input
+    // reset all file inputs
+    const target = e.target;
+    if (target) target.value = '';
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -2590,7 +2612,38 @@ const ChatInterface: React.FC = () => {
               </div>
             )}
 
-            <div className="p-4 bg-white/90 dark:bg-slate-900/90 border-t border-gray-200 dark:border-slate-800 backdrop-blur-sm z-10">
+            <div className="p-4 bg-white/90 dark:bg-slate-900/90 border-t border-gray-200 dark:border-slate-800 backdrop-blur-sm z-10 relative">
+              {/* WhatsApp-style attachment grid */}
+              {showAttachGrid && (
+                <>
+                  <div className="fixed inset-0 z-30" onClick={() => setShowAttachGrid(false)} />
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 z-40 animate-in fade-in slide-in-from-bottom-4 duration-200">
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-slate-700 p-4">
+                      <div className="grid grid-cols-3 gap-4 min-w-[240px]">
+                        {[
+                          { type: 'document' as const, icon: File, label: 'Documento', bg: 'bg-indigo-500', hover: 'hover:bg-indigo-600' },
+                          { type: 'image' as const, icon: Image, label: 'Imagem', bg: 'bg-violet-500', hover: 'hover:bg-violet-600' },
+                          { type: 'sticker' as const, icon: Sticker, label: 'Sticker', bg: 'bg-teal-500', hover: 'hover:bg-teal-600' },
+                          { type: 'video' as const, icon: Video, label: 'Vídeo', bg: 'bg-rose-500', hover: 'hover:bg-rose-600' },
+                          { type: 'audio' as const, icon: Music, label: 'Áudio', bg: 'bg-orange-500', hover: 'hover:bg-orange-600' },
+                        ].map(item => (
+                          <button
+                            key={item.type}
+                            type="button"
+                            onClick={() => handleAttachGridSelect(item.type)}
+                            className="flex flex-col items-center gap-2 group"
+                          >
+                            <div className={`w-14 h-14 rounded-full ${item.bg} ${item.hover} flex items-center justify-center shadow-lg transition-all duration-150 group-hover:scale-110 group-active:scale-95`}>
+                              <item.icon className="w-6 h-6 text-white" />
+                            </div>
+                            <span className="text-xs text-gray-600 dark:text-slate-300 font-medium">{item.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
               <form onSubmit={handleSendMessage} className="flex items-end gap-3 max-w-4xl mx-auto">
                 {/* left-side action buttons removed as requested */}
                 
@@ -2619,6 +2672,11 @@ const ChatInterface: React.FC = () => {
                   />
 
                   <input ref={fileInputRef} type="file" multiple onChange={handleFileInput} accept="image/*,video/*,audio/*,application/*" className="hidden" />
+                  <input ref={imageInputRef} type="file" multiple onChange={handleFileInput} accept="image/*" className="hidden" />
+                  <input ref={videoInputRef} type="file" multiple onChange={handleFileInput} accept="video/*" className="hidden" />
+                  <input ref={audioInputRef} type="file" multiple onChange={handleFileInput} accept="audio/*" className="hidden" />
+                  <input ref={stickerInputRef} type="file" onChange={handleFileInput} accept="image/png,image/webp" className="hidden" />
+                  <input ref={docInputRef} type="file" multiple onChange={handleFileInput} accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.rar" className="hidden" />
 
                   
 
@@ -2930,7 +2988,7 @@ const ChatInterface: React.FC = () => {
                         <img src={getAvatarUrl(activeChat)} alt={getDisplayName(activeChat)} className="w-full h-full rounded-full object-cover border-2 border-gray-200 dark:border-slate-900" />
                   </div>
                   <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">{activeChat.contactName}</h3>
-                  <p className="text-sm text-gray-500 dark:text-slate-400 mb-4">{activeChat.clientMemory.lead_profile.lead_stage}</p>
+                  <p className="text-sm text-gray-500 dark:text-slate-400 mb-4">{activeChat.clientMemory?.lead_profile?.lead_stage ?? ''}</p>
                 </div>
                 <div className="mt-4">
                   <div className="flex items-center gap-3 text-sm mb-3">
@@ -2972,9 +3030,9 @@ const ChatInterface: React.FC = () => {
                   </div>
                   <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">{activeChat.contactName}</h3>
                   <p className="text-sm text-gray-500 dark:text-slate-400 mb-2">
-                    {activeChat.clientMemory.lead_profile.lead_stage === 'new' ? 'Novo Lead' : 
-                     activeChat.clientMemory.lead_profile.lead_stage === 'qualified' ? 'Lead Qualificado' :
-                     activeChat.clientMemory.lead_profile.lead_stage}
+                    {(activeChat.clientMemory?.lead_profile?.lead_stage === 'new') ? 'Novo Lead' : 
+                     (activeChat.clientMemory?.lead_profile?.lead_stage === 'qualified') ? 'Lead Qualificado' :
+                     (activeChat.clientMemory?.lead_profile?.lead_stage ?? '')}
                   </p>
                   {activeChat.isGroup && (
                     <div className="w-full text-left mt-2">
@@ -3288,7 +3346,7 @@ const ChatInterface: React.FC = () => {
                     Memória do(a) {sdrName}
                   </h4>
                   
-                  {activeChat.clientMemory.lead_profile.interests.length > 0 && (
+                  {Array.isArray(activeChat.clientMemory?.lead_profile?.interests) && activeChat.clientMemory.lead_profile.interests.length > 0 && (
                     <div className="p-3 rounded-lg bg-gray-200/50 dark:bg-slate-800/50 border border-gray-300/50 dark:border-slate-700/50">
                       <span className="text-xs text-gray-500 dark:text-slate-400">Interesses</span>
                       <p className="text-sm text-gray-700 dark:text-slate-200 mt-1">
@@ -3297,7 +3355,7 @@ const ChatInterface: React.FC = () => {
                     </div>
                   )}
 
-                  {activeChat.clientMemory.sales_intelligence.pain_points.length > 0 && (
+                  {Array.isArray(activeChat.clientMemory?.sales_intelligence?.pain_points) && activeChat.clientMemory.sales_intelligence.pain_points.length > 0 && (
                     <div className="p-3 rounded-lg bg-gray-200/50 dark:bg-slate-800/50 border border-gray-300/50 dark:border-slate-700/50">
                       <span className="text-xs text-gray-500 dark:text-slate-400">Dores Identificadas</span>
                       <p className="text-sm text-gray-700 dark:text-slate-200 mt-1">
@@ -3309,14 +3367,14 @@ const ChatInterface: React.FC = () => {
                   <div className="p-3 rounded-lg bg-gray-200/50 dark:bg-slate-800/50 border border-gray-300/50 dark:border-slate-700/50">
                     <span className="text-xs text-gray-500 dark:text-slate-400">Próxima Ação Sugerida</span>
                     <p className="text-sm text-gray-700 dark:text-slate-200 mt-1">
-                      {activeChat.clientMemory.sales_intelligence.next_best_action === 'qualify' ? 'Qualificar lead' :
-                       activeChat.clientMemory.sales_intelligence.next_best_action === 'demo' ? 'Agendar demonstração' :
-                       activeChat.clientMemory.sales_intelligence.next_best_action}
+                      {(activeChat.clientMemory?.sales_intelligence?.next_best_action === 'qualify') ? 'Qualificar lead' :
+                       (activeChat.clientMemory?.sales_intelligence?.next_best_action === 'demo') ? 'Agendar demonstração' :
+                       (activeChat.clientMemory?.sales_intelligence?.next_best_action ?? '')}
                     </p>
                   </div>
 
                   <div className="text-xs text-gray-500 dark:text-slate-500 text-center">
-                    Total de conversas: {activeChat.clientMemory.interaction_summary.total_conversations}
+                    Total de conversas: {activeChat.clientMemory?.interaction_summary?.total_conversations ?? 0}
                   </div>
                 </div>
 

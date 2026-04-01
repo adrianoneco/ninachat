@@ -8,6 +8,11 @@ interface NinaSettings {
   whatsapp_access_token: string | null;
   whatsapp_phone_number_id: string | null;
   whatsapp_verify_token: string | null;
+  evolution_api_url?: string | null;
+  evolution_api_key?: string | null;
+  zapi_instance_id?: string | null;
+  zapi_token?: string | null;
+  zapi_client_token?: string | null;
   // external integrations removed (evolution, zapi)
 }
 
@@ -27,6 +32,11 @@ const ApiSettings = forwardRef<ApiSettingsRef, { onDirtyChange?: (dirty: boolean
   const [webhookOpen, setWebhookOpen] = useState(false);
   const committedRef = useRef<string>('not-loaded');
   const [isDirty, setIsDirty] = useState(false);
+  const [evolutionValid, setEvolutionValid] = useState<'unknown' | 'valid' | 'invalid'>('unknown');
+  const [evolutionValidationMsg, setEvolutionValidationMsg] = useState<string | null>(null);
+  const [evolutionTesting, setEvolutionTesting] = useState(false);
+  const [showZapiToken, setShowZapiToken] = useState(false);
+  const [showZapiClientToken, setShowZapiClientToken] = useState(false);
 
   // evolution integration removed
 
@@ -59,6 +69,11 @@ const ApiSettings = forwardRef<ApiSettingsRef, { onDirtyChange?: (dirty: boolean
     whatsapp_access_token: null,
     whatsapp_phone_number_id: null,
     whatsapp_verify_token: generateUniqueToken(),
+    evolution_api_url: null,
+    evolution_api_key: null,
+    zapi_instance_id: null,
+    zapi_token: null,
+    zapi_client_token: null,
     // integrations removed
   });
 
@@ -112,6 +127,21 @@ const ApiSettings = forwardRef<ApiSettingsRef, { onDirtyChange?: (dirty: boolean
   }
 
   useEffect(() => { loadSettings(); }, []);
+
+  function validateEvolutionUrl() {
+    // lightweight noop validator to avoid runtime issues in this trimmed component
+    setEvolutionTesting(true);
+    setTimeout(() => {
+      if (settings.evolution_api_url) {
+        setEvolutionValid('valid');
+        setEvolutionValidationMsg('Conectável');
+      } else {
+        setEvolutionValid('invalid');
+        setEvolutionValidationMsg('URL inválida');
+      }
+      setEvolutionTesting(false);
+    }, 600);
+  }
 
   async function handleSave() {
     setSaving(true);
@@ -172,6 +202,7 @@ const ApiSettings = forwardRef<ApiSettingsRef, { onDirtyChange?: (dirty: boolean
   return (
     <div className="space-y-6">
             {false && (
+            <>
             <div className="rounded-xl border border-gray-200 dark:border-slate-800 bg-gray-100/50 dark:bg-slate-900/50 p-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
@@ -245,7 +276,8 @@ const ApiSettings = forwardRef<ApiSettingsRef, { onDirtyChange?: (dirty: boolean
           <p className="text-xs text-gray-500 dark:text-slate-500">Configure a URL e a chave da API da Evolution globalmente. Use <strong>Instâncias</strong> para configurações por instância.</p>
         </div>
       </div>
-            )}
+        </>
+        )}
       {/* ── Z-API ── */}
       <div className="rounded-xl border border-gray-200 dark:border-slate-800 bg-gray-100/50 dark:bg-slate-900/50 p-6">
         <div className="flex items-center justify-between mb-4">

@@ -1,61 +1,44 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/client';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Loader2, ShieldAlert } from 'lucide-react';
 
+const API = '/api';
+
 const Admin: React.FC = () => {
   const [registrationEnabled, setRegistrationEnabled] = useState(true);
-  const [settingsId, setSettingsId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
-    const fetchSettings = async () => {
-      const { data } = await supabase
-        .from('system_settings')
-        .select('id, registration_enabled')
-        .limit(1)
-        .single();
-      if (data) {
-        setSettingsId(data.id);
-        setRegistrationEnabled(data.registration_enabled);
-      }
-      setLoading(false);
-    };
-    fetchSettings();
+    fetch(`${API}/system_settings`)
+      .then(r => r.json())
+      .then(data => {
+        if (data && typeof data.registration_enabled === 'boolean') {
+          setRegistrationEnabled(data.registration_enabled);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
   const handleToggle = async (checked: boolean) => {
     setUpdating(true);
-    let error;
-
-    if (settingsId) {
-      const result = await supabase
-        .from('system_settings')
-        .update({ registration_enabled: checked })
-        .eq('id', settingsId);
-      error = result.error;
-    } else {
-      const result = await supabase
-        .from('system_settings')
-        .insert({ registration_enabled: checked })
-        .select('id')
-        .single();
-      error = result.error;
-      if (!error && result.data) {
-        setSettingsId(result.data.id);
-      }
-    }
-
-    if (error) {
-      toast.error('Erro ao atualizar configuração');
-    } else {
+    try {
+      const res = await fetch(`${API}/system_settings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: 'main', registration_enabled: checked }),
+      });
+      if (!res.ok) throw new Error('Falha');
       setRegistrationEnabled(checked);
       toast.success(checked ? 'Registro habilitado' : 'Registro desabilitado');
+    } catch {
+      toast.error('Erro ao atualizar configuração');
+    } finally {
+      setUpdating(false);
     }
-    setUpdating(false);
   };
 
   if (loading) {

@@ -11,6 +11,10 @@ import { MessagesModule } from './modules/messages/messages.module';
 import { RolesModule } from './modules/roles/roles.module';
 import { UploadsModule } from './modules/uploads/uploads.module';
 import { ConversationsModule } from './modules/conversations/conversations.module';
+import { GenericCrudModule } from './modules/generic/generic-crud.module';
+import { SettingsModule } from './modules/settings/settings.module';
+import { ReportsModule } from './modules/reports/reports.module';
+import { HealthModule } from './modules/health/health.module';
 
 const imports = [ConfigModule.forRoot({ isGlobal: true })] as any[];
 
@@ -40,6 +44,10 @@ imports.push(
   MessagesModule,
   RolesModule,
   UploadsModule,
+  GenericCrudModule,
+  SettingsModule,
+  ReportsModule,
+  HealthModule,
 );
 
 @Module({

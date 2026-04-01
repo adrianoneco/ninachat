@@ -20,6 +20,24 @@ export class Instance {
   @Column({ type: 'text', nullable: true })
   session_dir?: string;
 
+  @Column({ type: 'text', nullable: true })
+  webhook_url?: string;
+
+  @Column({ type: 'text', nullable: true })
+  wppconnect_api_url?: string;
+
+  @Column({ type: 'boolean', default: false })
+  isPrivate?: boolean;
+
+  @Column({ type: 'simple-array', nullable: true })
+  allowedUserIds?: string[];
+
+  @Column({ type: 'uuid', nullable: true })
+  responsibleAgentId?: string;
+
+  @Column({ type: 'boolean', default: false })
+  enableTicketing?: boolean;
+
   @Column({ type: 'simple-json', nullable: true })
   metadata?: any;
 

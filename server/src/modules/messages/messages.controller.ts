@@ -7,9 +7,19 @@ export class MessagesController {
   constructor(private readonly svc: MessagesService) {}
 
   @Get()
-  async list(@Query('conversation_id') conversation_id?: string) {
-    if (conversation_id) return this.svc.findByConversation(conversation_id, 100);
+  async list(@Query('conversation_id') conversation_id?: string, @Query('limit') limit?: string) {
+    if (conversation_id) return this.svc.findByConversation(conversation_id, limit ? parseInt(limit, 10) : 100);
     return this.svc.findAll();
+  }
+
+  @Post('mark-read')
+  async markAsRead(@Body() body: { conversation_id: string }) {
+    return this.svc.markAsRead(body.conversation_id);
+  }
+
+  @Post('forward')
+  async forward(@Body() body: { message_id: string; target_conversation_id: string }) {
+    return this.svc.forward(body.message_id, body.target_conversation_id);
   }
 
   @Post()

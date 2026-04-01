@@ -1,30 +1,51 @@
-import { useEffect } from 'react';
-import { api } from '@/services/api';
+import { useEffect, useRef } from 'react';
 
 export function useWebhookEvents(serverUrl: string = '/api') {
+  const retryTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const retryDelay = useRef(2000);
+  const closed = useRef(false);
+
   useEffect(() => {
+    closed.current = false;
     let es: EventSource | null = null;
-    try {
-      es = new EventSource(`${serverUrl.replace(/\/$/, '')}/events`);
-      es.onmessage = async (e) => {
-        try {
-          const payload = JSON.parse(e.data);
-          // Forward to the frontend API handler to persist/update UI
-          if (api && typeof api.processIncomingExternal === 'function') {
-            await api.processIncomingExternal(payload);
+
+    const connect = () => {
+      if (closed.current) return;
+      try {
+        es = new EventSource(`${serverUrl.replace(/\/$/, '')}/events`);
+
+        es.onopen = () => {
+          retryDelay.current = 2000; // reset backoff on successful connection
+        };
+
+        es.onmessage = () => {
+          // SSE stream is keepalive-only. Real-time data arrives via socket.io
+          // and is handled by useConversations.
+        };
+
+        es.onerror = () => {
+          // EventSource.onerror fires on every transient disconnect — it will
+          // auto-reconnect by spec. We only intervene if it reaches CLOSED state.
+          if (es && es.readyState === EventSource.CLOSED) {
+            es.close();
+            if (!closed.current) {
+              retryTimer.current = setTimeout(() => {
+                retryDelay.current = Math.min(retryDelay.current * 2, 30000);
+                connect();
+              }, retryDelay.current);
+            }
           }
-        } catch (err) {
-          console.error('Error handling SSE message', err);
-        }
-      };
-      es.onerror = (err) => {
-        console.error('SSE connection error', err);
-      };
-    } catch (err) {
-      console.error('Could not connect to webhook events', err);
-    }
+        };
+      } catch {
+        // browser may not support EventSource; fail silently
+      }
+    };
+
+    connect();
 
     return () => {
+      closed.current = true;
+      if (retryTimer.current) clearTimeout(retryTimer.current);
       if (es) es.close();
     };
   }, [serverUrl]);

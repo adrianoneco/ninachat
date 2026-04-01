@@ -68,19 +68,19 @@ export const SystemHealthCard: React.FC = () => {
   const fetchHealth = useCallback(async () => {
     setLoading(true);
     try {
-      // Mock health data
-      setHealthData({
-        results: [
-          { component: 'identity', status: 'ok', message: 'Identidade configurada' },
-          { component: 'pipeline', status: 'ok', message: 'Pipeline configurado' },
-          { component: 'whatsapp', status: 'warning', message: 'WhatsApp não configurado' },
-        ],
-        overallStatus: 'warning',
-        summary: { ok: 2, total: 3, percentage: 67 },
-        message: 'Sistema parcialmente configurado'
-      });
+      const res = await fetch('/api/health');
+      if (!res.ok) throw new Error('health check failed');
+      const data: HealthData = await res.json();
+      setHealthData(data);
     } catch (error) {
       console.error('Error fetching health:', error);
+      // fallback: show unknown state
+      setHealthData({
+        results: [{ component: 'database', status: 'error', message: 'Não foi possível verificar o sistema' }],
+        overallStatus: 'error',
+        summary: { ok: 0, total: 1, percentage: 0 },
+        message: 'Falha ao verificar estado do sistema',
+      });
     } finally {
       setLoading(false);
     }

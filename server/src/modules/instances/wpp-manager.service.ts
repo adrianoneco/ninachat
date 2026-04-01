@@ -330,10 +330,6 @@ export class WppManagerService implements OnApplicationShutdown {
 
     this.instances.set(session, client);
     // Also register client under common identifiers so API callers can use
-
-
-
-
     try {
       if (instance.name) this.instances.set(instance.name, client);
       if (instance.id) this.instances.set(instance.id, client);
@@ -341,6 +337,34 @@ export class WppManagerService implements OnApplicationShutdown {
     } catch (e) {
       // non-fatal
     }
+
+    // Wait for the page frame to fully stabilize before considering the client
+    // ready for sending. WhatsApp Web may do a post-login navigation that detaches
+    // the original frame. We poll page.evaluate() until it succeeds.
+    (async () => {
+      const stabilizeMaxAttempts = 20;
+      const stabilizeDelay = 3000;
+      for (let attempt = 1; attempt <= stabilizeMaxAttempts; attempt++) {
+        try {
+          if (client.page) {
+            const ready = await client.page.evaluate(() => {
+              return typeof (globalThis as any).WPP !== 'undefined' && 
+                     typeof (globalThis as any).WPP.chat !== 'undefined';
+            });
+            if (ready) {
+              logger.log(`[${instance.name}] page frame stabilized on attempt ${attempt}`);
+              break;
+            }
+          }
+        } catch (e: any) {
+          const msg = String(e?.message || e);
+          if (msg.includes('detached Frame') || msg.includes('detached')) {
+            logger.warn(`[${instance.name}] frame detached on readiness check attempt ${attempt} — WA may be updating`);
+          }
+        }
+        await new Promise(r => setTimeout(r, stabilizeDelay));
+      }
+    })().catch(() => {});
 
     // Helper to safely log
     const logEvent = (
@@ -365,105 +389,47 @@ export class WppManagerService implements OnApplicationShutdown {
       }
     };
 
+    // Try to set auto-download settings with retries — WPP global may not be injected immediately.
+    // The call returns a Promise (Puppeteer evaluate); we must await it and catch rejections.
+    (async () => {
+      const maxAttempts = 10;
+      const delayMs = 2000;
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+          if (client && typeof (client as any).setAutoDownloadSettings === 'function') {
+            await Promise.resolve(
+              (client as any).setAutoDownloadSettings({ audio: true, document: true, image: true, video: true })
+            );
+            logs.verbose(`[${instance.name}] setAutoDownloadSettings succeeded on attempt ${attempt}`);
+            break;
+          }
+        } catch (e: any) {
+          const msg = String(e?.message || e || '');
+          // WPP not yet injected — keep retrying silently
+          if (attempt === maxAttempts) {
+            logs.verbose(`[${instance.name}] setAutoDownloadSettings not available after ${maxAttempts} attempts (ignored): ${msg}`);
+          }
+        }
+        await new Promise((res) => setTimeout(res, delayMs));
+      }
+    })().catch(() => { /* swallow — non-critical */ });
 
     client.onMessage(async (message: any) => {
       try {
         // Attempt to extract common fields from various wppconnect message shapes
         const raw = message || {};
-        const rawFrom = raw.from || raw.author || raw.key?.remoteJid || raw.chatId || raw.sender || (raw?.message?.conversation ? raw.message.conversation : undefined) || null;
+        const rawFrom = raw.from || raw.author || raw.key?.remoteJid || raw.chatId || raw.sender || null;
         const msgBody = raw.body || raw.text || raw.message?.conversation || raw.message?.extendedTextMessage?.text || raw.message?.imageMessage?.caption || null;
         const msgId = (raw.key && raw.key.id) || raw.id || raw.message?.key?.id || `msg-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
         const timestamp = raw.t || raw.timestamp || raw.message?.timestamp || new Date().toISOString();
+        // Normalize to digits only — used for phone_number and as fallback
         const digits = rawFrom ? String(rawFrom).replace(/\D/g, '') : null;
+        // Keep the full JID for WPP API calls (e.g. 5511999@c.us or 5511999@lid)
+        const wppJid = rawFrom || (digits ? `${digits}@c.us` : null);
 
-        // Ensure contact exists
+        // Emit a lightweight preview immediately so frontend can show instant feedback
         try {
-          let contact = null as any;
-          if (rawFrom) {
-            const variants: any[] = [];
-            variants.push({ whatsapp_id: rawFrom });
-            if (digits) {
-              variants.push({ whatsapp_id: digits });
-              variants.push({ phone_number: rawFrom });
-              variants.push({ phone_number: `+${digits}` });
-            } else {
-              variants.push({ phone_number: rawFrom });
-            }
-            for (const q of variants) {
-              try {
-                contact = await this.contactRepo.findOneBy(q as any);
-                if (contact) break;
-              } catch (e) { /* ignore per-attempt */ }
-            }
-          }
-          if (!contact && rawFrom) {
-            try {
-              contact = this.contactRepo.create({
-                name: message.sender.pushname || message.sender?.verifiedName || message.sender?.formattedName || rawFrom,
-                phone_number: message.from,
-                whatsapp_id: message.from,
-                created_at: new Date(),
-              } as any);
-              contact = await this.contactRepo.save(contact as any);
-            } catch (e) {
-              console.warn('[WppManager] failed creating contact', e);
-            }
-          }
-
-          // Ensure conversation exists (filter by whatsapp_id and instance id)
-          let conv = null as any;
-          try {
-            if (contact) {
-              conv = await this.convRepo.findOne({ where: { contact_id: contact.whatsapp_id || contact.phone_number, instance_id: instance.id } as any });
-              if (!conv && contact.phone_number) {
-                conv = await this.convRepo.findOne({ where: { contact_id: contact.phone_number, instance_id: instance.id } as any });
-              }
-            }
-            if (!conv) {
-              const convEnt = this.convRepo.create({
-                contact_id: contact ? (contact.whatsapp_id || contact.phone_number) : (digits || rawFrom),
-                instance_id: instance.id,
-                is_active: true,
-                last_message_at: new Date(),
-              } as any);
-              conv = await this.convRepo.save(convEnt as any);
-            }
-          } catch (e) {
-            console.warn('[WppManager] conversation upsert failed', e);
-          }
-
-          // Persist message into messages table
-          try {
-            const conversationId = (conv && conv.id) || digits || rawFrom || session || `conv-${Date.now()}`;
-            const msgEnt: any = {
-              conversation_id: conversationId,
-              message_id: String(msgId),
-              whatsapp_message_id: String(msgId),
-              type: msgBody ? 'text' : 'media',
-              from_type: 'whatsapp',
-              content: msgBody || null,
-              media_url: null,
-              status: 'received',
-              sent_at: new Date(timestamp),
-              metadata: raw,
-            };
-            const ent = this.msgRepo.create(msgEnt as any);
-            const saved = await this.msgRepo.save(ent as any);
-            // Emit created message event for frontend consumers
-            try {
-              this.events.emit('message:created', saved);
-              this.events.emitTo(session, 'message:created', saved);
-            } catch (e) { }
-          } catch (e) {
-            console.warn('[WppManager] failed saving incoming message', e);
-          }
-        } catch (e) {
-          console.warn('[WppManager] contact/message handling failed', e);
-        }
-
-        // Forward raw payload via websocket for frontend processing (SSE/hook will also process)
-        try {
-          const payload = {
+          const preview = {
             id: msgId,
             from: rawFrom,
             to: session,
@@ -472,33 +438,132 @@ export class WppManagerService implements OnApplicationShutdown {
             provider: 'wppconnect',
             raw,
           };
-          this.events.emitTo(session, 'wpp:message', payload);
+          this.events.emitTo(session, 'wpp:message', preview);
         } catch (e) {
-          console.warn('[WppManager] failed emitting wpp:message payload', e);
+          console.warn('[WppManager] failed emitting wpp:message preview', e);
         }
 
-
-        // add or update conversation
+        // ── Ensure contact exists ──
+        let contact = null as any;
         try {
-          const conversation = await this.convRepo.findOneBy({ contact_id: rawFrom, instance_id: instance.id } as any);
-          if (conversation) {
-            this.convRepo.createQueryBuilder()
-              .insert("conversations")
-              .values({
-                contact_id: rawFrom,
-                instance_id: instance.id,
-                is_active: true
-              })
-              .execute();
-          } else {
-            this.convRepo.createQueryBuilder()
-              .update("conversations")
-              .set({ last_message_at: new Date() })
-              .where({ contact_id: rawFrom, instance_id: instance.id })
-              .execute();
+          if (digits || rawFrom) {
+            // Try multiple lookup strategies — JID formats vary (@c.us, @lid, @s.whatsapp.net)
+            const lookups: any[] = [];
+            if (rawFrom) lookups.push({ whatsapp_id: rawFrom });
+            if (digits) {
+              lookups.push({ whatsapp_id: `${digits}@c.us` });
+              lookups.push({ whatsapp_id: `${digits}@lid` });
+              lookups.push({ whatsapp_id: digits });
+              lookups.push({ phone_number: digits });
+              lookups.push({ phone_number: `+${digits}` });
+            }
+            for (const q of lookups) {
+              try {
+                contact = await this.contactRepo.findOneBy(q as any);
+                if (contact) break;
+              } catch { /* ignore per-attempt */ }
+            }
+          }
+          if (!contact && (digits || rawFrom)) {
+            try {
+              const displayName = message.sender?.pushname || message.sender?.verifiedName || message.sender?.formattedName || digits || rawFrom;
+              contact = this.contactRepo.create({
+                name: displayName,
+                phone_number: digits || rawFrom,
+                whatsapp_id: wppJid || rawFrom,
+                created_at: new Date(),
+              } as any);
+              contact = await this.contactRepo.save(contact as any);
+              logger.log(`[onMessage] created contact ${displayName} (${digits})`);
+            } catch (e) {
+              console.warn('[WppManager] failed creating contact', e);
+            }
           }
         } catch (e) {
-          console.warn('[WppManager] onMessage top-level handler error', e);
+          console.warn('[WppManager] contact lookup/create failed', e);
+        }
+
+        // ── Ensure conversation exists ──
+        let conv = null as any;
+        try {
+          // Lookup by multiple possible contact_id formats stored in conversations
+          const contactVariants: string[] = [];
+          if (contact?.whatsapp_id) contactVariants.push(contact.whatsapp_id);
+          if (contact?.phone_number) contactVariants.push(contact.phone_number);
+          if (wppJid) contactVariants.push(wppJid);
+          if (digits) {
+            contactVariants.push(digits);
+            contactVariants.push(`${digits}@c.us`);
+            contactVariants.push(`${digits}@lid`);
+            contactVariants.push(`+${digits}`);
+          }
+          // Deduplicate
+          const uniqueVariants = [...new Set(contactVariants.filter(Boolean))];
+
+          for (const cid of uniqueVariants) {
+            conv = await this.convRepo.findOne({ where: { contact_id: cid, instance_id: instance.id } as any });
+            if (conv) break;
+          }
+
+          if (!conv) {
+            // Create new conversation — use the WPP JID as contact_id for send compatibility
+            const contactId = wppJid || digits || rawFrom;
+            const convEnt = this.convRepo.create({
+              contact_id: contactId,
+              instance_id: instance.id,
+              is_active: true,
+              last_message_at: new Date(),
+              nina_context: {},
+              metadata: {},
+            } as any);
+            conv = await this.convRepo.save(convEnt as any);
+            logger.log(`[onMessage] created conversation ${conv.id} for contact_id=${contactId}`);
+            this.events.emit('conversation:created', conv);
+          }
+        } catch (e) {
+          console.warn('[WppManager] conversation upsert failed', e);
+        }
+
+        // ── Persist message ──
+        try {
+          const conversationId = conv?.id;
+          if (!conversationId) {
+            console.warn('[WppManager] no conversation_id — skipping message persist');
+            return;
+          }
+          const msgEnt: any = {
+            conversation_id: conversationId,
+            message_id: String(msgId),
+            whatsapp_message_id: String(msgId),
+            type: msgBody ? 'text' : 'media',
+            from_type: 'whatsapp',
+            content: msgBody || null,
+            media_url: null,
+            status: 'received',
+            sent_at: new Date(timestamp),
+            metadata: raw,
+          };
+          const ent = this.msgRepo.create(msgEnt as any);
+          const saved = await this.msgRepo.save(ent as any);
+
+          // Emit canonical created message event for frontend consumers
+          try {
+            this.events.emit('message:created', saved);
+            this.events.emitTo(session, 'message:created', saved);
+          } catch (e) {
+            console.warn('[WppManager] failed emitting message:created', e);
+          }
+
+          // Update conversation timestamp/active state
+          try {
+            conv.last_message_at = new Date();
+            conv.is_active = true;
+            await this.convRepo.save(conv as any);
+          } catch (e) {
+            console.warn('[WppManager] failed updating conversation after save', e);
+          }
+        } catch (e) {
+          console.warn('[WppManager] failed saving incoming message', e);
         }
       } catch (e) {
         console.warn('[WppManager] onMessage handler error', e);
@@ -612,17 +677,64 @@ export class WppManagerService implements OnApplicationShutdown {
     }
   }
 
+  /** Retry helper for transient Puppeteer/WPP errors (e.g. detached Frame).
+   *  On detached-frame errors on the last retry, triggers a full instance restart
+   *  so the next user attempt gets a fresh client. */
+  private async withRetry<T>(fn: () => Promise<T>, retries = 1, delayMs = 2000): Promise<T> {
+    let lastErr: any;
+    for (let i = 0; i <= retries; i++) {
+      try {
+        return await fn();
+      } catch (e: any) {
+        lastErr = e;
+        const msg = String(e?.message || e);
+        const isTransient = msg.includes('detached Frame') || msg.includes('detached') ||
+          msg.includes('Target closed') || msg.includes('Session closed') ||
+          msg.includes('not attached') || msg.includes('Execution context');
+        if (!isTransient || i >= retries) {
+          // On final detached-frame failure, schedule a background instance restart
+          if (isTransient) {
+            logger.warn('[WPP] persistent detached frame — scheduling instance restart');
+            setImmediate(() => this.restartAllDetached().catch(() => {}));
+          }
+          throw e;
+        }
+        logger.warn(`[WPP] transient error (attempt ${i + 1}/${retries + 1}): ${msg.slice(0, 120)}`);
+        await new Promise(r => setTimeout(r, delayMs));
+      }
+    }
+    throw lastErr;
+  }
+
+  /** Restart any instances whose Puppeteer page has a detached frame */
+  private async restartAllDetached() {
+    for (const [key, instance] of this.instances) {
+      try {
+        // Skip alias keys (name, wppconnect_session) — only restart by UUID-shaped keys
+        if (key.length < 30) continue;
+        const inst = await this.instanceRepo.findOneBy({ id: key } as any);
+        if (!inst) continue;
+        logger.log(`[WPP] Restarting instance ${inst.name || key} to recover from detached frame`);
+        await this.restartInstance(inst);
+        break; // restart one at a time
+      } catch (e) {
+        logger.warn(`[WPP] Failed restarting instance ${key}: ${String(e)}`);
+      }
+    }
+  }
+
   async sendMessage(sessionOrId: string, to: string, body: string) {
     const client = this.getClient(sessionOrId);
     if (!client) throw new Error('Client not running for ' + sessionOrId);
-    // try common wppconnect send methods
-    if (client.sendText) return client.sendText(to, body);
-    if (client.sendMessage) return client.sendMessage(to, { text: body });
-    if (client.sendSimpleText) return client.sendSimpleText(to, body as any);
-    throw new Error('No send method available on client');
+    return this.withRetry(async () => {
+      if (client.sendText) return client.sendText(to, body);
+      if (client.sendMessage) return client.sendMessage(to, { text: body });
+      if (client.sendSimpleText) return client.sendSimpleText(to, body as any);
+      throw new Error('No send method available on client');
+    });
   }
 
-  // generic media/file sender: tcry multiple client methods for best-effort
+  // generic media/file sender: try multiple client methods for best-effort
   async sendMedia(
     sessionOrId: string,
     to: string,
@@ -632,33 +744,34 @@ export class WppManagerService implements OnApplicationShutdown {
   ) {
     const client = this.getClient(sessionOrId);
     if (!client) throw new Error('Client not running for ' + sessionOrId);
-    // attempt common APIs
-    const tryCalls = [
-      async () =>
-        client.sendImage &&
-        client.sendImage(to, bufferOrUrl, filename || 'image', caption),
-      async () =>
-        client.sendFile &&
-        client.sendFile(to, bufferOrUrl, filename || 'file', caption),
-      async () =>
-        client.sendFileFromBase64 &&
-        client.sendFileFromBase64(to, bufferOrUrl, filename || 'file', caption),
-      async () =>
-        client.sendImageFromUrl &&
-        client.sendImageFromUrl(to, bufferOrUrl, caption),
-      async () =>
-        client.sendFileFromUrl &&
-        client.sendFileFromUrl(to, bufferOrUrl, filename || 'file', caption),
-    ];
-    for (const fn of tryCalls) {
-      try {
-        const res = await fn();
-        if (res) return res;
-      } catch (e) {
-        // try next
+    return this.withRetry(async () => {
+      const tryCalls = [
+        async () =>
+          client.sendImage &&
+          client.sendImage(to, bufferOrUrl, filename || 'image', caption),
+        async () =>
+          client.sendFile &&
+          client.sendFile(to, bufferOrUrl, filename || 'file', caption),
+        async () =>
+          client.sendFileFromBase64 &&
+          client.sendFileFromBase64(to, bufferOrUrl, filename || 'file', caption),
+        async () =>
+          client.sendImageFromUrl &&
+          client.sendImageFromUrl(to, bufferOrUrl, caption),
+        async () =>
+          client.sendFileFromUrl &&
+          client.sendFileFromUrl(to, bufferOrUrl, filename || 'file', caption),
+      ];
+      for (const fn of tryCalls) {
+        try {
+          const res = await fn();
+          if (res) return res;
+        } catch (e) {
+          // try next
+        }
       }
-    }
-    throw new Error('No media send method succeeded');
+      throw new Error('No media send method succeeded');
+    });
   }
 
   async sendSticker(sessionOrId: string, to: string, bufferOrUrl: string) {

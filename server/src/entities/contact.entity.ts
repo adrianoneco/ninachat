@@ -9,14 +9,17 @@ export class Contact {
   @Column({ nullable: true })
   name?: string;
 
+  @Column({ nullable: true, default: false })
+  is_online?: boolean;
+
   @Column({ nullable: true })
   call_name?: string;
 
   @Column({ nullable: false })
-  phone_number?: string;
+  phone_number!: string;
 
   @Column({ nullable: false })
-  whatsapp_id?: string;
+  whatsapp_id!: string;
 
   @Column({ nullable: true })
   email?: string;
@@ -45,10 +48,10 @@ export class Contact {
   @Column({ type: 'jsonb', nullable: true, default: () => "'{}'::jsonb" })
   client_memory?: any;
 
-  @Column({ type: 'timestamptz', nullable: true })
+  @Column({ type: 'timestamptz', nullable: true, default: () => 'now()' })
   first_contact_date?: Date;
 
-  @Column({ type: 'timestamptz', nullable: true })
+  @Column({ type: 'timestamptz', nullable: true, default: () => 'now()' })
   last_activity?: Date;
 
   @CreateDateColumn()

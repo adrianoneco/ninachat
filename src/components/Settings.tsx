@@ -30,7 +30,7 @@ interface OutletContext {
   setShowOnboarding: (show: boolean) => void;
 }
 
-type TabId = 'empresa' | 'agent' | 'instances' | 'ia' | 'chamada' | 'webhooks' | 'atribuicao' | 'setores' | 'macros' | 'relatorio' | 'monitor' | 'equipe' | 'docs';
+type TabId = 'empresa' | 'agent' | 'instances' | 'ia' | 'chamada' | 'webhooks' | 'atribuicao' | 'setores' | 'macros' | 'relatorio' | 'monitor' | 'equipe' | 'docs' | 'permissoes';
 
 interface NavGroup {
   label: string;
