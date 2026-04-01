@@ -71,20 +71,20 @@ export class HealthService {
       results.push({ component: 'whatsapp', status: 'warning', message: 'Não foi possível verificar WhatsApp' });
     }
 
-    // 5. Nina settings / AI agent
+    // 5. LiveChat settings / AI agent
     try {
       const rows = await this.ds.query(
-        `SELECT is_active, agent_name FROM nina_settings LIMIT 1`,
+        `SELECT is_active, agent_name FROM livechat_settings LIMIT 1`,
       );
       if (rows.length === 0) {
-        results.push({ component: 'nina_settings', status: 'warning', message: 'Configurações do agente não encontradas' });
+        results.push({ component: 'livechat_settings', status: 'warning', message: 'Configurações do agente não encontradas' });
       } else if (rows[0].is_active) {
-        results.push({ component: 'nina_settings', status: 'ok', message: `Agente "${rows[0].agent_name || 'Nina'}" ativo` });
+        results.push({ component: 'livechat_settings', status: 'ok', message: `Agente "${rows[0].agent_name || 'LiveChat'}" ativo` });
       } else {
-        results.push({ component: 'nina_settings', status: 'warning', message: 'Agente IA inativo' });
+        results.push({ component: 'livechat_settings', status: 'warning', message: 'Agente IA inativo' });
       }
     } catch {
-      results.push({ component: 'nina_settings', status: 'warning', message: 'Não foi possível verificar agente IA' });
+      results.push({ component: 'livechat_settings', status: 'warning', message: 'Não foi possível verificar agente IA' });
     }
 
     // 6. Team members

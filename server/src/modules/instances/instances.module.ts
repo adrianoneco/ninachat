@@ -10,9 +10,10 @@ import { WppManagerService } from './wpp-manager.service';
 import { Contact } from '../../entities/contact.entity';
 import { Message } from '../../entities/message.entity';
 import { Conversation } from '../../entities/conversation.entity';
+import { StorageModule } from '../storage/storage.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Instance, Contact, Message, Conversation])],
+  imports: [TypeOrmModule.forFeature([Instance, Contact, Message, Conversation]), StorageModule],
   controllers: [InstancesController, WppController, MessagesSendController],
   providers: [InstancesService, EventsGateway, WppManagerService],
   exports: [InstancesService, WppManagerService],

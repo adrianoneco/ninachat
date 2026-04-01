@@ -91,7 +91,7 @@ const EmpresaSettings = forwardRef<EmpresaSettingsRef, { onDirtyChange?: (dirty:
     try {
       let data: any = null;
       try {
-        const res = await fetch(`${API_BASE}/nina_settings`);
+        const res = await fetch(`${API_BASE}/livechat_settings`);
         if (res.ok) { const json = await res.json(); data = json?.data ?? json; }
       } catch {}
       if (!data) data = null;
@@ -130,12 +130,12 @@ const EmpresaSettings = forwardRef<EmpresaSettingsRef, { onDirtyChange?: (dirty:
     setSaving(true);
     try {
       const current = await (async () => {
-        try { const res = await fetch(`${API_BASE}/nina_settings`); if (res.ok) { const json = await res.json(); return json?.data ?? json ?? {}; } } catch {}
+        try { const res = await fetch(`${API_BASE}/livechat_settings`); if (res.ok) { const json = await res.json(); return json?.data ?? json ?? {}; } } catch {}
         return {};
       })();
       const merged = { ...current, ...settings, updated_at: new Date().toISOString() };
       try {
-        const res = await fetch(`${API_BASE}/nina_settings`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(merged) });
+        const res = await fetch(`${API_BASE}/livechat_settings`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(merged) });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
       } catch (err) {
         console.error('[EmpresaSettings] Failed to save to backend', err);

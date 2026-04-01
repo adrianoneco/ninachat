@@ -137,7 +137,7 @@ const Monitor: React.FC = () => {
           <input value={q} onChange={e => setQ(e.target.value)} placeholder="Buscar por contato ou mensagem..." className="bg-gray-100/40 dark:bg-slate-900/40 border border-gray-200 dark:border-slate-800 rounded-md px-3 py-2 text-sm text-gray-900 dark:text-white w-80" />
           <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="bg-gray-100/40 dark:bg-slate-900/40 border border-gray-200 dark:border-slate-800 rounded-md px-3 py-2 text-sm text-gray-900 dark:text-white">
             <option value="all">Todos</option>
-            <option value="nina">Ativas</option>
+            <option value="livechat">Ativas</option>
             <option value="closed">Encerrada</option>
           </select>
           <select value={selectedInstance} onChange={e => setSelectedInstance(e.target.value)} className="bg-gray-100/40 dark:bg-slate-900/40 border border-gray-200 dark:border-slate-800 rounded-md px-3 py-2 text-sm text-gray-900 dark:text-white">

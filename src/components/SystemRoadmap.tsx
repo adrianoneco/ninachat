@@ -655,7 +655,7 @@ const SystemRoadmap: React.FC = () => {
       ↓
 PostgreSQL (contacts, conversations, messages)
       ↓
-[nina-orchestrator] Edge Function
+[livechat-orchestrator] Edge Function
       ↓
 Lovable AI Gateway (Gemini/GPT)
       ↓
@@ -876,7 +876,7 @@ WhatsApp Cloud API (resposta ao cliente)`}
                   <td className="p-4 text-gray-500 dark:text-slate-500">verify_jwt: false</td>
                 </tr>
                 <tr>
-                  <td className="p-4 font-mono text-cyan-400">nina-orchestrator</td>
+                  <td className="p-4 font-mono text-cyan-400">livechat-orchestrator</td>
                   <td className="p-4 text-gray-600 dark:text-slate-300">Processa fila de mensagens, gera respostas via IA, gerencia contexto</td>
                   <td className="p-4 text-amber-400">verify_jwt: true</td>
                 </tr>
@@ -901,8 +901,8 @@ WhatsApp Cloud API (resposta ao cliente)`}
                   <td className="p-4 text-gray-500 dark:text-slate-500">verify_jwt: false</td>
                 </tr>
                 <tr>
-                  <td className="p-4 font-mono text-gray-500 dark:text-slate-400">trigger-nina-orchestrator</td>
-                  <td className="p-4 text-gray-600 dark:text-slate-300">Trigger auxiliar para chamar nina-orchestrator via HTTP</td>
+                  <td className="p-4 font-mono text-gray-500 dark:text-slate-400">trigger-livechat-orchestrator</td>
+                  <td className="p-4 text-gray-600 dark:text-slate-300">Trigger auxiliar para chamar livechat-orchestrator via HTTP</td>
                   <td className="p-4 text-gray-500 dark:text-slate-500">verify_jwt: false</td>
                 </tr>
                 <tr>
@@ -932,7 +932,7 @@ WhatsApp Cloud API (resposta ao cliente)`}
             <pre className="text-xs text-gray-600 dark:text-slate-300 font-mono bg-white dark:bg-slate-950 p-4 rounded border border-gray-300 dark:border-slate-700 overflow-x-auto">
 {`// Exemplo de chamada entre funções
 const response = await fetch(
-  \`\${SUPABASE_URL}/functions/v1/nina-orchestrator\`,
+  \`\${SUPABASE_URL}/functions/v1/livechat-orchestrator\`,
   {
     method: 'POST',
     headers: {
@@ -976,7 +976,7 @@ const response = await fetch(
     team_functions ||--o{ team_members : "define"
     
     messages }o--|| message_processing_queue : "processa"
-    messages }o--|| nina_processing_queue : "analisa"
+    messages }o--|| livechat_processing_queue : "analisa"
     messages }o--|| send_queue : "envia"
     
     contacts {
@@ -994,7 +994,7 @@ const response = await fetch(
         uuid contact_id FK
         conversation_status status
         team_assignment assigned_team
-        jsonb nina_context
+        jsonb livechat_context
     }
     
     messages {
@@ -1042,9 +1042,9 @@ const response = await fetch(
               <h4 className="text-emerald-400 font-bold mb-3 text-sm">conversations</h4>
               <p className="text-xs text-gray-500 dark:text-slate-400 mb-3">Gerencia conversas ativas</p>
               <ul className="text-xs text-gray-500 dark:text-slate-500 space-y-1 font-mono">
-                <li>• id, contact_id, status (nina/human/paused)</li>
+                <li>• id, contact_id, status (livechat/human/paused)</li>
                 <li>• assigned_team, assigned_user_id</li>
-                <li>• nina_context (JSONB)</li>
+                <li>• livechat_context (JSONB)</li>
                 <li>• last_message_at, is_active</li>
               </ul>
             </div>
@@ -1054,7 +1054,7 @@ const response = await fetch(
               <p className="text-xs text-gray-500 dark:text-slate-400 mb-3">Histórico completo de mensagens</p>
               <ul className="text-xs text-gray-500 dark:text-slate-500 space-y-1 font-mono">
                 <li>• id, conversation_id, content</li>
-                <li>• from_type (user/nina/human)</li>
+                <li>• from_type (user/livechat/human)</li>
                 <li>• type (text/audio/image/document/video)</li>
                 <li>• status (sent/delivered/read/failed)</li>
                 <li>• whatsapp_message_id</li>
@@ -1095,7 +1095,7 @@ const response = await fetch(
             </div>
 
             <div className="bg-gray-100/50 dark:bg-slate-900/50 border border-gray-200 dark:border-slate-800 rounded-lg p-5">
-              <h4 className="text-orange-400 font-bold mb-3 text-sm">nina_settings</h4>
+              <h4 className="text-orange-400 font-bold mb-3 text-sm">livechat_settings</h4>
               <p className="text-xs text-gray-500 dark:text-slate-400 mb-3">Configurações globais do agente IA</p>
               <ul className="text-xs text-gray-500 dark:text-slate-500 space-y-1 font-mono">
                 <li>• company_name, sdr_name</li>
@@ -1122,7 +1122,7 @@ const response = await fetch(
             <h4 className="text-gray-900 dark:text-white font-bold mb-4">Filas de Processamento</h4>
             <div className="space-y-3">
               <div className="flex items-start gap-3">
-                <span className="text-cyan-400 font-mono text-xs">nina_processing_queue</span>
+                <span className="text-cyan-400 font-mono text-xs">livechat_processing_queue</span>
                 <span className="text-gray-500 dark:text-slate-400 text-xs">→ Mensagens aguardando processamento pela IA</span>
               </div>
               <div className="flex items-start gap-3">
@@ -1174,7 +1174,7 @@ const response = await fetch(
                 <h5 className="text-amber-400 font-bold text-sm mb-2">contacts_with_stats (VIEW)</h5>
                 <p className="text-xs text-gray-500 dark:text-slate-400 mb-2">View com estatísticas agregadas</p>
                 <ul className="text-xs text-gray-500 dark:text-slate-500 space-y-1 font-mono">
-                  <li>• total_messages, nina_messages</li>
+                  <li>• total_messages, livechat_messages</li>
                   <li>• user_messages, human_messages</li>
                   <li>• Todos os campos de contacts</li>
                 </ul>
@@ -1186,8 +1186,8 @@ const response = await fetch(
             <h4 className="text-gray-900 dark:text-white font-bold mb-4">Database Functions (Stored Procedures)</h4>
             <div className="space-y-3">
               <div className="bg-white dark:bg-slate-950 border border-gray-300 dark:border-slate-700 rounded p-3">
-                <p className="text-cyan-400 font-mono text-xs mb-1">claim_nina_processing_batch(p_limit)</p>
-                <p className="text-gray-500 dark:text-slate-400 text-xs">Atomicamente busca e marca mensagens como 'processing' na nina_processing_queue</p>
+                <p className="text-cyan-400 font-mono text-xs mb-1">claim_livechat_processing_batch(p_limit)</p>
+                <p className="text-gray-500 dark:text-slate-400 text-xs">Atomicamente busca e marca mensagens como 'processing' na livechat_processing_queue</p>
               </div>
               <div className="bg-white dark:bg-slate-950 border border-gray-300 dark:border-slate-700 rounded p-3">
                 <p className="text-emerald-400 font-mono text-xs mb-1">claim_send_queue_batch(p_limit)</p>
@@ -1222,7 +1222,7 @@ const response = await fetch(
               <div className="bg-white dark:bg-slate-950 border border-gray-300 dark:border-slate-700 rounded p-3">
                 <p className="text-cyan-400 font-bold text-xs mb-1">update_updated_at_column (8 tabelas)</p>
                 <p className="text-gray-500 dark:text-slate-400 text-xs">Trigger <code className="text-gray-500 dark:text-slate-500">BEFORE UPDATE</code> que automaticamente atualiza <code>updated_at = now()</code></p>
-                <p className="text-gray-500 dark:text-slate-500 text-xs mt-1">Tabelas: contacts, conversations, conversation_states, nina_processing_queue, message_processing_queue, send_queue, nina_settings, tag_definitions</p>
+                <p className="text-gray-500 dark:text-slate-500 text-xs mt-1">Tabelas: contacts, conversations, conversation_states, livechat_processing_queue, message_processing_queue, send_queue, livechat_settings, tag_definitions</p>
               </div>
               <div className="bg-white dark:bg-slate-950 border border-gray-300 dark:border-slate-700 rounded p-3">
                 <p className="text-emerald-400 font-bold text-xs mb-1">update_conversation_last_message</p>
@@ -1265,7 +1265,7 @@ const response = await fetch(
                 <h5 className="text-emerald-400 font-bold mb-2 text-sm">conversation_status</h5>
                 <p className="text-xs text-gray-500 dark:text-slate-400 mb-2">Estado da conversa</p>
                 <ul className="text-xs text-gray-600 dark:text-slate-300 space-y-1 font-mono">
-                  <li>• nina (IA respondendo)</li>
+                  <li>• livechat (IA respondendo)</li>
                   <li>• human (agente humano)</li>
                   <li>• paused (pausada)</li>
                 </ul>
@@ -1296,7 +1296,7 @@ const response = await fetch(
                 <p className="text-xs text-gray-500 dark:text-slate-400 mb-2">Origem da mensagem</p>
                 <ul className="text-xs text-gray-600 dark:text-slate-300 space-y-1 font-mono">
                   <li>• user (cliente)</li>
-                  <li>• nina (IA)</li>
+                  <li>• livechat (IA)</li>
                   <li>• human (agente humano)</li>
                 </ul>
               </div>
@@ -1388,14 +1388,14 @@ const response = await fetch(
 └────────────────────┬────────────────────────────────────────┘
                      ↓
 ┌─────────────────────────────────────────────────────────────┐
-│ Adiciona item à nina_processing_queue                       │
+│ Adiciona item à livechat_processing_queue                       │
 │  • priority = 1 (padrão)                                    │
 │  • status = 'pending'                                       │
 │  • context_data = { contact, conversation, message }        │
 └────────────────────┬────────────────────────────────────────┘
                      ↓
 ┌─────────────────────────────────────────────────────────────┐
-│ [nina-orchestrator] Edge Function (chamada via fetch)       │
+│ [livechat-orchestrator] Edge Function (chamada via fetch)       │
 │  • Busca context: contato + conversa + histórico           │
 │  • Verifica se deve responder (auto_response_enabled)       │
 │  • Processa templates dinâmicos ({{ data_hora }}, etc)     │
@@ -1432,7 +1432,7 @@ const response = await fetch(
             </h4>
             <pre className="text-xs text-gray-600 dark:text-slate-300 font-mono bg-white dark:bg-slate-950 p-4 rounded border border-gray-300 dark:border-slate-700 overflow-x-auto leading-loose">
 {`┌─────────────────────────────────────────────────────────────┐
-│ nina-orchestrator processa mensagem                         │
+│ livechat-orchestrator processa mensagem                         │
 └────────────────────┬────────────────────────────────────────┘
                      ↓
 ┌─────────────────────────────────────────────────────────────┐
@@ -1490,8 +1490,8 @@ const response = await fetch(
 └────────────────────┬────────────────────────────────────────┘
                      ↓
 ┌─────────────────────────────────────────────────────────────┐
-│ nina-orchestrator detecta status = 'human'                  │
-│  • Não adiciona item à nina_processing_queue                │
+│ livechat-orchestrator detecta status = 'human'                  │
+│  • Não adiciona item à livechat_processing_queue                │
 │  • IA para de responder automaticamente                     │
 └────────────────────┬────────────────────────────────────────┘
                      ↓
@@ -1503,7 +1503,7 @@ const response = await fetch(
                      ↓
 ┌─────────────────────────────────────────────────────────────┐
 │ Quando resolver, agente clica "Reativar IA"                │
-│ conversation.status = 'nina'                                │
+│ conversation.status = 'livechat'                                │
 │ IA volta a responder automaticamente                        │
 └─────────────────────────────────────────────────────────────┘`}
             </pre>
@@ -1530,7 +1530,7 @@ const response = await fetch(
                   <ul className="text-xs text-gray-500 dark:text-slate-400 space-y-1">
                     <li>• <code className="text-cyan-400">fetchConversations()</code> - Busca inicial de conversas</li>
                     <li>• <code className="text-cyan-400">sendMessage(conversationId, content)</code> - Envia mensagem com optimistic update</li>
-                    <li>• <code className="text-cyan-400">updateStatus(conversationId, status)</code> - Alterna nina/human/paused</li>
+                    <li>• <code className="text-cyan-400">updateStatus(conversationId, status)</code> - Alterna livechat/human/paused</li>
                     <li>• <code className="text-cyan-400">markAsRead(conversationId)</code> - Marca mensagens como lidas</li>
                     <li>• <code className="text-cyan-400">assignConversation(conversationId, userId)</code> - Atribui a agente</li>
                   </ul>
@@ -1689,8 +1689,8 @@ setConversations(prev => replaceTempId(prev, tempId, data.id));
               <div className="bg-white dark:bg-slate-950 border border-gray-300 dark:border-slate-700 rounded-lg p-4">
                 <h5 className="text-blue-400 font-bold mb-3 text-sm">Settings API</h5>
                 <ul className="text-xs text-gray-500 dark:text-slate-400 space-y-1 font-mono">
-                  <li>• fetchNinaSettings()</li>
-                  <li>• updateNinaSettings(data)</li>
+                  <li>• fetchLiveChatSettings()</li>
+                  <li>• updateLiveChatSettings(data)</li>
                   <li>• testWhatsAppMessage(phone, message)</li>
                 </ul>
               </div>
@@ -1882,7 +1882,7 @@ const transformConversation = (dbConv: DBConversation): UIConversation => {
                 <div className="bg-gray-100 dark:bg-slate-900 rounded p-3 mb-3">
                   <p className="text-xs text-gray-600 dark:text-slate-300 font-mono mb-2">Quando message_breaking_enabled = true:</p>
                   <ul className="text-xs text-gray-500 dark:text-slate-400 space-y-1">
-                    <li>• Nina retorna resposta com delimitador <code className="text-emerald-400">\n\n</code></li>
+                    <li>• LiveChat retorna resposta com delimitador <code className="text-emerald-400">\n\n</code></li>
                     <li>• whatsapp-sender split() por <code>\n\n</code></li>
                     <li>• Cada chunk vira uma mensagem separada na send_queue</li>
                     <li>• scheduled_at aumenta ~1.5s entre chunks</li>
@@ -1904,12 +1904,12 @@ const transformConversation = (dbConv: DBConversation): UIConversation => {
                   Sistema que seleciona dinamicamente o modelo de IA baseado no contexto da conversa.
                 </p>
                 <div className="bg-gray-100 dark:bg-slate-900 rounded p-3">
-                  <p className="text-xs text-gray-600 dark:text-slate-300 font-mono mb-2">Critérios de seleção (nina-orchestrator):</p>
+                  <p className="text-xs text-gray-600 dark:text-slate-300 font-mono mb-2">Critérios de seleção (livechat-orchestrator):</p>
                   <ul className="text-xs text-gray-500 dark:text-slate-400 space-y-1">
                     <li>• <strong>Usa gemini-2.5-pro se:</strong> conversa longa (&gt;10 msgs), urgente, técnica, objeções detectadas</li>
                     <li>• <strong>Usa gemini-2.5-flash se:</strong> conversa curta, saudações, confirmações simples</li>
                     <li>• Ajusta temperatura: 0.7 (pro) vs 0.8 (flash)</li>
-                    <li>• Configurável via nina_settings.ai_model_mode = 'adaptive'</li>
+                    <li>• Configurável via livechat_settings.ai_model_mode = 'adaptive'</li>
                   </ul>
                 </div>
               </div>
@@ -1952,7 +1952,7 @@ const transformConversation = (dbConv: DBConversation): UIConversation => {
                   </ul>
                 </div>
                 <div className="bg-gray-100 dark:bg-slate-900 rounded p-3">
-                  <p className="text-xs text-gray-600 dark:text-slate-300 font-mono mb-2">Nina Insights visíveis no deal:</p>
+                  <p className="text-xs text-gray-600 dark:text-slate-300 font-mono mb-2">LiveChat Insights visíveis no deal:</p>
                   <ul className="text-xs text-gray-500 dark:text-slate-400 space-y-1">
                     <li>• qualification_score (0-100)</li>
                     <li>• interests[], pain_points[]</li>
@@ -2091,7 +2091,7 @@ const transformConversation = (dbConv: DBConversation): UIConversation => {
                       <span className="text-violet-400">•</span>
                       <div>
                         <span className="font-bold">Agendamento Nativo:</span>{' '}
-                        <span className="text-gray-500 dark:text-slate-400">Integrado via Nina (create/reschedule/cancel appointment)</span>
+                        <span className="text-gray-500 dark:text-slate-400">Integrado via LiveChat (create/reschedule/cancel appointment)</span>
                       </div>
                     </li>
                   </ul>
@@ -2202,7 +2202,7 @@ const transformConversation = (dbConv: DBConversation): UIConversation => {
               </div>
 
               <div>
-                <h4 className="text-emerald-400 font-bold mb-3 text-sm">2. Credentials na Tabela (nina_settings)</h4>
+                <h4 className="text-emerald-400 font-bold mb-3 text-sm">2. Credentials na Tabela (livechat_settings)</h4>
                 <div className="bg-white dark:bg-slate-950 border border-gray-300 dark:border-slate-700 rounded-lg p-4">
                   <p className="text-xs text-gray-500 dark:text-slate-400 mb-3">
                     <strong>✅ Editáveis via Settings → APIs</strong>:
@@ -2231,7 +2231,7 @@ const transformConversation = (dbConv: DBConversation): UIConversation => {
                     <div>
                       <p className="text-xs font-bold text-pink-400 mb-2">Agendamento</p>
                       <ul className="text-sm text-gray-600 dark:text-slate-300 space-y-1 pl-4">
-                        <li className="text-xs">✅ Agendamento é <strong>nativo</strong> via Nina (create/reschedule/cancel)</li>
+                        <li className="text-xs">✅ Agendamento é <strong>nativo</strong> via LiveChat (create/reschedule/cancel)</li>
                         <li className="text-xs">Dados salvos na tabela <code>appointments</code></li>
                       </ul>
                     </div>
@@ -2253,7 +2253,7 @@ const transformConversation = (dbConv: DBConversation): UIConversation => {
             <p className="text-sm text-amber-200 flex items-start gap-2">
               <span className="text-amber-400 font-bold">⚠️</span>
               <span>
-                <strong>Importante:</strong> Nunca commitar credenciais no código. Todas as secrets devem estar em nina_settings 
+                <strong>Importante:</strong> Nunca commitar credenciais no código. Todas as secrets devem estar em livechat_settings 
                 ou em variáveis de ambiente gerenciadas pelo Lovable/Supabase.
               </span>
             </p>
@@ -2330,7 +2330,7 @@ Deno.serve(async (req) => {
                     <li className="flex items-start gap-2">
                       <span className="text-violet-400">•</span>
                       <div>
-                        <strong>Via Código:</strong> Editar lógica de processamento em <code className="text-violet-400">nina-orchestrator/index.ts</code>
+                        <strong>Via Código:</strong> Editar lógica de processamento em <code className="text-violet-400">livechat-orchestrator/index.ts</code>
                       </div>
                     </li>
                     <li className="flex items-start gap-2">
@@ -2544,7 +2544,7 @@ verify_jwt = false
 [functions.message-grouper]
 verify_jwt = false
 
-[functions.nina-orchestrator]
+[functions.livechat-orchestrator]
 verify_jwt = false
 
 [functions.whatsapp-sender]
@@ -2580,7 +2580,7 @@ verify_jwt = false
 [functions.seed-appointments]
 verify_jwt = false
 
-[functions.trigger-nina-orchestrator]
+[functions.trigger-livechat-orchestrator]
 verify_jwt = false
 
 [functions.trigger-whatsapp-sender]

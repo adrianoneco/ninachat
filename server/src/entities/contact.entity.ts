@@ -9,14 +9,17 @@ export class Contact {
   @Column({ nullable: true })
   name?: string;
 
-  @Column({ nullable: true, default: false })
-  is_online?: boolean;
+  @Column({ nullable: false, default: 'unavailable' })
+  presense!: string;
 
   @Column({ nullable: true })
   call_name?: string;
 
   @Column({ nullable: false })
   phone_number!: string;
+
+  @Column({ nullable: false })
+  phone_formated: string;
 
   @Column({ nullable: false })
   whatsapp_id!: string;
@@ -38,6 +41,12 @@ export class Contact {
 
   @Column({ nullable: true })
   blocked_reason?: string;
+
+  @Column({ nullable: false })
+  instance_id!: string;
+
+  @Column({ nullable: false, default: false })
+  is_group?: boolean;
 
   @Column({ type: 'text', array: true, default: () => "'{}'" })
   tags?: string[];

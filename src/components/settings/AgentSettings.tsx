@@ -3,7 +3,7 @@ import { Bot, Loader2, Wand2, RotateCcw, Info, Cpu, Eye, EyeOff, Key } from 'luc
 import { Button } from '../Button';
 import { toast } from 'sonner';
 import PromptGeneratorSheet from './PromptGeneratorSheet';
-import { DEFAULT_NINA_PROMPT } from '@/prompts/default-nina-prompt';
+import { DEFAULT_LIVECHAT_PROMPT } from '@/prompts/default-livechat-prompt';
 // Mock mode - no auth needed
 import {
   Tooltip,
@@ -43,7 +43,7 @@ const AI_PROVIDERS = [
   { id: 'ollama',    name: 'Ollama (Local)', badge: 'Local',   models: ['llama3.2', 'llama3.1', 'mistral', 'codellama', 'qwen2.5', 'phi3'],                   defaultModel: 'llama3.2',                 keyPlaceholder: '—',           defaultBase: 'http://localhost:11434/v1' },
 ];
 
-// Using shared prompt from @/prompts/default-nina-prompt
+// Using shared prompt from @/prompts/default-livechat-prompt
 
 export interface AgentSettingsRef {
   save: () => Promise<void>;
@@ -105,7 +105,7 @@ const AgentSettings = forwardRef<AgentSettingsRef, { onDirtyChange?: (dirty: boo
       // Try loading from backend first
       let data: any = null;
       try {
-        const res = await fetch(`${API_BASE}/nina_settings`);
+        const res = await fetch(`${API_BASE}/livechat_settings`);
         if (res.ok) {
           const json = await res.json();
           data = json?.data ?? json;
@@ -150,7 +150,7 @@ const AgentSettings = forwardRef<AgentSettingsRef, { onDirtyChange?: (dirty: boo
     try {
       let current: any = {};
       try {
-        const res = await fetch(`${API_BASE}/nina_settings`);
+        const res = await fetch(`${API_BASE}/livechat_settings`);
         if (res.ok) { const json = await res.json(); current = json?.data ?? json ?? {}; }
       } catch {}
       const merged = {
@@ -175,7 +175,7 @@ const AgentSettings = forwardRef<AgentSettingsRef, { onDirtyChange?: (dirty: boo
       };
       // Save to backend first
       try {
-        const res = await fetch(`${API_BASE}/nina_settings`, {
+        const res = await fetch(`${API_BASE}/livechat_settings`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(merged),
@@ -202,7 +202,7 @@ const AgentSettings = forwardRef<AgentSettingsRef, { onDirtyChange?: (dirty: boo
   };
 
   const handleRestoreDefault = () => {
-    setSettings(prev => ({ ...prev, system_prompt_override: DEFAULT_NINA_PROMPT }));
+    setSettings(prev => ({ ...prev, system_prompt_override: DEFAULT_LIVECHAT_PROMPT }));
     toast.success('Prompt restaurado para o padrão');
   };
 

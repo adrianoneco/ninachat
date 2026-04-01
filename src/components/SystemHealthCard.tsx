@@ -45,7 +45,7 @@ const componentIcons: Record<string, React.ReactNode> = {
   lovable_ai: <Sparkles className="w-4 h-4" />,
   pipeline: <Layers className="w-4 h-4" />,
   profile: <User className="w-4 h-4" />,
-  nina_settings: <Bot className="w-4 h-4" />,
+  livechat_settings: <Bot className="w-4 h-4" />,
 };
 
 const componentLabels: Record<string, string> = {
@@ -57,7 +57,7 @@ const componentLabels: Record<string, string> = {
   lovable_ai: 'Lovable AI',
   pipeline: 'Pipeline',
   profile: 'Perfil',
-  nina_settings: 'Configurações',
+  livechat_settings: 'Configurações',
 };
 
 export const SystemHealthCard: React.FC = () => {

@@ -2,7 +2,10 @@
 export enum MessageType {
   TEXT = 'text',
   IMAGE = 'image',
-  AUDIO = 'audio'
+  AUDIO = 'audio',
+  VIDEO = 'video',
+  STICKER = 'sticker',
+  FILE = 'file'
 }
 
 export enum MessageDirection {
@@ -74,7 +77,7 @@ export interface Conversation {
 
 // Metadata for AI-created appointments
 export interface AppointmentMetadata {
-  source?: 'nina_ai' | 'manual';
+  source?: 'livechat_ai' | 'manual';
   conversation_id?: string;
   created_at_conversation?: string;
 }
@@ -93,6 +96,7 @@ export interface Contact {
   profile_picture_url?: string;
   blocked_reason?: string;
   extra?: Record<string, any>;
+  presense?: string;
 }
 
 export interface StatMetric {
@@ -183,10 +187,10 @@ export interface TagDefinition {
 }
 
 // ============= Database Types (Real Supabase Schema) =============
-export type ConversationStatus = 'nina' | 'human' | 'paused';
-export type MessageFromType = 'user' | 'nina' | 'human';
+export type ConversationStatus = 'livechat' | 'human' | 'paused';
+export type MessageFromType = 'user' | 'livechat' | 'human';
 export type DBMessageStatus = 'sent' | 'delivered' | 'read' | 'failed' | 'processing';
-export type DBMessageType = 'text' | 'audio' | 'image' | 'document' | 'video';
+export type DBMessageType = 'text' | 'audio' | 'image' | 'document' | 'video' | 'sticker' | 'file';
 
 export interface ClientMemory {
   last_updated: string | null;
@@ -247,7 +251,7 @@ export interface DBConversation {
   assigned_team: string | null;
   tags: string[];
   metadata: Record<string, any>;
-  nina_context: Record<string, any>;
+  livechat_context: Record<string, any>;
   started_at: string;
   last_message_at: string;
   created_at: string;
@@ -268,8 +272,8 @@ export interface DBMessage {
   media_url: string | null;
   media_type: string | null;
   reply_to_id: string | null;
-  processed_by_nina: boolean;
-  nina_response_time: number | null;
+  processed_by_livechat: boolean;
+  livechat_response_time: number | null;
   metadata: Record<string, any>;
   sent_at: string;
   delivered_at: string | null;
@@ -299,6 +303,7 @@ export interface UIConversation {
   messages: UIMessage[];
   clientMemory: ClientMemory;
   notes: string | null;
+  contactPresence: string | null;
 }
 
 export interface UIMessage {
@@ -348,7 +353,8 @@ export function transformDBToUIConversation(
     tags: [...(conv.tags || []), ...(conv.contact?.tags || [])],
     messages: sortedMessages.map(transformDBToUIMessage),
     clientMemory: conv.contact?.client_memory || getDefaultClientMemory(),
-    notes: conv.contact?.notes || null
+    notes: conv.contact?.notes || null,
+    contactPresence: (conv.contact as any)?.presense || null
   };
 }
 
@@ -370,6 +376,10 @@ function mapDBMessageType(type: DBMessageType): MessageType {
   switch (type) {
     case 'image': return MessageType.IMAGE;
     case 'audio': return MessageType.AUDIO;
+    case 'video': return MessageType.VIDEO;
+    case 'sticker': return MessageType.STICKER;
+    case 'document':
+    case 'file': return MessageType.FILE;
     default: return MessageType.TEXT;
   }
 }

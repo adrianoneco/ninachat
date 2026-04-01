@@ -6,6 +6,7 @@ import { Conversation } from '../../entities/conversation.entity';
 import { Contact } from '../../entities/contact.entity';
 import { EventsGateway } from '../../ws/events.gateway';
 import { WppManagerService } from '../instances/wpp-manager.service';
+import { StorageService } from '../storage/storage.service';
 
 const logger = new Logger('MessagesService');
 
@@ -17,6 +18,7 @@ export class MessagesService {
     @InjectRepository(Contact) private contactRepo: Repository<Contact>,
     private readonly events: EventsGateway,
     private readonly wpp: WppManagerService,
+    private readonly storageService: StorageService,
   ) {}
 
   async findAll() {
@@ -28,28 +30,53 @@ export class MessagesService {
   }
 
   async create(data: Partial<Message>) {
+    // If outbound media_url is a data URL, upload to MinIO first
+    const rawMediaUrl = (data as any).media_url || (data as any).mediaUrl || null;
+    if (rawMediaUrl && typeof rawMediaUrl === 'string' && rawMediaUrl.startsWith('data:')) {
+      try {
+        const fileName = `outbound_${Date.now()}`;
+        const storageFile = await this.storageService.uploadFromDataUrl(
+          rawMediaUrl,
+          fileName,
+          undefined,
+          (data as any).conversation_id,
+        );
+        (data as any).media_url = `/api/storage/${storageFile.id}/url`;
+        logger.log(`[create] uploaded outbound media to MinIO: ${storageFile.s3_key}`);
+      } catch (e) {
+        logger.warn(`[create] failed uploading outbound media to MinIO: ${String(e)}`);
+      }
+    }
+
     const ent = this.repo.create({ ...data, created_at: new Date() } as any);
     const saved = await this.repo.save(ent);
 
     // If outbound message belongs to a conversation with an instance_id, send through WPP
     const direction = (data as any).direction || (data as any).from_type;
-    const isOutbound = direction === 'outbound' || direction === 'user' || direction === 'nina';
+    const isOutbound = direction === 'outbound' || direction === 'user' || direction === 'livechat';
     if (isOutbound && (data as any).conversation_id) {
       try {
         const conv = await this.convRepo.findOneBy({ id: (data as any).conversation_id } as any);
         if (conv && conv.instance_id && conv.contact_id) {
           const client = this.wpp.getClient(conv.instance_id);
           if (client) {
-            // Resolve the WPP JID for sending.  conv.contact_id may already be
-            // a JID (e.g. 5511999@c.us / 5511999@lid) or just digits.
-            // Also try looking up the Contact record for the authoritative whatsapp_id.
+            // Resolve the WPP JID for sending.
+            // conv.contact_id may be a UUID (preferred), a JID, or digits.
             let to = conv.contact_id;
             try {
-              const ct = await this.contactRepo.findOneBy({ whatsapp_id: conv.contact_id } as any)
-                      || await this.contactRepo.findOneBy({ phone_number: conv.contact_id } as any);
+              const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+              let ct: any = null;
+              if (uuidRegex.test(conv.contact_id!)) {
+                // contact_id is the contacts.id UUID — resolve directly
+                ct = await this.contactRepo.findOneBy({ id: conv.contact_id } as any);
+              } else {
+                // legacy JID / digits fallback
+                ct = await this.contactRepo.findOneBy({ whatsapp_id: conv.contact_id } as any)
+                  || await this.contactRepo.findOneBy({ phone_number: conv.contact_id } as any);
+              }
               if (ct?.whatsapp_id) to = ct.whatsapp_id;
             } catch { /* use conv.contact_id as-is */ }
-            // Ensure the JID has a suffix WPP expects
+            // Ensure the JID has a suffix WPP expects — but ONLY if not already a JID
             if (to && !to.includes('@')) to = `${to}@c.us`;
 
             const content = (data as any).content || '';
@@ -57,15 +84,19 @@ export class MessagesService {
             const mediaUrl = (data as any).media_url || (data as any).mediaUrl || null;
             const payload = (data as any).payload;
 
-            if (type === 'text' && content) {
-              await this.wpp.sendMessage(conv.instance_id, to, content);
-              logger.log(`[WPP] sent text to ${to}`);
+            if (type === 'sticker' && (mediaUrl || payload?.attachments?.[0]?.url)) {
+              const url = mediaUrl || payload.attachments[0].url;
+              await this.wpp.sendSticker(conv.instance_id, to, url);
+              logger.log(`[WPP] sent sticker to ${to}`);
             } else if (['image', 'video', 'audio', 'media', 'file'].includes(type) && (mediaUrl || payload?.attachments?.[0]?.url)) {
               const url = mediaUrl || payload.attachments[0].url;
               const filename = payload?.attachments?.[0]?.name || 'file';
               const caption = content || '';
               await this.wpp.sendMedia(conv.instance_id, to, url, filename, caption);
-              logger.log(`[WPP] sent media to ${to}`);
+              logger.log(`[WPP] sent ${type} to ${to}`);
+            } else if (type === 'text' && content) {
+              await this.wpp.sendMessage(conv.instance_id, to, content);
+              logger.log(`[WPP] sent text to ${to}`);
             } else if (content) {
               // fallback: send as text
               await this.wpp.sendMessage(conv.instance_id, to, content);
@@ -162,7 +193,15 @@ export class MessagesService {
       if (conv && conv.instance_id && conv.contact_id && original.content) {
         const client = this.wpp.getClient(conv.instance_id);
         if (client) {
-          await this.wpp.sendMessage(conv.instance_id, conv.contact_id, original.content);
+          const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+          let fwdTo = conv.contact_id;
+          const fwdCt: any = uuidRegex.test(conv.contact_id!)
+            ? await this.contactRepo.findOneBy({ id: conv.contact_id } as any)
+            : (await this.contactRepo.findOneBy({ whatsapp_id: conv.contact_id } as any)
+               || await this.contactRepo.findOneBy({ phone_number: conv.contact_id } as any));
+          if (fwdCt?.whatsapp_id) fwdTo = fwdCt.whatsapp_id;
+          if (fwdTo && !fwdTo.includes('@')) fwdTo = `${fwdTo}@c.us`;
+          await this.wpp.sendMessage(conv.instance_id, fwdTo, original.content);
         }
       }
     } catch (e) {

@@ -37,7 +37,7 @@ const ChamadaApi: React.FC = () => {
     (async () => {
       let data: any = null;
       try {
-        const res = await fetch(`${API_BASE}/nina_settings`);
+        const res = await fetch(`${API_BASE}/livechat_settings`);
         if (res.ok) { const json = await res.json(); data = json?.data ?? json; }
       } catch {}
       if (!data) data = {};
@@ -66,7 +66,7 @@ const ChamadaApi: React.FC = () => {
     const API_BASE = import.meta.env.VITE_API_BASE || '/api';
     let current: any = {};
     try {
-      const res = await fetch(`${API_BASE}/nina_settings`);
+      const res = await fetch(`${API_BASE}/livechat_settings`);
       if (res.ok) { const json = await res.json(); current = json?.data ?? json ?? {}; }
     } catch {}
     const merged = { ...current,
@@ -85,7 +85,7 @@ const ChamadaApi: React.FC = () => {
       updated_at: new Date().toISOString(),
     };
     try {
-      const res = await fetch(`${API_BASE}/nina_settings`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(merged) });
+      const res = await fetch(`${API_BASE}/livechat_settings`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(merged) });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
     } catch (err) {
       console.error('[ChamadaApi] Failed to save to backend', err);

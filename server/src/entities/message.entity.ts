@@ -6,10 +6,10 @@ export class Message {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column({ type: 'uuid', nullable: true })
+  @Column({ type: 'uuid', nullable: false })
   conversation_id?: string;
 
-  @Column({ type: 'text', nullable: true, unique: true })
+  @Column({ type: 'text', nullable: false, unique: true })
   message_id?: string;
 
   @Column({ type: 'text', nullable: true })
@@ -37,10 +37,10 @@ export class Message {
   status?: string;
 
   @Column({ type: 'boolean', default: false })
-  processed_by_nina!: boolean;
+  processed_by_livechat!: boolean;
 
   @Column({ type: 'integer', nullable: true })
-  nina_response_time?: number;
+  livechat_response_time?: number;
 
   @Column({ type: 'varchar', nullable: true })
   direction?: string;

@@ -1,21 +1,74 @@
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, GetObjectCommand, HeadBucketCommand, CreateBucketCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import fs from 'fs-extra';
 import path from 'path';
 
-const endpoint = process.env.MINIO_ENDPOINT;
+const useSsl = process.env.MINIO_USE_SSL === 'true';
+const host = process.env.MINIO_ENDPOINT || 'localhost';
+const port = process.env.MINIO_PORT || '9003';
+const endpoint = `${useSsl ? 'https' : 'http'}://${host}:${port}`;
 const region = process.env.MINIO_REGION || 'us-east-1';
-const accessKey = process.env.MINIO_ACCESS_KEY;
-const secretKey = process.env.MINIO_SECRET_KEY;
-const bucket = process.env.MINIO_BUCKET || 'wpp-sessions';
+const accessKey = process.env.MINIO_USER || process.env.MINIO_ACCESS_KEY || '';
+const secretKey = process.env.MINIO_PASSWORD || process.env.MINIO_SECRET_KEY || '';
+const bucket = process.env.MINIO_BUCKET_NAME || process.env.MINIO_BUCKET || 'livechat';
 
 let client: S3Client | null = null;
-if (endpoint && accessKey && secretKey) {
+if (accessKey && secretKey) {
   client = new S3Client({
     region,
     endpoint,
     credentials: { accessKeyId: accessKey, secretAccessKey: secretKey },
     forcePathStyle: true,
   } as any);
+}
+
+export function getS3Client(): S3Client | null {
+  return client;
+}
+
+export function getS3Bucket(): string {
+  return bucket;
+}
+
+/** Ensure the bucket exists, create it if not. */
+export async function ensureBucket(): Promise<void> {
+  if (!client) return;
+  try {
+    await client.send(new HeadBucketCommand({ Bucket: bucket }));
+  } catch {
+    try {
+      await client.send(new CreateBucketCommand({ Bucket: bucket }));
+    } catch (e) {
+      // bucket may already exist or we lack permissions – log and proceed
+      console.warn('[S3] failed to create bucket:', String(e));
+    }
+  }
+}
+
+/** Upload a Buffer to S3/MinIO and return the key. */
+export async function uploadBufferToS3(
+  buffer: Buffer,
+  key: string,
+  contentType = 'application/octet-stream',
+): Promise<string> {
+  if (!client) throw new Error('S3 client not configured');
+  await ensureBucket();
+  await client.send(
+    new PutObjectCommand({
+      Bucket: bucket,
+      Key: key,
+      Body: buffer,
+      ContentType: contentType,
+    }),
+  );
+  return key;
+}
+
+/** Generate a presigned GET URL with a given expiration (default 8 hours). */
+export async function getPresignedUrl(key: string, expiresInSeconds = 8 * 60 * 60): Promise<string> {
+  if (!client) throw new Error('S3 client not configured');
+  const command = new GetObjectCommand({ Bucket: bucket, Key: key });
+  return getSignedUrl(client, command, { expiresIn: expiresInSeconds });
 }
 
 export async function uploadDirToS3(localDir: string, prefix = '') {

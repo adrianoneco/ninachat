@@ -42,7 +42,7 @@ const componentIcons: Record<string, React.ReactNode> = {
   identity: <Building2 className="w-5 h-5" />,
   whatsapp: <MessageSquare className="w-5 h-5" />,
   agent_prompt: <Bot className="w-5 h-5" />,
-  nina_settings: <Database className="w-5 h-5" />,
+  livechat_settings: <Database className="w-5 h-5" />,
   elevenlabs: <Mic className="w-5 h-5" />,
   business_hours: <Clock className="w-5 h-5" />,
 };
@@ -51,7 +51,7 @@ const componentLabels: Record<string, string> = {
   identity: 'Identidade da Empresa',
   whatsapp: 'WhatsApp Cloud API',
   agent_prompt: 'Prompt do Agente',
-  nina_settings: 'Configurações do Sistema',
+  livechat_settings: 'Configurações do Sistema',
   elevenlabs: 'Respostas em Áudio',
   business_hours: 'Horário Comercial',
 };
@@ -68,7 +68,7 @@ export const StepVerification: React.FC<StepVerificationProps> = ({ onAllChecked
       let settings: any = {};
       const API_BASE = import.meta.env.VITE_API_BASE || '/api';
       try {
-        const res = await fetch(`${API_BASE}/nina_settings`);
+        const res = await fetch(`${API_BASE}/livechat_settings`);
         if (res.ok) { const json = await res.json(); settings = json?.data ?? json ?? {}; }
       } catch {}
       if (!settings || !Object.keys(settings).length) settings = {};

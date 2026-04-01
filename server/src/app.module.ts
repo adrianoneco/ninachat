@@ -15,6 +15,7 @@ import { GenericCrudModule } from './modules/generic/generic-crud.module';
 import { SettingsModule } from './modules/settings/settings.module';
 import { ReportsModule } from './modules/reports/reports.module';
 import { HealthModule } from './modules/health/health.module';
+import { StorageModule } from './modules/storage/storage.module';
 
 const imports = [ConfigModule.forRoot({ isGlobal: true })] as any[];
 
@@ -48,6 +49,7 @@ imports.push(
   SettingsModule,
   ReportsModule,
   HealthModule,
+  StorageModule,
 );
 
 @Module({

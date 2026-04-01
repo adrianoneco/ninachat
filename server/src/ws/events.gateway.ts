@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import { WebSocketGateway, WebSocketServer, OnGatewayConnection, OnGatewayDisconnect, SubscribeMessage } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 
@@ -5,17 +6,18 @@ import { Server, Socket } from 'socket.io';
 export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
+  logger = new Logger('Socket.IO');
 
   handleConnection(client: Socket) {
     try {
       // optional debug
-      console.log('[WS] client connected', client.id);
+      this.logger.log('[WS] client connected', client.id);
     } catch (e) {}
   }
 
   handleDisconnect(client: Socket) {
     try {
-      console.log('[WS] client disconnected', client.id);
+      this.logger.log('[WS] client disconnected', client.id);
     } catch (e) {}
   }
 
@@ -25,7 +27,7 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const session = typeof data === 'string' ? data : data?.session;
       if (session) {
         client.join(session);
-        console.log(`[WS] client ${client.id} joined session ${session}`);
+        this.logger.log(`[WS] client ${client.id} joined session ${session}`);
         return { status: 'ok', session };
       }
     } catch (e) {

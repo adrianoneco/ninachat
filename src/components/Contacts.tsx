@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Search, Filter, UserPlus, MessageSquare, Loader2, Mail, Phone, Users, Upload, FileSpreadsheet, X, Edit, Trash2 } from 'lucide-react';
+import { Search, Filter, UserPlus, MessageSquare, Loader2, Mail, Phone, Users, Upload, FileSpreadsheet, X, Edit, Trash2, LayoutGrid, List } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { Button } from './Button';
@@ -8,13 +8,22 @@ import { api, upsertContact, deleteContact, generateId } from '../services/api';
 import { Contact } from '../types';
 import { useAuth } from '@/hooks/useAuth';
 import { useCompanySettings } from '@/hooks/useCompanySettings';
+import { connectSocket } from '@/lib/socket';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from './ui/sheet';
+
+function getPresenceDotClass(presense?: string): string {
+  if (presense === 'available') return 'bg-emerald-500';
+  if (presense === 'composing' || presense === 'recording') return 'bg-amber-400 animate-pulse';
+  if (presense === 'paused') return 'bg-yellow-400';
+  return 'bg-gray-400';
+}
 
 const Contacts: React.FC = () => {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isImportOpen, setIsImportOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
   const [csvText, setCsvText] = useState('');
   const [importing, setImporting] = useState(false);
   const [previewRows, setPreviewRows] = useState<{ name: string; phone: string; email?: string; status?: string; normalizedPhone?: string; valid?: boolean }[]>([]);
@@ -24,6 +33,22 @@ const Contacts: React.FC = () => {
   const { user } = auth;
   const companySettings = (() => { try { return useCompanySettings(); } catch { return { isAdmin: false }; } })();
   const { isAdmin } = companySettings;
+
+  useEffect(() => {
+    const socket = connectSocket();
+    if (!socket) return;
+    const handler = (data: { phone: string; presence: string }) => {
+      setContacts(prev => prev.map(c => {
+        const cp = (c.phone || '').replace(/\D/g, '');
+        const dp = (data.phone || '').replace(/\D/g, '');
+        if (!cp || !dp) return c;
+        if (cp.endsWith(dp) || dp.endsWith(cp)) return { ...c, presense: data.presence };
+        return c;
+      }));
+    };
+    socket.on('contact:presence', handler);
+    return () => { socket.off('contact:presence', handler); };
+  }, []);
 
   useEffect(() => {
     const loadContacts = async () => {
@@ -351,6 +376,31 @@ const Contacts: React.FC = () => {
           <Filter className="w-4 h-4 mr-2" />
           Filtros Avançados
         </Button>
+        {/* View mode toggle */}
+        <div className="flex items-center gap-1 bg-gray-200/60 dark:bg-slate-800/60 rounded-lg p-1 border border-gray-200 dark:border-slate-800">
+          <button
+            onClick={() => setViewMode('table')}
+            title="Visualização em tabela"
+            className={`p-2 rounded-md transition-all ${
+              viewMode === 'table'
+                ? 'bg-white dark:bg-slate-700 text-primary shadow-sm'
+                : 'text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200'
+            }`}
+          >
+            <List className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => setViewMode('grid')}
+            title="Visualização em grade"
+            className={`p-2 rounded-md transition-all ${
+              viewMode === 'grid'
+                ? 'bg-white dark:bg-slate-700 text-primary shadow-sm'
+                : 'text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200'
+            }`}
+          >
+            <LayoutGrid className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       {/* Table */}
@@ -367,6 +417,65 @@ const Contacts: React.FC = () => {
             <p className="text-sm text-gray-500 dark:text-slate-500 mt-1">
               {searchTerm ? 'Tente buscar por outro termo' : 'Os contatos aparecerão aqui'}
             </p>
+          </div>
+        ) : viewMode === 'grid' ? (
+          <div className="p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {filteredContacts.map((contact) => (
+              <div key={contact.id} className="group flex flex-col bg-white dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700 rounded-2xl p-4 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 transition-all">
+                {/* Avatar + Name */}
+                <div className="flex flex-col items-center text-center mb-3">
+                  <div className="relative mb-2">
+                    {(contact.profile_picture_url || (contact.extra && contact.extra.profilePictureUrl)) ? (
+                      <img
+                        src={contact.profile_picture_url || (contact.extra && contact.extra.profilePictureUrl)}
+                        alt={contact.name || contact.phone || '?'}
+                        className="w-16 h-16 rounded-full object-cover border-2 border-gray-200 dark:border-slate-700 shadow"
+                      />
+                    ) : (
+                      <div className="w-16 h-16 rounded-full bg-gradient-to-br from-gray-300 to-gray-400 dark:from-slate-700 dark:to-slate-800 border-2 border-gray-200 dark:border-slate-700 flex items-center justify-center text-lg font-bold text-primary shadow">
+                        {(contact.name || contact.phone || '?').substring(0, 2).toUpperCase()}
+                      </div>
+                    )}
+                    <span className={`absolute bottom-0.5 right-0.5 w-3 h-3 rounded-full border-2 border-white dark:border-slate-800 ${getPresenceDotClass(contact.presense)}`}></span>
+                  </div>
+                  <div className="font-semibold text-gray-800 dark:text-slate-100 text-sm group-hover:text-primary transition-colors truncate w-full">{contact.name || 'Sem nome'}</div>
+                  <div className="text-xs text-gray-400 dark:text-slate-500 mt-0.5">{contact.phone}</div>
+                </div>
+                {/* Status */}
+                <div className="flex justify-center mb-3">
+                  <span className={`px-2.5 py-1 rounded-md text-xs font-semibold border ${getStatusColor(contact.status)}`}>
+                    {contact.status === 'customer' ? 'Cliente Ativo' : contact.status === 'lead' ? 'Lead Qualificado' : 'Churned'}
+                  </span>
+                </div>
+                {/* Email */}
+                {contact.email && (
+                  <div className="flex items-center gap-2 text-xs text-gray-400 dark:text-slate-500 mb-1 truncate">
+                    <Mail className="w-3.5 h-3.5 shrink-0" />
+                    <span className="truncate">{contact.email}</span>
+                  </div>
+                )}
+                {/* Last contact */}
+                <div className="text-xs text-gray-400 dark:text-slate-600 mb-3">
+                  {new Date(contact.lastContact).toLocaleDateString('pt-BR')}
+                </div>
+                {/* Actions */}
+                <div className="mt-auto flex items-center justify-center gap-2 pt-2 border-t border-gray-100 dark:border-slate-700/60">
+                  <Button size="sm" variant="primary" className="h-8 w-8 p-0 rounded-lg shadow-none" title="Iniciar Conversa" onClick={() => handleStartConversation(contact)}>
+                    <MessageSquare className="w-4 h-4" />
+                  </Button>
+                  <Button size="sm" variant="ghost" className="h-8 w-8 p-0 rounded-lg text-gray-500 dark:text-slate-400 hover:text-primary" title="Editar contato" onClick={() => { setEditingContact(contact); setEditingExtra((contact as any).extra || {}); }}>
+                    <Edit className="w-4 h-4" />
+                  </Button>
+                  <Button size="sm" variant="danger" className="h-8 w-8 p-0 rounded-lg text-red-400 hover:text-red-300" title="Excluir contato" onClick={async () => {
+                    if (!confirm('Deseja realmente excluir este contato?')) return;
+                    try { await deleteContact(contact.id); setContacts(prev => prev.filter(c => c.id !== contact.id)); toast.success('Contato excluído'); }
+                    catch (err) { console.error(err); toast.error('Falha ao excluir contato'); }
+                  }}>
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -385,17 +494,20 @@ const Contacts: React.FC = () => {
                   <tr key={contact.id} className="hover:bg-gray-200/40 dark:bg-slate-800/40 transition-colors group">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-4">
-                        {((contact.profile_picture_url || (contact.extra && contact.extra.profilePictureUrl))) ? (
-                          <img
-                            src={contact.profile_picture_url || (contact.extra && contact.extra.profilePictureUrl)}
-                            alt={contact.name || contact.phone || '?'}
-                            className="w-10 h-10 rounded-full object-cover border border-gray-300 dark:border-slate-700 shadow-inner"
-                          />
-                        ) : (
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-300 to-gray-400 dark:from-slate-700 dark:to-slate-800 border border-gray-300 dark:border-slate-700 flex items-center justify-center text-sm font-bold text-primary shadow-inner">
-                            {(contact.name || contact.phone || '?').substring(0, 2).toUpperCase()}
-                          </div>
-                        )}
+                        <div className="relative shrink-0">
+                          {((contact.profile_picture_url || (contact.extra && contact.extra.profilePictureUrl))) ? (
+                            <img
+                              src={contact.profile_picture_url || (contact.extra && contact.extra.profilePictureUrl)}
+                              alt={contact.name || contact.phone || '?'}
+                              className="w-10 h-10 rounded-full object-cover border border-gray-300 dark:border-slate-700 shadow-inner"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-300 to-gray-400 dark:from-slate-700 dark:to-slate-800 border border-gray-300 dark:border-slate-700 flex items-center justify-center text-sm font-bold text-primary shadow-inner">
+                              {(contact.name || contact.phone || '?').substring(0, 2).toUpperCase()}
+                            </div>
+                          )}
+                          <span className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-slate-800 ${getPresenceDotClass(contact.presense)}`}></span>
+                        </div>
                         <div>
                             <div className="font-semibold text-gray-700 dark:text-slate-200 group-hover:text-primary transition-colors">
                               {contact.name || 'Sem nome'}
@@ -490,133 +602,167 @@ const Contacts: React.FC = () => {
 
         {editingContact && (
           <Sheet open={!!editingContact} onOpenChange={(open) => { if (!open) { setEditingContact(null); setEditingExtra({}); } }}>
-            <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto p-0">
-              <SheetHeader className="p-4 border-b border-gray-200 dark:border-slate-800">
-                <SheetTitle className="text-lg font-bold">Editar Contato</SheetTitle>
-              </SheetHeader>
-              <div className="p-4 space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs text-gray-500 dark:text-slate-400">Nome</label>
-                    <input className="w-full mt-1 p-2 theme-input" value={editingContact.name || ''} onChange={e => setEditingContact({ ...editingContact, name: e.target.value } as any)} />
-                  </div>
-                  <div>
-                    <label className="text-xs text-gray-500 dark:text-slate-400">Empresa</label>
-                    <input className="w-full mt-1 p-2 theme-input" value={editingExtra.companyName || ''} onChange={e => setEditingExtra({ ...editingExtra, companyName: e.target.value })} />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs text-gray-500 dark:text-slate-400">Telefone</label>
-                    <input className="w-full mt-1 p-2 theme-input" value={editingContact.phone || ''} onChange={e => setEditingContact({ ...editingContact, phone: e.target.value } as any)} />
-                  </div>
-                  <div>
-                    <label className="text-xs text-gray-500 dark:text-slate-400">Email</label>
-                    <input className="w-full mt-1 p-2 theme-input" value={editingContact.email || ''} onChange={e => setEditingContact({ ...editingContact, email: e.target.value } as any)} />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-xs text-gray-500 dark:text-slate-400">Código do cliente</label>
-                  <input className="w-full mt-1 p-2 theme-input" value={editingExtra.clientCode || ''} onChange={e => setEditingExtra({ ...editingExtra, clientCode: e.target.value })} placeholder="Opcional" />
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs text-gray-500 dark:text-slate-400">Foto do Contato (URL ou upload)</label>
+            <SheetContent side="right" className="w-full sm:max-w-2xl p-0 flex flex-col overflow-hidden">
+              {/* Layout: photo left | form right */}
+              <div className="flex flex-1 overflow-hidden">
+                {/* ── Left: photo panel ── */}
+                <div className="relative w-40 shrink-0 flex flex-col items-center justify-between bg-gradient-to-b from-gray-200 to-gray-300 dark:from-slate-800 dark:to-slate-900 border-r border-gray-200 dark:border-slate-700 overflow-hidden">
+                  {/* Photo */}
+                  <div className="flex-1 w-full relative">
                     {editingExtra.profilePictureUrl ? (
-                      <img src={editingExtra.profilePictureUrl as string} alt="profile" className="w-16 h-16 rounded-full mb-2 object-cover border border-gray-200 dark:border-slate-800" />
-                    ) : null}
-                    <div className="flex items-center gap-2">
-                      <button type="button" onClick={() => profileFileRef.current?.click()} className="px-3 py-1 rounded bg-gray-200 dark:bg-slate-800 text-sm text-gray-700 dark:text-slate-200 hover:bg-gray-300 dark:bg-slate-700">Escolher arquivo</button>
-                      <button type="button" onClick={() => setEditingExtra((prev: any) => ({ ...prev, profilePictureUrl: '' }))} className="px-2 py-1 rounded bg-gray-100 dark:bg-slate-900 text-sm text-gray-500 dark:text-slate-400">Remover</button>
-                    </div>
-                    <input ref={el => (profileFileRef.current = el)} type="file" accept="image/*" className="hidden" onChange={e => {
-                      const f = e.target.files?.[0]; if (!f) return;
-                      const reader = new FileReader(); reader.onload = (ev) => {
-                        const data = ev.target?.result as string;
-                        setCropImageSrc(data);
-                        setCropFor('profile');
-                        setCropScale(1);
-                        setCropOffset({ x: 0, y: 0 });
-                      };
-                      reader.readAsDataURL(f);
-                      e.currentTarget.value = '';
-                    }} />
-                  </div>
-                  <div>
-                    <label className="text-xs text-gray-500 dark:text-slate-400">Foto da Empresa (URL ou upload)</label>
-                    {editingExtra.companyPhotoUrl ? (
-                      <img src={editingExtra.companyPhotoUrl as string} alt="company" className="w-20 h-12 rounded-md mb-2 object-cover border border-gray-200 dark:border-slate-800" />
-                    ) : null}
-                    <div className="flex items-center gap-2">
-                      <button type="button" onClick={() => companyFileRef.current?.click()} className="px-3 py-1 rounded bg-gray-200 dark:bg-slate-800 text-sm text-gray-700 dark:text-slate-200 hover:bg-gray-300 dark:bg-slate-700">Escolher arquivo</button>
-                      <button type="button" onClick={() => setEditingExtra((prev: any) => ({ ...prev, companyPhotoUrl: '' }))} className="px-2 py-1 rounded bg-gray-100 dark:bg-slate-900 text-sm text-gray-500 dark:text-slate-400">Remover</button>
-                    </div>
-                    <input ref={el => (companyFileRef.current = el)} type="file" accept="image/*" className="hidden" onChange={e => {
-                      const f = e.target.files?.[0]; if (!f) return;
-                      const reader = new FileReader(); reader.onload = (ev) => {
-                        const data = ev.target?.result as string;
-                        setCropImageSrc(data);
-                        setCropFor('company');
-                        setCropScale(1);
-                        setCropOffset({ x: 0, y: 0 });
-                      };
-                      reader.readAsDataURL(f);
-                      e.currentTarget.value = '';
-                    }} />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-xs text-gray-500 dark:text-slate-400">Tags</label>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {(editingExtra.tags || []).map((t: string, idx: number) => (
-                      <div key={idx} className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm bg-gray-200 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 text-gray-700 dark:text-slate-200">
-                        <span>{t}</span>
-                        <button onClick={() => setEditingExtra((prev:any) => ({ ...prev, tags: (prev.tags || []).filter((x:string)=>x !== t) }))} className="text-xs text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:text-white">×</button>
+                      <img
+                        src={editingExtra.profilePictureUrl as string}
+                        alt="profile"
+                        className="absolute inset-0 w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-gray-400 dark:text-slate-600">
+                        <div className="w-20 h-20 rounded-full bg-gray-300 dark:bg-slate-700 flex items-center justify-center text-3xl font-bold text-primary">
+                          {(editingContact.name || editingContact.phone || '?').substring(0, 2).toUpperCase()}
+                        </div>
+                        <span className="text-xs text-center px-2">Sem foto</span>
                       </div>
-                    ))}
+                    )}
+                    {/* Overlay hover para trocar foto */}
+                    <button
+                      type="button"
+                      onClick={() => profileFileRef.current?.click()}
+                      className="absolute inset-0 bg-black/0 hover:bg-black/40 transition-all flex items-center justify-center opacity-0 hover:opacity-100 group"
+                      title="Trocar foto"
+                    >
+                      <span className="text-white text-xs font-medium px-2 text-center">Trocar foto</span>
+                    </button>
                   </div>
-                  <div className="mt-2">
-                    <input placeholder="Adicionar tag e pressione Enter" className="w-full mt-1 p-2 theme-input" value={newTagInput} onChange={e => setNewTagInput(e.target.value)} onKeyDown={e => {
-                      const val = newTagInput.trim();
-                      if (e.key === 'Enter' && val) {
-                        e.preventDefault();
-                        setEditingExtra((prev:any) => ({ ...prev, tags: Array.from(new Set([...(prev.tags||[]), val])) }));
-                        setNewTagInput('');
-                      }
-                      if (e.key === ',') {
-                        e.preventDefault();
-                        const parts = newTagInput.split(',').map(s=>s.trim()).filter(Boolean);
-                        if (parts.length) {
-                          setEditingExtra((prev:any) => ({ ...prev, tags: Array.from(new Set([...(prev.tags||[]), ...parts])) }));
-                          setNewTagInput('');
-                        }
-                      }
-                    }} />
-                    <div className="text-xs text-gray-500 dark:text-slate-500 mt-2 flex gap-2 flex-wrap">
-                      {(availableTags || []).slice(0,6).map((t,i) => (
-                        <button key={i} type="button" onClick={() => setEditingExtra((prev:any) => ({ ...prev, tags: Array.from(new Set([...(prev.tags||[]), t.key || t || ''])) }))} className="px-2 py-1 rounded bg-gray-200 dark:bg-slate-800 text-gray-600 dark:text-slate-300 text-xs">{t.label || t.key || t}</button>
-                      ))}
+                  {/* Remove / upload buttons */}
+                  <div className="w-full p-2 flex flex-col gap-1.5 bg-black/10 dark:bg-black/30">
+                    <button type="button" onClick={() => profileFileRef.current?.click()} className="w-full text-center px-2 py-1.5 rounded bg-white/20 hover:bg-white/30 text-white text-xs font-medium transition-colors">
+                      Upload
+                    </button>
+                    {editingExtra.profilePictureUrl && (
+                      <button type="button" onClick={() => setEditingExtra((prev: any) => ({ ...prev, profilePictureUrl: '' }))} className="w-full text-center px-2 py-1.5 rounded bg-red-500/20 hover:bg-red-500/40 text-red-300 text-xs font-medium transition-colors">
+                        Remover
+                      </button>
+                    )}
+                  </div>
+                  <input ref={el => (profileFileRef.current = el)} type="file" accept="image/*" className="hidden" onChange={e => {
+                    const f = e.target.files?.[0]; if (!f) return;
+                    const reader = new FileReader(); reader.onload = (ev) => {
+                      const data = ev.target?.result as string;
+                      setCropImageSrc(data); setCropFor('profile'); setCropScale(1); setCropOffset({ x: 0, y: 0 });
+                    };
+                    reader.readAsDataURL(f); e.currentTarget.value = '';
+                  }} />
+                </div>
+
+                {/* ── Right: form ── */}
+                <div className="flex flex-col flex-1 overflow-hidden">
+                  <SheetHeader className="px-5 py-4 border-b border-gray-200 dark:border-slate-800 shrink-0">
+                    <SheetTitle className="text-lg font-bold">{editingContact.name || 'Novo Contato'}</SheetTitle>
+                    <p className="text-xs text-gray-400 dark:text-slate-500">{editingContact.phone}</p>
+                  </SheetHeader>
+
+                  <div className="flex-1 overflow-y-auto p-5 space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-xs text-gray-500 dark:text-slate-400">Nome</label>
+                        <input className="w-full mt-1 p-2 theme-input" value={editingContact.name || ''} onChange={e => setEditingContact({ ...editingContact, name: e.target.value } as any)} />
+                      </div>
+                      <div>
+                        <label className="text-xs text-gray-500 dark:text-slate-400">Empresa</label>
+                        <input className="w-full mt-1 p-2 theme-input" value={editingExtra.companyName || ''} onChange={e => setEditingExtra({ ...editingExtra, companyName: e.target.value })} />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-xs text-gray-500 dark:text-slate-400">Telefone</label>
+                        <input className="w-full mt-1 p-2 theme-input" value={editingContact.phone || ''} onChange={e => setEditingContact({ ...editingContact, phone: e.target.value } as any)} />
+                      </div>
+                      <div>
+                        <label className="text-xs text-gray-500 dark:text-slate-400">Email</label>
+                        <input className="w-full mt-1 p-2 theme-input" value={editingContact.email || ''} onChange={e => setEditingContact({ ...editingContact, email: e.target.value } as any)} />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-xs text-gray-500 dark:text-slate-400">Código do cliente</label>
+                      <input className="w-full mt-1 p-2 theme-input" value={editingExtra.clientCode || ''} onChange={e => setEditingExtra({ ...editingExtra, clientCode: e.target.value })} placeholder="Opcional" />
+                    </div>
+
+                    {/* Foto da Empresa */}
+                    <div>
+                      <label className="text-xs text-gray-500 dark:text-slate-400">Foto da Empresa</label>
+                      <div className="flex items-center gap-3 mt-1">
+                        {editingExtra.companyPhotoUrl ? (
+                          <img src={editingExtra.companyPhotoUrl as string} alt="company" className="w-14 h-9 rounded object-cover border border-gray-200 dark:border-slate-800" />
+                        ) : (
+                          <div className="w-14 h-9 rounded bg-gray-200 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 flex items-center justify-center text-gray-400 text-xs">Logo</div>
+                        )}
+                        <button type="button" onClick={() => companyFileRef.current?.click()} className="px-3 py-1 rounded bg-gray-200 dark:bg-slate-800 text-sm text-gray-700 dark:text-slate-200 hover:bg-gray-300 dark:hover:bg-slate-700">Upload</button>
+                        {editingExtra.companyPhotoUrl && (
+                          <button type="button" onClick={() => setEditingExtra((prev: any) => ({ ...prev, companyPhotoUrl: '' }))} className="px-2 py-1 rounded bg-gray-100 dark:bg-slate-900 text-sm text-gray-500 dark:text-slate-400">Remover</button>
+                        )}
+                      </div>
+                      <input ref={el => (companyFileRef.current = el)} type="file" accept="image/*" className="hidden" onChange={e => {
+                        const f = e.target.files?.[0]; if (!f) return;
+                        const reader = new FileReader(); reader.onload = (ev) => {
+                          const data = ev.target?.result as string;
+                          setCropImageSrc(data); setCropFor('company'); setCropScale(1); setCropOffset({ x: 0, y: 0 });
+                        };
+                        reader.readAsDataURL(f); e.currentTarget.value = '';
+                      }} />
+                    </div>
+
+                    <div>
+                      <label className="text-xs text-gray-500 dark:text-slate-400">Tags</label>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {(editingExtra.tags || []).map((t: string, idx: number) => (
+                          <div key={idx} className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm bg-gray-200 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 text-gray-700 dark:text-slate-200">
+                            <span>{t}</span>
+                            <button onClick={() => setEditingExtra((prev:any) => ({ ...prev, tags: (prev.tags || []).filter((x:string)=>x !== t) }))} className="text-xs text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:text-white">×</button>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-2">
+                        <input placeholder="Adicionar tag e pressione Enter" className="w-full mt-1 p-2 theme-input" value={newTagInput} onChange={e => setNewTagInput(e.target.value)} onKeyDown={e => {
+                          const val = newTagInput.trim();
+                          if (e.key === 'Enter' && val) {
+                            e.preventDefault();
+                            setEditingExtra((prev:any) => ({ ...prev, tags: Array.from(new Set([...(prev.tags||[]), val])) }));
+                            setNewTagInput('');
+                          }
+                          if (e.key === ',') {
+                            e.preventDefault();
+                            const parts = newTagInput.split(',').map(s=>s.trim()).filter(Boolean);
+                            if (parts.length) {
+                              setEditingExtra((prev:any) => ({ ...prev, tags: Array.from(new Set([...(prev.tags||[]), ...parts])) }));
+                              setNewTagInput('');
+                            }
+                          }
+                        }} />
+                        <div className="text-xs text-gray-500 dark:text-slate-500 mt-2 flex gap-2 flex-wrap">
+                          {(availableTags || []).slice(0,6).map((t,i) => (
+                            <button key={i} type="button" onClick={() => setEditingExtra((prev:any) => ({ ...prev, tags: Array.from(new Set([...(prev.tags||[]), t.key || t || ''])) }))} className="px-2 py-1 rounded bg-gray-200 dark:bg-slate-800 text-gray-600 dark:text-slate-300 text-xs">{t.label || t.key || t}</button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <label htmlFor="isBusiness" className="text-xs text-gray-500 dark:text-slate-400">É empresa / negócio</label>
+                      <Switch id="isBusiness" checked={Boolean(editingExtra.isBusiness)} onCheckedChange={(val) => setEditingExtra({ ...editingExtra, isBusiness: Boolean(val) })} />
+                    </div>
+
+                    <div>
+                      <label className="text-xs text-gray-500 dark:text-slate-400">Notas</label>
+                      <textarea className="w-full mt-1 p-2 theme-input" rows={3} value={editingExtra.notes || ''} onChange={e => setEditingExtra({ ...editingExtra, notes: e.target.value })} />
                     </div>
                   </div>
-                </div>
 
-                <div className="flex items-center gap-3">
-                  <label htmlFor="isBusiness" className="text-xs text-gray-500 dark:text-slate-400">É empresa / negócio</label>
-                  <Switch id="isBusiness" checked={Boolean(editingExtra.isBusiness)} onCheckedChange={(val) => setEditingExtra({ ...editingExtra, isBusiness: Boolean(val) })} />
-                </div>
-
-                <div>
-                  <label className="text-xs text-gray-500 dark:text-slate-400">Notas</label>
-                  <textarea className="w-full mt-1 p-2 theme-input" rows={3} value={editingExtra.notes || ''} onChange={e => setEditingExtra({ ...editingExtra, notes: e.target.value })} />
-                </div>
-
-                <div className="flex items-center justify-end gap-2">
-                  <Button variant="outline" className="px-4 py-2" onClick={() => { setEditingContact(null); setEditingExtra({}); }}>Cancelar</Button>
-                  <Button className="px-4 py-2 bg-primary hover:bg-primary/90" onClick={() => handleSaveContact(editingContact as Contact)}>Salvar</Button>
+                  <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-gray-200 dark:border-slate-800 shrink-0">
+                    <Button variant="outline" className="px-4 py-2" onClick={() => { setEditingContact(null); setEditingExtra({}); }}>Cancelar</Button>
+                    <Button className="px-4 py-2 bg-primary hover:bg-primary/90" onClick={() => handleSaveContact(editingContact as Contact)}>Salvar</Button>
+                  </div>
                 </div>
               </div>
             </SheetContent>

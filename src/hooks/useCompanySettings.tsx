@@ -14,7 +14,7 @@ const CompanySettingsContext = createContext<CompanySettings | undefined>(undefi
 
 export const CompanySettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [companyName, setCompanyName] = useState('Minha Empresa');
-  const [sdrName, setSdrName] = useState('Nina');
+  const [sdrName, setSdrName] = useState('LiveChat');
   const [loading, setLoading] = useState(false);
 
   const fetchSettings = async () => {
@@ -31,9 +31,9 @@ export const CompanySettingsProvider: React.FC<{ children: React.ReactNode }> = 
         }
       } catch {}
 
-      // Fallback: try nina_settings endpoint
+      // Fallback: try livechat_settings endpoint
       try {
-        const res = await fetch(`${API_BASE}/nina_settings`);
+        const res = await fetch(`${API_BASE}/livechat_settings`);
         if (res.ok) {
           const json = await res.json();
           const data = json?.data ?? json;
@@ -45,7 +45,7 @@ export const CompanySettingsProvider: React.FC<{ children: React.ReactNode }> = 
 
       // Backend unavailable — use defaults
       setCompanyName('Minha Empresa');
-      setSdrName('Nina');
+      setSdrName('LiveChat');
     } finally {
       setLoading(false);
     }

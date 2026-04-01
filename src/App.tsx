@@ -24,15 +24,16 @@ const AppLayout: React.FC = () => {
   if (!auth?.user) {
     return <Navigate to="/auth" replace />;
   }
+  const wizardEnabled = import.meta.env.VITE_WIZARD_ENABLED !== 'false';
   const [showOnboarding, setShowOnboarding] = useState(false);
   const { isComplete, hasSeenWizard, loading } = useOnboardingStatus();
 
   // Show wizard automatically on first load if not complete and never seen
   useEffect(() => {
-    if (!loading && !isComplete && !hasSeenWizard) {
+    if (wizardEnabled && !loading && !isComplete && !hasSeenWizard) {
       setShowOnboarding(true);
     }
-  }, [loading, isComplete, hasSeenWizard]);
+  }, [loading, isComplete, hasSeenWizard, wizardEnabled]);
 
   return (
     <div className="flex h-screen w-full bg-background text-foreground overflow-hidden">

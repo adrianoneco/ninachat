@@ -1,18 +1,27 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import fs from 'fs';
+import * as bodyParser from 'body-parser';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.enableCors({ origin: true, credentials: true });
+  // Increase request body size limits to allow larger payloads (file uploads via form-data/binary)
+  // Default was 100kb which caused PayloadTooLargeError for ~200-400kb requests.
+  app.use(bodyParser.json({ limit: '5mb' }));
+  app.use(bodyParser.urlencoded({ limit: '5mb', extended: true }));
+  // Serve uploaded files
+  app.useStaticAssets(join(__dirname, '..', 'uploads'), { prefix: '/uploads/' });
   // Enable validation for incoming requests
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   // Setup Swagger at /api-docs
   try {
     const config = new DocumentBuilder()
-      .setTitle('Nina Chat API')
+      .setTitle('LiveChat API')
       .setDescription('APIs de integração WPP e ambiente de testes')
       .setVersion('1.0')
       .build();
@@ -51,3 +60,22 @@ async function bootstrap() {
   });
 }
 bootstrap();
+
+// Suppress unhandled rejections from Puppeteer/WPPConnect context-destroyed errors
+// (WhatsApp Web navigates the page during updates, causing transient execution context errors)
+const TRANSIENT_PUPPETEER_MSGS = [
+  'Execution context was destroyed',
+  'detached Frame',
+  'Target closed',
+  'Session closed',
+  'not attached to an active page',
+  'Protocol error',
+];
+process.on('unhandledRejection', (reason: any) => {
+  const msg = String(reason?.message || reason || '');
+  if (TRANSIENT_PUPPETEER_MSGS.some(s => msg.includes(s))) {
+    // swallow — these are expected during WhatsApp Web navigations
+    return;
+  }
+  console.error('Unhandled Rejection:', reason);
+});

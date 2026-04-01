@@ -521,12 +521,12 @@ export const api = {
 
   sendMessage: async (conversationId: string, content: string, isHumanModeParam?: boolean, attachments?: Array<{ dataUrl?: string; name?: string; type?: string }>): Promise<string> => {
     console.log('[debug] api.sendMessage called', { conversationId, isHumanModeParam });
-    const ninaSettings = await apiGet<any>('nina_settings', {});
+    const livechatSettings = await apiGet<any>('livechat_settings', {});
 
     const applyCopilotIfEnabled = async (text: string) => {
       try {
-        if (ninaSettings?.ai_copilot_enabled) {
-          const prompt = ninaSettings.ai_copilot_system_prompt || 'Seja conciso.';
+        if (livechatSettings?.ai_copilot_enabled) {
+          const prompt = livechatSettings.ai_copilot_system_prompt || 'Seja conciso.';
           const suggestion = `[Copilot suggestion based on "${prompt}"]`;
           return `${suggestion} ${text}`;
         }
@@ -575,6 +575,23 @@ export const api = {
       }
     }
 
+    // Determine the specific message type based on the first attachment's MIME type
+    let msgType = 'text';
+    if (attached.length > 0) {
+      const mime = (attached[0].type || '').toLowerCase();
+      if (mime.startsWith('image/webp') || mime.startsWith('image/png') && (attached[0].name || '').toLowerCase().includes('sticker')) {
+        msgType = 'sticker';
+      } else if (mime.startsWith('image/')) {
+        msgType = 'image';
+      } else if (mime.startsWith('video/')) {
+        msgType = 'video';
+      } else if (mime.startsWith('audio/')) {
+        msgType = 'audio';
+      } else {
+        msgType = 'file';
+      }
+    }
+
     const id = generateId();
     const newMsg = {
       id,
@@ -582,11 +599,12 @@ export const api = {
       message_id: id,
       conversation_id: conversationId,
       direction: 'outbound',
-      from_type: isHumanMode ? 'user' : 'nina',
+      from_type: isHumanMode ? 'user' : 'livechat',
       content,
       created_at: new Date().toISOString(),
       provider: 'mock',
-      type: attached.length > 0 ? 'media' : 'text',
+      type: msgType,
+      media_url: attached.length > 0 ? attached[0].url : undefined,
       payload: attached.length > 0 ? { attachments: attached } : undefined,
     };
     await apiPost('messages', newMsg);
@@ -671,7 +689,7 @@ export const api = {
           created_at: new Date().toISOString(),
           is_active: true,
           last_message_at: new Date().toISOString(),
-          nina_context: null,
+          livechat_context: null,
         });
       }
     } catch (err) {
@@ -699,11 +717,11 @@ export const api = {
         return {
           id: c.id,
           contactId: contact.id || c.contact_id || c.id,
-          contactName: (contact && (contact.name || contact.call_name)) || c.contact_id || 'Contato',
-          contactPhone: contact.phone_number || '',
+          contactName: (contact && (contact.name || contact.call_name)) || contact.phone_formated || contact.phone_number || 'Contato',
+          contactPhone: contact.phone_formated || contact.phone_number || '',
           contactAvatar: contact.profile_picture_url || `https://ui-avatars.com/api/?name=${encodeURIComponent((contact && contact.name) || 'U')}&background=0ea5e9&color=fff`,
           contactEmail: contact.email || null,
-          status: c.status || 'nina',
+          status: c.status || 'livechat',
           isActive: c.is_active !== false,
           assignedTeam: c.assigned_team || null,
           assignedUserId: c.assigned_user_id || null,
@@ -721,8 +739,12 @@ export const api = {
             const explicit = (m.type || '').toString().toLowerCase();
             const imageExt = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp'];
             const audioExt = ['.mp3', '.wav', '.ogg', '.m4a', '.aac'];
-            if (explicit === 'image' || imageExt.some(ext => media.endsWith(ext))) msgType = MessageType.IMAGE;
+            const videoExt = ['.mp4', '.webm', '.mov', '.avi'];
+            if (explicit === 'sticker') msgType = MessageType.STICKER;
+            else if (explicit === 'video' || videoExt.some(ext => media.endsWith(ext))) msgType = MessageType.VIDEO;
+            else if (explicit === 'image' || imageExt.some(ext => media.endsWith(ext))) msgType = MessageType.IMAGE;
             else if (explicit === 'audio' || audioExt.some(ext => media.endsWith(ext))) msgType = MessageType.AUDIO;
+            else if (explicit === 'file' || explicit === 'document') msgType = MessageType.FILE;
             return {
               id: m.id,
               content: m.content,
@@ -730,7 +752,7 @@ export const api = {
               direction: m.direction === 'outbound' ? MessageDirection.OUTGOING : MessageDirection.INCOMING,
               type: msgType,
               status: m.status || 'sent',
-              fromType: (m.from_type as any) || (m.direction === 'outbound' ? 'nina' : 'user'),
+              fromType: (m.from_type as any) || (m.direction === 'outbound' ? 'livechat' : 'user'),
               mediaUrl: m.media_url || m.mediaUrl || null,
               whatsappMessageId: m.whatsapp_message_id || m.whatsappMessageId || null,
               edits: m.edits || undefined,
@@ -740,6 +762,7 @@ export const api = {
           }),
           clientMemory: c.client_memory || null,
           notes: c.notes || null,
+          contactPresence: c.contact?.presense || null,
         } as UIConversation;
       });
       return result as UIConversation[];
@@ -772,7 +795,7 @@ export const api = {
       notes: null,
       mute_notifications: Boolean(opts.muteNotifications),
       client_memory: null,
-      nina_context: null,
+      livechat_context: null,
     };
     await apiPost('conversations', conv);
     return conv;
@@ -804,7 +827,7 @@ export const api = {
     await apiPost('conversations', {
       id: conversationId,
       is_active: true,
-      status: 'nina',
+      status: 'livechat',
       closed_at: null,
       closed_by: null,
       updated_at: new Date().toISOString(),
@@ -829,7 +852,7 @@ export const api = {
     });
   },
 
-  updateConversationStatus: async (conversationId: string, status: 'nina' | 'human' | 'paused'): Promise<void> => {
+  updateConversationStatus: async (conversationId: string, status: 'livechat' | 'human' | 'paused'): Promise<void> => {
     await apiPost('conversations', {
       id: conversationId,
       status,

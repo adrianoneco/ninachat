@@ -5,13 +5,15 @@
   "type": "module",
   "scripts": {
     "dev": "sudo mkdir -p /data/wpp_data && sudo chmod -R 777 /data/wpp_data && npx kill-port 40000 40001 && npx dotenv -e .env -- concurrently --prefix-colors \"yellow,blue\" --names SERVER,CLIENT \"cd server && bun run build && bun run start:prod\" \"bun run start:client\"",
-    "nina": "vite",
+    "livechat": "vite",
     "test": "vitest --run --include src/**",
     "start:server": "cd server && bun run start:dev",
     "start:client": "vite --host --port 40000",
     "build": "vite build && cd server && bun run build",
     "preview": "vite preview",
-    "install:all": "npx concurrently --prefix-colors \"yellow,blue\" --names SERVER,CLIENT \"cd server && bun install --force && bun run build\" \"bun install --force && bun run build\""
+    "install:all": "npx concurrently --prefix-colors \"yellow,blue\" --names \"SERVER:INSTALL,CLIENT:INSTALL,SERVER:BUILD,CLIENT:BUILD\" \"cd server && bun install --force\" \"bun install --force\" \"cd server && bun run build\" \"vite build\"",
+    "docker:up": "sudo mkdir -p ./data/docker/postgres_data ./data/docker/minio_data && sudo chmod -R 777 ./data/docker && docker compose up -d",
+    "docker:ps": "docker ps --format \"table {{.ID}}\t{{.Names}}\t{{.Status}}\t{{.Ports}}\""
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
@@ -53,6 +55,7 @@
     "framer-motion": "^12.23.25",
     "input-otp": "^1.4.1",
     "kill-port": "^2.0.1",
+    "libphonenumber-js": "^1.12.41",
     "lovable-tagger": "^1.1.11",
     "lucide-react": "^0.462.0",
     "next-themes": "^0.4.4",

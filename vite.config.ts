@@ -23,6 +23,17 @@ export default defineConfig(({ mode }) => {
           secure: false,
           rewrite: (p: string) => p.replace(/^\/api/, ''),
         },
+        // Proxy uploads to backend
+        '/uploads': {
+          target: 'http://localhost:40001',
+          changeOrigin: true,
+        },
+        // Proxy Socket.IO to backend
+        '/socket.io': {
+          target: 'http://localhost:40001',
+          changeOrigin: true,
+          ws: true,
+        },
       },
     },
     plugins: [

@@ -19,10 +19,14 @@ export function useConversations() {
   const [realtimeConnected] = useState(false);
   const { user } = useAuth();
   const { isAdmin } = useCompanySettings();
+  const initialLoadDone = useRef(false);
 
   const fetchConversations = useCallback(async () => {
     try {
-      setLoading(true);
+      // Only show loading spinner on the very first fetch
+      if (!initialLoadDone.current) {
+        setLoading(true);
+      }
       setError(null);
       const data = await api.fetchConversations();
 
@@ -61,18 +65,22 @@ export function useConversations() {
         return {
           ...conv,
           contactId: contact.id || conv.contactId,
-          contactName: name || conv.contactName,
-          contactPhone: contact.phone_number || contact.phone || conv.contactPhone,
+          contactName: name || contact.phone_formated || contact.phone_number || conv.contactName,
+          contactPhone: contact.phone_formated || contact.phone_number || contact.phone || conv.contactPhone,
           contactAvatar: avatarUrl || conv.contactAvatar,
           contactEmail: contact.email || conv.contactEmail,
+          contactPresence: contact.presense || null,
         };
       });
 
       setConversations(visible);
     } catch (err) {
       console.error('[useConversations] Error fetching:', err);
-      setError('Erro ao carregar conversas');
+      if (!initialLoadDone.current) {
+        setError('Erro ao carregar conversas');
+      }
     } finally {
+      initialLoadDone.current = true;
       setLoading(false);
     }
   }, []);
@@ -103,6 +111,28 @@ export function useConversations() {
       socket.on('conversation:updated', handler);
       socket.on('contact:updated', handler);
       socket.on('messages:read', handler);
+      // presence updates: patch in-memory without full refetch
+      socket.on('contact:presence', (data: { phone: string; presence: string }) => {
+        const pausedTimers = new Map<string, ReturnType<typeof setTimeout>>();
+        setConversations(prev => prev.map(conv => {
+          const cp = (conv as any).contactPhone || '';
+          const matchPhone = cp.replace(/\D/g, '');
+          const incomingPhone = (data.phone || '').replace(/\D/g, '');
+          if (!matchPhone || !incomingPhone || !matchPhone.endsWith(incomingPhone) && !incomingPhone.endsWith(matchPhone)) return conv;
+          const newPresence = data.presence;
+          if (newPresence === 'paused') {
+            // clear existing timer if any
+            const key = conv.id;
+            if (pausedTimers.has(key)) clearTimeout(pausedTimers.get(key)!);
+            const t = setTimeout(() => {
+              setConversations(p => p.map(c => c.id === key ? { ...c, contactPresence: (c as any)._dbPresence || 'unavailable' } : c));
+              pausedTimers.delete(key);
+            }, 5000);
+            pausedTimers.set(key, t);
+          }
+          return { ...conv, _dbPresence: newPresence !== 'paused' ? newPresence : (conv as any)._dbPresence, contactPresence: newPresence };
+        }));
+      });
     } catch (e) {
       // ignore
     }
@@ -117,6 +147,7 @@ export function useConversations() {
         socket.off('conversation:updated', handler);
         socket.off('contact:updated', handler);
         socket.off('messages:read', handler);
+        socket.off('contact:presence');
       } catch (e) {}
     };
   }, [fetchConversations]);
@@ -141,10 +172,10 @@ export function useConversations() {
 
   const updateStatus = useCallback(async (
     conversationId: string, 
-    status: 'nina' | 'human' | 'paused'
+    status: 'livechat' | 'human' | 'paused'
   ) => {
     const statusLabels = {
-      nina: 'IA ativada',
+      livechat: 'IA ativada',
       human: 'Atendimento humano ativado',
       paused: 'Conversa pausada'
     };

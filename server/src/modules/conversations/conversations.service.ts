@@ -18,43 +18,28 @@ export class ConversationsService {
 
   /**
    * Return a pooled payload containing conversations, recent messages and contact online status.
-   * Optimized to avoid N+1 queries.
+   * Optimized to avoid N+1 queries by loading contact via join.
    */
   async pool(limitPerConversation = 50): Promise<any[]> {
-    const convs = await this.repo.find({ order: { updated_at: 'DESC' } });
+    const convs = await this.repo
+      .createQueryBuilder('c')
+      .leftJoinAndSelect('c.contact', 'contact')
+      .orderBy('c.updated_at', 'DESC')
+      .getMany();
+    
     if (convs.length === 0) return [];
-
-    // Collect all contact_ids and fetch contacts in bulk
-    const contactIds = [...new Set(convs.map(c => c.contact_id).filter(Boolean))] as string[];
-    // Also derive digits-only variants for JID-format contact_ids (e.g. 55119@lid → 55119)
-    const digitVariants = contactIds.map(id => id!.replace(/@.*$/, '')).filter(Boolean);
-    const allIds = [...new Set([...contactIds, ...digitVariants])];
-    let contactsMap = new Map<string, any>();
-    if (allIds.length > 0) {
-      const contacts = await this.contactRepo
-        .createQueryBuilder('c')
-        .where('c.whatsapp_id IN (:...ids) OR c.phone_number IN (:...ids)', { ids: allIds })
-        .getMany();
-      for (const ct of contacts) {
-        if (ct.whatsapp_id) contactsMap.set(ct.whatsapp_id, ct);
-        if (ct.phone_number) contactsMap.set(ct.phone_number, ct);
-        // Also index by digits-only so JID-keyed conversations find their contact
-        const d = (ct.whatsapp_id || ct.phone_number || '').replace(/@.*$/, '');
-        if (d) contactsMap.set(d, ct);
-      }
-    }
 
     // Fetch all messages for these conversations in bulk
     const convIds = convs.map(c => c.id);
     let allMessages: any[] = [];
     if (convIds.length > 0) {
-      // Get recent messages per conversation using a subquery approach
       allMessages = await this.messageRepo
         .createQueryBuilder('m')
         .where('m.conversation_id IN (:...ids)', { ids: convIds })
         .orderBy('m.sent_at', 'DESC')
         .getMany();
     }
+
     // Group messages by conversation_id
     const msgsByConv = new Map<string, any[]>();
     for (const m of allMessages) {
@@ -65,7 +50,7 @@ export class ConversationsService {
 
     const result: any[] = [];
     for (const c of convs) {
-      const contact = c.contact_id ? (contactsMap.get(c.contact_id) || null) : null;
+      const contact = c.contact || null;
       let msgs = msgsByConv.get(c.id) || [];
       // Take only limitPerConversation most recent, then reverse to chronological
       msgs = msgs.slice(0, limitPerConversation).reverse();
@@ -79,7 +64,6 @@ export class ConversationsService {
         ...c,
         contact: contact || null,
         messages: msgs,
-        contact_is_online: contact ? Boolean(contact.is_online) : false,
         client_memory: contact?.client_memory || c.client_memory || null,
         notes: c.notes || contact?.notes || null,
         unread_count: unreadCount,
@@ -91,20 +75,20 @@ export class ConversationsService {
   async getOrCreateActiveConversation(contact_id: string, data: Partial<Conversation> = {}): Promise<Conversation> {
     let conversation = await this.repo.findOne({ where: { contact_id, is_active: true } });
     if (conversation) return conversation;
-    const ent = this.repo.create({ nina_context: {}, metadata: {}, ...data, contact_id, is_active: true });
+    const ent = this.repo.create({ livechat_context: {}, metadata: {}, ...data, contact_id, is_active: true });
     const saved = await this.repo.save(ent);
     this.events.emit('conversation:created', saved);
     return saved;
   }
 
   async findAll(): Promise<any[]> {
-    const convs = await this.repo.find({ order: { updated_at: 'DESC' } });
-    const result: any[] = [];
-    for (const c of convs) {
-      const contact = await this.resolveContact(c.contact_id);
-      result.push({ ...c, contact: contact || null });
-    }
-    return result;
+    const convs = await this.repo
+      .createQueryBuilder('c')
+      .leftJoinAndSelect('c.contact', 'contact')
+      .orderBy('c.updated_at', 'DESC')
+      .getMany();
+    
+    return convs.map(c => ({ ...c, contact: c.contact || null }));
   }
 
   async createOrUpdate(data: any) {
@@ -113,7 +97,7 @@ export class ConversationsService {
 
     // Ensure NOT NULL JSONB columns never receive explicit null (TypeORM passes null
     // which overrides the DB-level DEFAULT, causing a NOT NULL constraint violation)
-    const jsonbNotNullCols = ['nina_context', 'metadata'] as const;
+    const jsonbNotNullCols = ['livechat_context', 'metadata'] as const;
     for (const col of jsonbNotNullCols) {
       if (cleanData[col] == null) cleanData[col] = {};
     }

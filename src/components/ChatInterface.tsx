@@ -25,6 +25,7 @@ import { TagSelector } from './TagSelector';
 import { CreateDealModal } from './CreateDealModal';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { Sheet, SheetContent, SheetHeader, SheetFooter, SheetTitle, SheetDescription } from './ui/sheet';
+import { MessageImage, MessageVideo, MessageSticker, MessageFile, MessageAudio } from './MediaRenderers';
 
 const ChatInterface: React.FC = () => {
   const { conversations, loading, sendMessage, updateStatus, markAsRead, assignConversation, refetch } = useConversations();
@@ -166,6 +167,36 @@ const ChatInterface: React.FC = () => {
   const getAvatarUrl = (chat: any) => {
     const name = getDisplayName(chat) || 'U';
     return chat?.contactAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0ea5e9&color=fff`;
+  };
+
+  // Helper functions for presence status mapping
+  const getPresenceDotColor = (presense: string | null): string => {
+    if (!presense) return 'bg-gray-400';
+    if (presense === 'available') return 'bg-emerald-500';
+    if (presense === 'composing' || presense === 'recording') return 'bg-amber-400 animate-pulse';
+    if (presense === 'paused') return 'bg-yellow-400';
+    if (presense === 'unavailable') return 'bg-gray-400';
+    return 'bg-gray-400';
+  };
+
+  const getPresenceStatusText = (presense: string | null): React.ReactNode => {
+    if (!presense) return null;
+    if (presense === 'available') return <span className="text-emerald-400">Online</span>;
+    if (presense === 'composing') return <span className="text-amber-400 animate-pulse">Digitando...</span>;
+    if (presense === 'recording') return <span className="text-amber-400 animate-pulse">Gravando áudio...</span>;
+    if (presense === 'paused') return <span className="text-yellow-400">Parou de digitar</span>;
+    if (presense === 'unavailable') return <span className="text-gray-400">Offline</span>;
+    return null;
+  };
+
+  const getPresenceLabel = (presense: string | null): string => {
+    if (!presense) return '';
+    if (presense === 'available') return 'Online';
+    if (presense === 'composing') return 'Digitando...';
+    if (presense === 'recording') return 'Gravando áudio...';
+    if (presense === 'paused') return 'Parou de digitar';
+    if (presense === 'unavailable') return 'Offline';
+    return '';
   };
 
   // Resizable sidebar state — width persisted to backend
@@ -839,8 +870,8 @@ const ChatInterface: React.FC = () => {
     const sendEl = sendBtnRef.current;
     if (!ta || !wrap || !iconsEl || !sendEl) return;
 
-    // If conversation is handled by Nina, icons are hidden — keep padding minimal
-    if (activeChat?.status === 'nina') {
+    // If conversation is handled by LiveChat, icons are hidden — keep padding minimal
+    if (activeChat?.status === 'livechat') {
       setDynamicPaddingRight(12);
       // place iconsRightPx near the send button area (icons hidden, value won't affect layout)
       setIconsRightPx(DEFAULT_SEND_RIGHT + DEFAULT_SEND_WIDTH);
@@ -900,8 +931,8 @@ const ChatInterface: React.FC = () => {
       const sendEl = sendBtnRef.current;
       if (!ta || !iconsEl || !sendEl) return;
 
-      // If Nina is active hide icons and keep small padding
-      if (activeChat?.status === 'nina') {
+      // If LiveChat is active hide icons and keep small padding
+      if (activeChat?.status === 'livechat') {
         setDynamicPaddingRight(12);
         return;
       }
@@ -1095,7 +1126,7 @@ const ChatInterface: React.FC = () => {
       case 'unread':
         return list.filter(c => (c.unreadCount || 0) > 0);
       case 'waiting':
-        return list.filter(c => c.status === 'nina' && (c.unreadCount || 0) === 0);
+        return list.filter(c => c.status === 'livechat' && (c.unreadCount || 0) === 0);
       case 'mine':
         return list.filter(c => c.assignedUserId && auth?.user && c.assignedUserId === auth.user.id);
       default:
@@ -1262,7 +1293,7 @@ const ChatInterface: React.FC = () => {
 
   const renderStatusBadge = (status: ConversationStatus) => {
     const config = {
-      nina: { label: sdrName, icon: Bot, color: 'bg-violet-500/20 text-violet-400 border-violet-500/30' },
+      livechat: { label: sdrName, icon: Bot, color: 'bg-violet-500/20 text-violet-400 border-violet-500/30' },
       human: { label: 'Humano', icon: User, color: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' },
       paused: { label: 'Pausado', icon: Pause, color: 'bg-amber-500/20 text-amber-400 border-amber-500/30' }
     };
@@ -1278,105 +1309,36 @@ const ChatInterface: React.FC = () => {
 
   const renderMessageContent = (msg: UIMessage) => {
     if (msg.type === MessageType.IMAGE) {
-      return (
-        <div className="mb-1 group relative">
-          <img 
-            src={msg.mediaUrl || msg.content} 
-            alt="Anexo" 
-            className="rounded-lg max-w-full h-auto max-h-72 object-cover border border-gray-300/50 dark:border-slate-700/50 shadow-lg"
-            loading="lazy"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = 'https://placehold.co/300x200/1e293b/cbd5e1?text=Erro+Imagem';
-            }}
-          />
-        </div>
-      );
+      return <MessageImage mediaUrl={msg.mediaUrl} content={msg.content} direction={msg.direction} />;
+    }
+
+    if (msg.type === MessageType.VIDEO) {
+      return <MessageVideo mediaUrl={msg.mediaUrl} content={msg.content} />;
+    }
+
+    if (msg.type === MessageType.STICKER) {
+      return <MessageSticker mediaUrl={msg.mediaUrl} content={msg.content} />;
+    }
+
+    if (msg.type === MessageType.FILE) {
+      return <MessageFile mediaUrl={msg.mediaUrl} content={msg.content} direction={msg.direction} />;
     }
 
     if (msg.type === MessageType.AUDIO) {
-      const isPlaying = playingAudioId === msg.id;
-      const duration = audioDurations[msg.id] || 0;
-      const progress = audioProgress[msg.id] || 0;
-      
-      const togglePlay = () => {
-        const audio = audioRefs.current[msg.id];
-        if (!audio) return;
-        
-        if (isPlaying) {
-          audio.pause();
-          setPlayingAudioId(null);
-        } else {
-          // Pause all other audios
-          Object.values(audioRefs.current).forEach(a => a.pause());
-          audio.play();
-          setPlayingAudioId(msg.id);
-        }
-      };
-
       return (
-        <div className="flex items-center gap-3 min-w-[220px] py-1">
-          {/* Hidden audio element */}
-          {msg.mediaUrl && (
-            <audio
-              ref={el => { if (el) audioRefs.current[msg.id] = el; }}
-              src={msg.mediaUrl}
-              onLoadedMetadata={(e) => {
-                const audio = e.currentTarget;
-                setAudioDurations(prev => ({ ...prev, [msg.id]: audio.duration }));
-              }}
-              onTimeUpdate={(e) => {
-                const audio = e.currentTarget;
-                setAudioProgress(prev => ({ ...prev, [msg.id]: audio.currentTime }));
-              }}
-              onEnded={() => setPlayingAudioId(null)}
-            />
-          )}
-          
-          {/* Play/Pause button */}
-          <button 
-            onClick={togglePlay}
-            disabled={!msg.mediaUrl}
-            className={`flex items-center justify-center w-9 h-9 rounded-full transition-all shadow-md ${
-              msg.direction === MessageDirection.OUTGOING 
-                ? 'bg-white dark:bg-slate-950 text-primary hover:bg-primary/5 disabled:opacity-50' 
-                : 'bg-primary text-white dark:text-white hover:bg-primary/90 disabled:opacity-50'
-            }`}
-          >
-            {isPlaying ? (
-              <Pause className="w-3.5 h-3.5 fill-current" />
-            ) : (
-              <Play className="w-3.5 h-3.5 ml-0.5 fill-current" />
-            )}
-          </button>
-          
-          {/* Progress bar and duration */}
-          <div className="flex-1 flex flex-col gap-1 justify-center h-9">
-            <div 
-              className={`h-1.5 rounded-full overflow-hidden cursor-pointer ${
-                msg.direction === MessageDirection.OUTGOING ? 'bg-white/30' : 'bg-gray-300 dark:bg-slate-600'
-              }`}
-              onClick={(e) => {
-                const audio = audioRefs.current[msg.id];
-                if (!audio || !duration) return;
-                const rect = e.currentTarget.getBoundingClientRect();
-                const percent = (e.clientX - rect.left) / rect.width;
-                audio.currentTime = percent * duration;
-              }}
-            >
-              <div 
-                className={`h-full rounded-full transition-all ${
-                  msg.direction === MessageDirection.OUTGOING ? 'bg-white' : 'bg-primary/40'
-                }`}
-                style={{ width: `${duration ? (progress / duration) * 100 : 0}%` }}
-              />
-            </div>
-            <span className={`text-[10px] font-medium ${
-              msg.direction === MessageDirection.OUTGOING ? 'text-primary/90' : 'text-gray-500 dark:text-slate-400'
-            }`}>
-              {formatAudioTime(progress)} / {formatAudioTime(duration)}
-            </span>
-          </div>
-        </div>
+        <MessageAudio
+          msgId={msg.id}
+          mediaUrl={msg.mediaUrl}
+          direction={msg.direction}
+          audioRefs={audioRefs}
+          playingAudioId={playingAudioId}
+          setPlayingAudioId={setPlayingAudioId}
+          audioDurations={audioDurations}
+          setAudioDurations={setAudioDurations}
+          audioProgress={audioProgress}
+          setAudioProgress={setAudioProgress}
+          formatAudioTime={formatAudioTime}
+        />
       );
     }
 
@@ -1454,7 +1416,7 @@ const ChatInterface: React.FC = () => {
                       <Popover>
                         <PopoverTrigger asChild>
                           <button className={`w-full text-left rounded-lg px-3 py-2 text-sm flex items-center justify-between ${statusFilter !== 'all' ? 'bg-primary text-white' : 'bg-white dark:bg-slate-950 text-gray-900 dark:text-slate-100 border border-gray-200 dark:border-slate-800'}`}>
-                            <span>{({ all: 'Todas', nina: 'IA', human: 'Humano', paused: 'Pausado' } as Record<string,string>)[statusFilter] || 'Todas'}</span>
+                            <span>{({ all: 'Todas', livechat: 'IA', human: 'Humano', paused: 'Pausado' } as Record<string,string>)[statusFilter] || 'Todas'}</span>
                             <ChevronDown className="w-4 h-4" />
                           </button>
                         </PopoverTrigger>
@@ -1467,7 +1429,7 @@ const ChatInterface: React.FC = () => {
                               className="w-full mb-2 px-3 py-2 rounded border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-sm outline-none"
                             />
                             <div className="max-h-48 overflow-auto">
-                              {Object.entries({ all: 'Todas', nina: 'IA', human: 'Humano', paused: 'Pausado' })
+                              {Object.entries({ all: 'Todas', livechat: 'IA', human: 'Humano', paused: 'Pausado' })
                                 .filter(([k, v]) => v.toLowerCase().includes(statusSearch.toLowerCase()))
                                 .map(([value, label]) => (
                                   <button
@@ -1618,7 +1580,7 @@ const ChatInterface: React.FC = () => {
                         <div className="text-xs text-gray-500 dark:text-slate-400">Status</div>
                         <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="w-full border border-gray-200 dark:border-slate-800 rounded-md px-2 py-1 text-sm text-gray-900 dark:text-white">
                           <option value="all">Todos</option>
-                          <option value="nina">IA</option>
+                          <option value="livechat">IA</option>
                           <option value="human">Humano</option>
                           <option value="paused">Pausado</option>
                         </select>
@@ -1715,6 +1677,13 @@ const ChatInterface: React.FC = () => {
                   </div>
                   
                   <div className="flex items-center mt-2 gap-1.5">
+                    {/* Presence indicator dot */}
+                    <div className="relative inline-block">
+                      <span 
+                        className={`w-2 h-2 rounded-full ${getPresenceDotColor((chat as any).contactPresence)}`}
+                        title={getPresenceLabel((chat as any).contactPresence)}
+                      ></span>
+                    </div>
                     {renderStatusBadge(chat.status)}
                     {chat.tags.slice(0, 1).map(tag => (
                       <span key={tag} className="px-2 py-0.5 bg-gray-200/80 dark:bg-slate-800/80 border border-gray-300 dark:border-slate-700 text-gray-500 dark:text-slate-400 text-[10px] rounded-md font-medium">
@@ -1744,7 +1713,7 @@ const ChatInterface: React.FC = () => {
 
                           <div className="space-y-2">
                             <button
-                              onClick={async () => { try { await updateStatus(chat.id, 'nina'); toast.success('Devolvido para I.A'); if (refetch) await refetch(); } catch (err) { console.error(err); toast.error('Falha'); } }}
+                              onClick={async () => { try { await updateStatus(chat.id, 'livechat'); toast.success('Devolvido para I.A'); if (refetch) await refetch(); } catch (err) { console.error(err); toast.error('Falha'); } }}
                               className="w-full flex items-center gap-3 px-3 py-2 rounded-md bg-cyan-100 dark:bg-slate-800 text-slate-900 dark:text-white"
                             >
                               <span className="w-7 h-7 rounded-md bg-cyan-200/70 dark:bg-cyan-900/40 flex items-center justify-center">
@@ -1933,14 +1902,16 @@ const ChatInterface: React.FC = () => {
                 >
                 <div className="relative">
                   <img src={getAvatarUrl(activeChat)} alt={getDisplayName(activeChat)} className="w-9 h-9 rounded-full ring-2 ring-gray-200 dark:ring-slate-800" />
-                  <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-gray-200 dark:border-slate-900 rounded-full"></span>
+                  <span className={`absolute bottom-0 right-0 w-2.5 h-2.5 border-2 border-gray-200 dark:border-slate-900 rounded-full ${getPresenceDotColor((activeChat as any).contactPresence)}`} title={getPresenceLabel((activeChat as any).contactPresence)}></span>
                 </div>
                 <div className="ml-3">
                   <h2 className="text-sm font-bold text-gray-800 dark:text-slate-100 flex items-center gap-2">
                     {activeChat.contactName}
                     {renderStatusBadge(activeChat.status)}
                   </h2>
-                  <p className="text-xs text-cyan-500 font-medium">{activeChat.contactPhone}</p>
+                  <p className="text-xs text-cyan-500 font-medium">
+                    {getPresenceStatusText((activeChat as any).contactPresence) || <span>{activeChat.contactPhone}</span>}
+                  </p>
                 </div>
               </div>
               </div>
@@ -1949,8 +1920,8 @@ const ChatInterface: React.FC = () => {
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className={`text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:text-white ${activeChat.status === 'nina' ? 'bg-violet-500/20 text-violet-400' : ''}`}
-                  onClick={() => handleStatusChange('nina')}
+                  className={`text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:text-white ${activeChat.status === 'livechat' ? 'bg-violet-500/20 text-violet-400' : ''}`}
+                  onClick={() => handleStatusChange('livechat')}
                   title={`Ativar ${sdrName} (IA)`}
                 >
                   <Bot className="w-5 h-5" />
@@ -2093,7 +2064,7 @@ const ChatInterface: React.FC = () => {
 
                       <div className="space-y-2">
                         <button
-                          onClick={() => { handleStatusChange('nina'); }}
+                          onClick={() => { handleStatusChange('livechat'); }}
                           className="w-full flex items-center gap-3 px-3 py-2 rounded-md bg-cyan-100 dark:bg-slate-800 text-slate-900 dark:text-white"
                         >
                           <span className="w-7 h-7 rounded-md bg-cyan-200/70 dark:bg-cyan-900/40 flex items-center justify-center">
@@ -2145,8 +2116,8 @@ const ChatInterface: React.FC = () => {
               </div>
             </div>
 
-            {/* IA Mode Banner (show when Nina is handling the conversation) */}
-            {(activeChat?.status === 'nina' && !activeChat?.assignedUserId) && (
+            {/* IA Mode Banner (show when LiveChat is handling the conversation) */}
+            {(activeChat?.status === 'livechat' && !activeChat?.assignedUserId) && (
               <div className="px-6 pb-3">
                 <div className="w-full rounded-2xl bg-emerald-50/80 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 p-3 flex items-center justify-between gap-4 shadow-md">
                   <div className="flex items-center gap-3 min-w-0">
@@ -2278,7 +2249,7 @@ const ChatInterface: React.FC = () => {
                           <div 
                             className={`px-5 py-3 rounded-2xl shadow-md relative text-sm leading-relaxed ${
                               isOutgoing 
-                                  ? msg.fromType === 'nina'
+                                  ? msg.fromType === 'livechat'
                                     ? 'bg-gradient-to-br from-violet-600 to-purple-700 text-gray-900 dark:text-white rounded-tr-sm shadow-violet-900/20'
                                     : isAgentSent
                                       ? 'bg-gradient-to-br from-emerald-500 to-emerald-600 text-white rounded-tr-sm shadow-emerald-900/20'
@@ -2347,11 +2318,18 @@ const ChatInterface: React.FC = () => {
                           </div>
                           
                           <div className="flex items-center mt-1.5 gap-1.5 opacity-60 group-hover:opacity-100 transition-opacity px-1">
-                            {isOutgoing && msg.fromType === 'nina' && (
+                            {isOutgoing && msg.fromType === 'livechat' && (
                               <Bot className="w-3 h-3 text-violet-400" />
                             )}
                             {isOutgoing && msg.fromType === 'user' && (
                               <User className="w-3 h-3 text-emerald-400" />
+                            )}
+                            {/* Presence indicator for incoming messages */}
+                            {!isOutgoing && (activeChat as any).contactPresence && (
+                              <span 
+                                className={`inline-block w-1.5 h-1.5 rounded-full ${getPresenceDotColor((activeChat as any).contactPresence)}`}
+                                title={getPresenceLabel((activeChat as any).contactPresence)}
+                              ></span>
                             )}
                             <span className="text-[10px] text-gray-500 dark:text-slate-500 font-medium">{msg.timestamp}</span>
                             {isOutgoing && (
@@ -2644,6 +2622,32 @@ const ChatInterface: React.FC = () => {
                   </div>
                 </>
               )}
+              {/* attachments preview above input */}
+              {attachments.length > 0 && (
+                <div className="flex items-center gap-2 px-3 pb-2 max-w-4xl mx-auto">
+                  {attachments.map(a => (
+                    <div key={a.id} className="w-12 h-12 rounded-lg overflow-hidden border border-gray-200 dark:border-slate-700 bg-black/10 relative flex items-center justify-center flex-shrink-0">
+                      {a.type && a.type.startsWith('image/') ? (
+                        <img onClick={() => openAttachmentPreview(a as any)} src={a.dataUrl} alt={a.name} className="w-full h-full object-cover cursor-pointer" />
+                      ) : a.type && a.type.startsWith('video/') ? (
+                        <button onClick={() => openAttachmentPreview(a as any)} className="w-full h-full flex items-center justify-center cursor-pointer">
+                          <Play className="w-5 h-5 text-white/90" />
+                        </button>
+                      ) : a.type && a.type.startsWith('audio/') ? (
+                        <button onClick={() => openAttachmentPreview(a as any)} className="w-full h-full flex items-center justify-center cursor-pointer">
+                          <Play className="w-5 h-5 text-white/90" />
+                        </button>
+                      ) : (
+                        <div onClick={() => openAttachmentPreview(a as any)} className="w-full h-full flex flex-col items-center justify-center text-xs text-gray-700 dark:text-slate-200 cursor-pointer px-1 text-center">
+                          <FileText className="w-4 h-4 mb-0.5" />
+                          <div className="truncate max-w-[40px] text-[9px]">{a.name}</div>
+                        </div>
+                      )}
+                      <button onClick={() => removeAttachment(a.id)} className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] flex items-center justify-center rounded-full shadow">×</button>
+                    </div>
+                  ))}
+                </div>
+              )}
               <form onSubmit={handleSendMessage} className="flex items-end gap-3 max-w-4xl mx-auto">
                 {/* left-side action buttons removed as requested */}
                 
@@ -2665,7 +2669,7 @@ const ChatInterface: React.FC = () => {
                         handleSendMessage();
                       }
                     }}
-                    placeholder={activeChat.status === 'nina' ? `${sdrName} está respondendo automaticamente...` : 'Digite sua mensagem...'}
+                    placeholder={activeChat.status === 'livechat' ? `${sdrName} está respondendo automaticamente...` : 'Digite sua mensagem...'}
                     style={dynamicPaddingRight != null ? { paddingRight: `${dynamicPaddingRight}px` } : undefined}
                     className={`w-full bg-transparent border-none p-3.5 max-h-32 min-h-[48px] text-sm ${isTyping ? 'text-white' : 'text-gray-700 dark:text-slate-200'} focus:ring-0 resize-none outline-none placeholder:text-gray-400 dark:placeholder:text-slate-600`}
                     rows={1}
@@ -2681,11 +2685,11 @@ const ChatInterface: React.FC = () => {
                   
 
                   {/* Icons behavior:
-                      - If Nina is handling the conversation: hide all icon options.
+                      - If LiveChat is handling the conversation: hide all icon options.
                       - If user is typing: show full set of icons.
                       - Otherwise (not typing): show compact/condensed icons.
                   */}
-                    {activeChat?.status === 'nina' ? null : (
+                    {activeChat?.status === 'livechat' ? null : (
                       inputText.trim().length > 0 ? (
                         <div ref={iconsRef} style={iconsRightPx != null ? { right: `${iconsRightPx}px` } : undefined} className="absolute inset-y-0 right-0 flex items-center gap-0 z-10 pr-3">
                           <button type="button" title="Emoji" className={iconBtnClass}>
@@ -2815,39 +2819,12 @@ const ChatInterface: React.FC = () => {
                       )
                     )}
 
-                  {/* attachments preview (if any) */}
-                  {attachments.length > 0 && (
-                    <div className="absolute left-3 top-2 flex items-center gap-2 z-10">
-                      {attachments.map(a => (
-                        <div key={a.id} className="w-10 h-10 rounded overflow-hidden border border-gray-200 dark:border-slate-800 bg-black/10 relative flex items-center justify-center">
-                          {a.type && a.type.startsWith('image/') ? (
-                            <img onClick={() => openAttachmentPreview(a as any)} src={a.dataUrl} alt={a.name} className="w-full h-full object-cover cursor-pointer" />
-                          ) : a.type && a.type.startsWith('video/') ? (
-                            <button onClick={() => openAttachmentPreview(a as any)} className="w-full h-full flex items-center justify-center cursor-pointer">
-                              <Play className="w-5 h-5 text-white/90" />
-                            </button>
-                          ) : a.type && a.type.startsWith('audio/') ? (
-                            <button onClick={() => openAttachmentPreview(a as any)} className="w-full h-full flex items-center justify-center cursor-pointer">
-                              <Play className="w-5 h-5 text-white/90" />
-                            </button>
-                          ) : (
-                            <div onClick={() => openAttachmentPreview(a as any)} className="w-full h-full flex flex-col items-center justify-center text-xs text-gray-700 dark:text-slate-200 cursor-pointer px-1 text-center">
-                              <FileText className="w-4 h-4 mb-1" />
-                              <div className="truncate">{a.name}</div>
-                            </div>
-                          )}
-                          <button onClick={() => removeAttachment(a.id)} className="absolute top-0 right-0 w-5 h-5 bg-black/50 text-white text-xs flex items-center justify-center rounded-bl">×</button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  
                   <Button
                     type="submit"
                     ref={sendBtnRef}
-                    disabled={!inputText.trim()}
+                    disabled={!inputText.trim() && attachments.length === 0}
                     className={`absolute right-3 top-1/2 transform -translate-y-1/2 rounded-full w-12 h-12 p-0 transition-transform flex items-center justify-center z-20 ${
-                      inputText.trim()
+                      (inputText.trim() || attachments.length > 0)
                         ? 'bg-gradient-to-br from-cyan-500 to-emerald-400 text-white shadow-xl hover:scale-105 active:scale-95 ring-1 ring-white/10'
                         : 'bg-gray-200 text-gray-400 opacity-60 cursor-not-allowed'
                     }`}>
@@ -3025,14 +3002,22 @@ const ChatInterface: React.FC = () => {
               <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-8">
                 {/* Identity */}
                 <div className="flex flex-col items-center text-center">
-                  <div className="w-24 h-24 rounded-full p-1 bg-gradient-to-tr from-cyan-500 to-teal-600 shadow-xl mb-4">
+                  <div className="w-24 h-24 rounded-full p-1 bg-gradient-to-tr from-cyan-500 to-teal-600 shadow-xl mb-4 relative">
                     <img src={activeChat.contactAvatar} alt={activeChat.contactName} className="w-full h-full rounded-full object-cover border-2 border-gray-200 dark:border-slate-900" />
+                    <span 
+                      className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white dark:border-slate-900 ${getPresenceDotColor((activeChat as any).contactPresence)}`}
+                      title={getPresenceLabel((activeChat as any).contactPresence)}
+                    ></span>
                   </div>
                   <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">{activeChat.contactName}</h3>
-                  <p className="text-sm text-gray-500 dark:text-slate-400 mb-2">
+                  <p className="text-sm text-gray-500 dark:text-slate-400 mb-1">
                     {(activeChat.clientMemory?.lead_profile?.lead_stage === 'new') ? 'Novo Lead' : 
                      (activeChat.clientMemory?.lead_profile?.lead_stage === 'qualified') ? 'Lead Qualificado' :
                      (activeChat.clientMemory?.lead_profile?.lead_stage ?? '')}
+                  </p>
+                  {/* Display presence status */}
+                  <p className="text-xs font-medium mb-2">
+                    {getPresenceStatusText((activeChat as any).contactPresence)}
                   </p>
                   {activeChat.isGroup && (
                     <div className="w-full text-left mt-2">
@@ -3483,11 +3468,11 @@ const ChatInterface: React.FC = () => {
               <div className="absolute inset-0 bg-cyan-500/20 rounded-full blur-xl group-hover:bg-cyan-500/30 transition-all duration-1000"></div>
               <MessageSquare className="w-10 h-10 text-cyan-500" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{companyName} Workspace</h2>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">LiveChat</h2>
             <p className="text-gray-500 dark:text-slate-400 text-sm leading-relaxed">
               {conversations.length === 0 
-                ? 'Aguardando novas conversas. Configure o webhook do WhatsApp para começar a receber mensagens.'
-                : 'Selecione uma conversa ao lado para iniciar o atendimento inteligente.'}
+                ? 'Nenhuma conversa por aqui ainda. Envie uma mensagem, importe contatos ou aguarde o próximo contato pelo WhatsApp.'
+                : 'Selecione uma conversa ao lado para iniciar o atendimento.'}
             </p>
             <div className="mt-8 flex gap-3 text-xs text-gray-500 dark:text-slate-500 font-mono bg-gray-100/50 dark:bg-slate-900/50 px-4 py-2 rounded-lg border border-gray-200/50 dark:border-slate-800/50">
               <span className="flex items-center gap-1.5">

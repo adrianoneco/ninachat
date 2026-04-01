@@ -277,7 +277,7 @@ const Scheduling: React.FC = () => {
                                     className={`text-[10px] px-2 py-1 rounded border truncate font-medium cursor-pointer relative ${getEventTypeColor(app.type)}`}
                                     onClick={(e) => handleAppointmentClick(app, e)}
                                 >
-                                    {app.metadata?.source === 'nina_ai' && (
+                                    {app.metadata?.source === 'livechat_ai' && (
                                       <Bot className="w-2.5 h-2.5 inline-block mr-0.5 text-cyan-400" />
                                     )}
                                     {app.time} - {app.title}
@@ -362,7 +362,7 @@ const Scheduling: React.FC = () => {
                                                 style={{ minHeight: `${Math.max(40, (app.duration / 60) * 80)}px` }}
                                             >
                                                 <div className="font-bold truncate flex items-center gap-1">
-                                                    {app.metadata?.source === 'nina_ai' && (
+                                                    {app.metadata?.source === 'livechat_ai' && (
                                                       <Bot className="w-3 h-3 text-cyan-400 flex-shrink-0" />
                                                     )}
                                                     {app.title}
@@ -420,7 +420,7 @@ const Scheduling: React.FC = () => {
                                     >
                                         <div>
                                             <div className="font-bold text-sm flex items-center gap-1.5">
-                                                {app.metadata?.source === 'nina_ai' && (
+                                                {app.metadata?.source === 'livechat_ai' && (
                                                   <Bot className="w-3.5 h-3.5 text-cyan-400 flex-shrink-0" />
                                                 )}
                                                 {app.title}
@@ -672,7 +672,7 @@ const Scheduling: React.FC = () => {
                                 <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase border ${getEventTypeColor(selectedAppointment.type)}`}>
                                     {selectedAppointment.type}
                                 </span>
-                                {selectedAppointment.metadata?.source === 'nina_ai' && (
+                                {selectedAppointment.metadata?.source === 'livechat_ai' && (
                                     <span className="px-2 py-1 rounded text-[10px] font-bold uppercase border bg-cyan-500/10 text-cyan-300 border-cyan-500/30 flex items-center gap-1">
                                         <Bot className="w-3 h-3" />
                                         Criado por IA

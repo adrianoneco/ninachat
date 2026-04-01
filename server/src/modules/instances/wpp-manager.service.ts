@@ -11,9 +11,14 @@ import fs from 'fs-extra';
 import path from 'path';
 import { uploadDirToS3 } from '../../lib/s3.client';
 import * as wppconnect from '@wppconnect-team/wppconnect';
+import { StorageService } from '../storage/storage.service';
 
 import _fs from 'fs';
 import shouldIgnore from 'src/utils/shouldIgnore';
+import { syncContacts } from '../sync/contactsSync';
+import e from 'express';
+import { syncConversations } from '../sync/conversationsSync';
+import { formatBR } from 'src/utils/fomatNumber';
 
 const logger = new Logger('WppManager');
 
@@ -29,6 +34,7 @@ export class WppManagerService implements OnApplicationShutdown {
     @InjectRepository(Contact) private contactRepo: Repository<Contact>,
     @InjectRepository(Message) private msgRepo: Repository<Message>,
     @InjectRepository(Conversation) private convRepo: Repository<Conversation>,
+    private readonly storageService: StorageService,
   ) {
     // register this instance manager globally for convenience
     // so other modules can call Wpp.getInstances()
@@ -348,8 +354,8 @@ export class WppManagerService implements OnApplicationShutdown {
         try {
           if (client.page) {
             const ready = await client.page.evaluate(() => {
-              return typeof (globalThis as any).WPP !== 'undefined' && 
-                     typeof (globalThis as any).WPP.chat !== 'undefined';
+              return typeof (globalThis as any).WPP !== 'undefined' &&
+                typeof (globalThis as any).WPP.chat !== 'undefined';
             });
             if (ready) {
               logger.log(`[${instance.name}] page frame stabilized on attempt ${attempt}`);
@@ -364,7 +370,7 @@ export class WppManagerService implements OnApplicationShutdown {
         }
         await new Promise(r => setTimeout(r, stabilizeDelay));
       }
-    })().catch(() => {});
+    })().catch(() => { });
 
     // Helper to safely log
     const logEvent = (
@@ -414,14 +420,23 @@ export class WppManagerService implements OnApplicationShutdown {
       }
     })().catch(() => { /* swallow — non-critical */ });
 
+    client.onAnyMessage((message) => {
+      fs.writeFileSync(`/home/neco/Documentos/nina_chat/data/messages/MOD1_${message.id}.json`, JSON.stringify(message, null, 4));
+    });
     client.onMessage(async (message: any) => {
+      fs.writeFileSync(`/home/neco/Documentos/nina_chat/data/messages/MOD2_${message.id}.json`, JSON.stringify(message, null, 4));
       try {
         // Attempt to extract common fields from various wppconnect message shapes
         const raw = message || {};
         const rawFrom = raw.from || raw.author || raw.key?.remoteJid || raw.chatId || raw.sender || null;
         const msgBody = raw.body || raw.text || raw.message?.conversation || raw.message?.extendedTextMessage?.text || raw.message?.imageMessage?.caption || null;
         const msgId = (raw.key && raw.key.id) || raw.id || raw.message?.key?.id || `msg-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-        const timestamp = raw.t || raw.timestamp || raw.message?.timestamp || new Date().toISOString();
+        const rawTs = raw.t || raw.timestamp || raw.message?.timestamp || null;
+        // WPPConnect delivers `t` as Unix seconds (10 digits); new Date() needs ms
+        const tsMs: number = rawTs
+          ? (typeof rawTs === 'number' && rawTs < 1e12 ? rawTs * 1000 : Number(rawTs))
+          : Date.now();
+        const timestamp = new Date(tsMs).toISOString();
         // Normalize to digits only — used for phone_number and as fallback
         const digits = rawFrom ? String(rawFrom).replace(/\D/g, '') : null;
         // Keep the full JID for WPP API calls (e.g. 5511999@c.us or 5511999@lid)
@@ -443,61 +458,66 @@ export class WppManagerService implements OnApplicationShutdown {
           console.warn('[WppManager] failed emitting wpp:message preview', e);
         }
 
+        // ── Determine JID type from message._serialized ──
+        const serialized: string = raw.id?._serialized || raw.key?.id || rawFrom || '';
+        const isLid = serialized.endsWith('@lid') || (rawFrom || '').endsWith('@lid');
+        // For @c.us contacts use phone_number (digits only); for @lid use full whatsapp_id
+        const senderPhone: string = message?.sender?.phone_number || (digits || '');
+        const senderWid: string = message?.sender?.id || (isLid ? (rawFrom || '') : `${digits}@c.us`);
+
         // ── Ensure contact exists ──
-        let contact = null as any;
+        let resolvedContact: any = null;
         try {
-          if (digits || rawFrom) {
-            // Try multiple lookup strategies — JID formats vary (@c.us, @lid, @s.whatsapp.net)
-            const lookups: any[] = [];
-            if (rawFrom) lookups.push({ whatsapp_id: rawFrom });
-            if (digits) {
-              lookups.push({ whatsapp_id: `${digits}@c.us` });
-              lookups.push({ whatsapp_id: `${digits}@lid` });
-              lookups.push({ whatsapp_id: digits });
-              lookups.push({ phone_number: digits });
-              lookups.push({ phone_number: `+${digits}` });
-            }
-            for (const q of lookups) {
-              try {
-                contact = await this.contactRepo.findOneBy(q as any);
-                if (contact) break;
-              } catch { /* ignore per-attempt */ }
-            }
-          }
-          if (!contact && (digits || rawFrom)) {
-            try {
-              const displayName = message.sender?.pushname || message.sender?.verifiedName || message.sender?.formattedName || digits || rawFrom;
-              contact = this.contactRepo.create({
-                name: displayName,
-                phone_number: digits || rawFrom,
-                whatsapp_id: wppJid || rawFrom,
-                created_at: new Date(),
-              } as any);
-              contact = await this.contactRepo.save(contact as any);
-              logger.log(`[onMessage] created contact ${displayName} (${digits})`);
-            } catch (e) {
-              console.warn('[WppManager] failed creating contact', e);
-            }
+          await this.contactRepo.createQueryBuilder()
+            .insert()
+            .into('contacts')
+            .values({
+              name: message?.sender?.name,
+              call_name: message?.sender?.verifiedName,
+              phone_number: senderPhone,
+              phone_formated: formatBR(senderPhone),
+              is_blocked: message?.sender?.isBlocked,
+              is_business: message?.sender?.isBusiness,
+              profile_picture_url: message?.sender?.avatar_url,
+              whatsapp_id: senderWid,
+              instance_id: instance.id
+            })
+            .orUpdate(
+              ['name', 'call_name', 'whatsapp_id', 'is_blocked', 'is_business', 'profile_picture_url', 'updated_at'],
+              ['phone_number'],
+            )
+            .execute()
+            .then(() => logger.log(`Contact ${message?.sender?.name} (${senderPhone}) synced`))
+            .catch((err) => logger.warn(`Failed to sync contact ${senderPhone}: ${err}`));
+
+          // Resolve contact entity to get its UUID
+          if (isLid) {
+            resolvedContact = await this.contactRepo.findOneBy({ whatsapp_id: senderWid } as any);
+          } else {
+            resolvedContact = await this.contactRepo.findOneBy({ phone_number: senderPhone } as any)
+              || await this.contactRepo.findOneBy({ whatsapp_id: senderWid } as any);
           }
         } catch (e) {
-          console.warn('[WppManager] contact lookup/create failed', e);
+          logger.warn(`[WppManager] contact lookup/create failed: ${e}`);
         }
 
         // ── Ensure conversation exists ──
+        // Prefer contact UUID as contact_id; fall back to legacy JID variants
         let conv = null as any;
         try {
-          // Lookup by multiple possible contact_id formats stored in conversations
+          const contactUuid: string | null = resolvedContact?.id || null;
+
+          // Build lookup variants: UUID first, then JID fallbacks for legacy rows
           const contactVariants: string[] = [];
-          if (contact?.whatsapp_id) contactVariants.push(contact.whatsapp_id);
-          if (contact?.phone_number) contactVariants.push(contact.phone_number);
-          if (wppJid) contactVariants.push(wppJid);
+          if (contactUuid) contactVariants.push(contactUuid);
+          if (senderWid) contactVariants.push(senderWid);
+          if (senderPhone) contactVariants.push(senderPhone);
           if (digits) {
             contactVariants.push(digits);
             contactVariants.push(`${digits}@c.us`);
             contactVariants.push(`${digits}@lid`);
             contactVariants.push(`+${digits}`);
           }
-          // Deduplicate
           const uniqueVariants = [...new Set(contactVariants.filter(Boolean))];
 
           for (const cid of uniqueVariants) {
@@ -505,23 +525,31 @@ export class WppManagerService implements OnApplicationShutdown {
             if (conv) break;
           }
 
+          // Migrate legacy JID-keyed conversation to use contact UUID
+          if (conv && contactUuid && conv.contact_id !== contactUuid) {
+            await this.convRepo.update(conv.id, { contact_id: contactUuid } as any);
+            conv = { ...conv, contact_id: contactUuid };
+          }
+
           if (!conv) {
-            // Create new conversation — use the WPP JID as contact_id for send compatibility
-            const contactId = wppJid || digits || rawFrom;
+            // New conversation — store contact UUID so pool() join works reliably
+            const contactId = contactUuid || senderWid || digits || rawFrom;
             const convEnt = this.convRepo.create({
+              chat_id: `${instance.id}-${contactId}`,
               contact_id: contactId,
               instance_id: instance.id,
               is_active: true,
               last_message_at: new Date(),
-              nina_context: {},
+              livechat_context: {},
               metadata: {},
+              is_group: conv?.isGroup,
             } as any);
             conv = await this.convRepo.save(convEnt as any);
             logger.log(`[onMessage] created conversation ${conv.id} for contact_id=${contactId}`);
             this.events.emit('conversation:created', conv);
           }
         } catch (e) {
-          console.warn('[WppManager] conversation upsert failed', e);
+          logger.warn(`[WppManager] conversation upsert failed: ${e}`);
         }
 
         // ── Persist message ──
@@ -531,14 +559,96 @@ export class WppManagerService implements OnApplicationShutdown {
             console.warn('[WppManager] no conversation_id — skipping message persist');
             return;
           }
+
+          // ── Detect media type from WPPConnect message ──
+          const wppType = (raw.type || '').toLowerCase();
+          const mediaTypes = ['image', 'video', 'audio', 'ptt', 'sticker', 'document'];
+          const isMediaMsg = raw.isMedia === true || mediaTypes.includes(wppType);
+          let resolvedType = 'text';
+          if (isMediaMsg) {
+            if (wppType === 'ptt' || wppType === 'audio') resolvedType = 'audio';
+            else if (wppType === 'image') resolvedType = 'image';
+            else if (wppType === 'video') resolvedType = 'video';
+            else if (wppType === 'sticker') resolvedType = 'sticker';
+            else if (wppType === 'document') resolvedType = 'file';
+            else resolvedType = 'file';
+          } else if (msgBody) {
+            resolvedType = 'text';
+          }
+
+          // ── Download media from WPP and upload to MinIO ──
+          let mediaUrl: string | null = null;
+          if (isMediaMsg) {
+            try {
+              let mediaBuffer: Buffer | null = null;
+
+              // Strategy 1: decryptFile returns a Buffer directly
+              if (client.decryptFile && typeof client.decryptFile === 'function') {
+                try {
+                  mediaBuffer = await client.decryptFile(raw);
+                } catch (decryptErr) {
+                  logger.warn(`[WPP] decryptFile failed: ${String(decryptErr)}`);
+                }
+              }
+
+              // Strategy 2: downloadMedia returns base64 string
+              if (!mediaBuffer && client.downloadMedia && typeof client.downloadMedia === 'function') {
+                try {
+                  const b64 = await client.downloadMedia(msgId);
+                  if (b64 && typeof b64 === 'string') {
+                    // May come as data:mime;base64,... or raw base64
+                    const match = b64.match(/^data:([^;]+);base64,(.*)$/);
+                    if (match) {
+                      mediaBuffer = Buffer.from(match[2], 'base64');
+                    } else {
+                      mediaBuffer = Buffer.from(b64, 'base64');
+                    }
+                  }
+                } catch (dlErr) {
+                  logger.warn(`[WPP] downloadMedia failed: ${String(dlErr)}`);
+                }
+              }
+
+              // Strategy 3: body may contain base64 data (when auto-download is enabled)
+              if (!mediaBuffer && raw.body && typeof raw.body === 'string' && raw.body.length > 100) {
+                try {
+                  const match = raw.body.match(/^data:([^;]+);base64,(.*)$/);
+                  if (match) {
+                    mediaBuffer = Buffer.from(match[2], 'base64');
+                  } else if (/^[A-Za-z0-9+/=\s]+$/.test(raw.body.slice(0, 100))) {
+                    mediaBuffer = Buffer.from(raw.body, 'base64');
+                  }
+                } catch { /* not base64 */ }
+              }
+
+              if (mediaBuffer && mediaBuffer.length > 0) {
+                const mime = raw.mimetype || 'application/octet-stream';
+                const ext = this.extFromMime(mime);
+                const originalName = raw.filename || `${wppType}_${Date.now()}${ext}`;
+                const storageFile = await this.storageService.upload({
+                  buffer: mediaBuffer,
+                  originalName,
+                  mimeType: mime,
+                  conversationId,
+                });
+                mediaUrl = `/api/storage/${storageFile.id}/url`;
+                logger.log(`[WPP] saved inbound ${resolvedType} to MinIO: ${storageFile.s3_key}`);
+              } else {
+                logger.warn(`[WPP] could not download media for message ${msgId}`);
+              }
+            } catch (storageErr) {
+              logger.warn(`[WPP] media storage failed: ${String(storageErr)}`);
+            }
+          }
+
           const msgEnt: any = {
             conversation_id: conversationId,
             message_id: String(msgId),
             whatsapp_message_id: String(msgId),
-            type: msgBody ? 'text' : 'media',
+            type: resolvedType,
             from_type: 'whatsapp',
             content: msgBody || null,
-            media_url: null,
+            media_url: mediaUrl,
             status: 'received',
             sent_at: new Date(timestamp),
             metadata: raw,
@@ -569,6 +679,57 @@ export class WppManagerService implements OnApplicationShutdown {
         console.warn('[WppManager] onMessage handler error', e);
       }
     });
+
+    // ── Presence tracking ──────────────────────────────────────────────────────
+    client.onPresenceChanged?.(async (presence: any) => {
+      try {
+        // WPPConnect shape: { id: '5541...@c.us', status: 'composing'|'recording'|'available'|'unavailable' }
+        const jid: string = presence?.id || presence?.chatId || presence?.from || '';
+        const presenceType: string = presence?.status || presence?.state || presence?.type || presence?.presence || '';
+        if (!jid || !presenceType) return;
+
+        const phone = jid.replace(/@.*$/, '');
+
+        // Update contact presense in DB (match by whatsapp_id OR phone_number)
+        await this.contactRepo.createQueryBuilder()
+          .update()
+          .set({ presense: presenceType })
+          .where('whatsapp_id = :jid OR phone_number = :phone', { jid, phone })
+          .execute()
+          .catch(() => {/* ignore */});
+
+        // Emit to frontend
+        const payload = { phone, presence: presenceType };
+        this.events.emit('contact:presence', payload);
+        this.events.emitTo(session, 'contact:presence', payload);
+      } catch (e) {
+        console.warn('[WppManager] onPresenceChanged error', e);
+      }
+    });
+
+    client.onStateChange(async (state: string) => {
+      if (state === 'CONNECTED') {
+        /*
+        await syncContacts(instance, client, this.contactRepo).catch((e) => {
+          logger.warn(`[${instance.name}] syncContacts failed: ${String(e)}`);
+        });
+
+        await syncConversations(instance, client, this.convRepo, this.contactRepo).catch((e) => {
+          logger.warn(`[${instance.name}] syncConversations failed: ${String(e)}`);
+        });
+
+        */
+       
+        logger.debug(`[${instance.name}] state changed -> ${state}`);
+      }
+      else if (state === 'DISCONNECTED') { }
+      else if (state === 'OPENING') { }
+      else if (state === 'PAIRING') { }
+      else if (state === 'TIMEOUT') { }
+      else if (state === 'UNPAIRED') { }
+      else if (state === 'UNPAIRED_IDLE') { }
+    });
+
 
 
     // persist session_dir
@@ -695,7 +856,7 @@ export class WppManagerService implements OnApplicationShutdown {
           // On final detached-frame failure, schedule a background instance restart
           if (isTransient) {
             logger.warn('[WPP] persistent detached frame — scheduling instance restart');
-            setImmediate(() => this.restartAllDetached().catch(() => {}));
+            setImmediate(() => this.restartAllDetached().catch(() => { }));
           }
           throw e;
         }
@@ -738,40 +899,158 @@ export class WppManagerService implements OnApplicationShutdown {
   async sendMedia(
     sessionOrId: string,
     to: string,
-    bufferOrUrl: string,
+    bufferOrUrl: string | Buffer,
     filename?: string,
     caption?: string,
   ) {
     const client = this.getClient(sessionOrId);
     if (!client) throw new Error('Client not running for ' + sessionOrId);
     return this.withRetry(async () => {
-      const tryCalls = [
-        async () =>
-          client.sendImage &&
-          client.sendImage(to, bufferOrUrl, filename || 'image', caption),
-        async () =>
-          client.sendFile &&
-          client.sendFile(to, bufferOrUrl, filename || 'file', caption),
-        async () =>
-          client.sendFileFromBase64 &&
-          client.sendFileFromBase64(to, bufferOrUrl, filename || 'file', caption),
-        async () =>
-          client.sendImageFromUrl &&
-          client.sendImageFromUrl(to, bufferOrUrl, caption),
-        async () =>
-          client.sendFileFromUrl &&
-          client.sendFileFromUrl(to, bufferOrUrl, filename || 'file', caption),
-      ];
-      for (const fn of tryCalls) {
+      // ── Strategy 1: Buffer (from form-data file upload) ──
+      if (Buffer.isBuffer(bufferOrUrl)) {
+        logger.log(`[WPP] Sending media as buffer: ${filename}`);
+        // Prefer sendImage for image buffers (native method)
         try {
-          const res = await fn();
-          if (res) return res;
+          if (client.sendImage) {
+            const result = await client.sendImage(to, bufferOrUrl, filename || 'image', caption || '');
+            if (result) return result;
+          }
         } catch (e) {
-          // try next
+          logger.warn(`[WPP] sendImage failed: ${String(e)}`);
+        }
+        // Fallback to base64
+        try {
+          const base64 = bufferOrUrl.toString('base64');
+          if (client.sendImageFromBase64) {
+            const result = await client.sendImageFromBase64(to, base64, filename || 'image', caption || '');
+            if (result) return result;
+          }
+        } catch (e) {
+          logger.warn(`[WPP] sendImageFromBase64 failed: ${String(e)}`);
+        }
+        // Last resort: sendFile
+        try {
+          if (client.sendFile) {
+            const result = await client.sendFile(to, bufferOrUrl, filename || 'file', caption || '');
+            if (result) return result;
+          }
+        } catch (e) {
+          logger.warn(`[WPP] sendFile failed: ${String(e)}`);
+        }
+        throw new Error('No buffer send method succeeded');
+      }
+
+      // ── Strategy 2: HTTP(S) URL ──
+      if (typeof bufferOrUrl === 'string' && /^https?:\/\//i.test(bufferOrUrl)) {
+        logger.log(`[WPP] Sending media from URL: ${bufferOrUrl}`);
+        const tryCalls = [
+          async () => client.sendImageFromUrl && client.sendImageFromUrl(to, bufferOrUrl, caption || ''),
+          async () => client.sendFileFromUrl && client.sendFileFromUrl(to, bufferOrUrl, filename || 'file', caption || ''),
+          async () => client.sendImage && client.sendImage(to, bufferOrUrl, filename || 'image', caption || ''),
+        ];
+        for (const fn of tryCalls) {
+          try {
+            const result = await fn();
+            if (result) return result;
+          } catch (e) {
+            logger.warn(`[WPP] URL send attempt failed: ${String(e)}`);
+          }
+        }
+        throw new Error('No URL send method succeeded');
+      }
+
+      // ── Strategy 3: Data URI (data:image/png;base64,...) ──
+      if (typeof bufferOrUrl === 'string' && bufferOrUrl.startsWith('data:')) {
+        logger.log(`[WPP] Sending media from data URI`);
+        const match = bufferOrUrl.match(/^data:([^;]+);base64,(.*)$/s);
+        if (match) {
+          const [, mimeType, base64Data] = match;
+          try {
+            if (client.sendImageFromBase64) {
+              const result = await client.sendImageFromBase64(to, base64Data, filename || 'image', caption || '');
+              if (result) return result;
+            }
+          } catch (e) {
+            logger.warn(`[WPP] sendImageFromBase64 from data URI failed: ${String(e)}`);
+          }
+          // Fallback: convert to buffer and try sendImage
+          try {
+            const buf = Buffer.from(base64Data, 'base64');
+            if (client.sendImage) {
+              const result = await client.sendImage(to, buf, filename || 'image', caption || '');
+              if (result) return result;
+            }
+          } catch (e) {
+            logger.warn(`[WPP] sendImage from data URI buffer failed: ${String(e)}`);
+          }
+        }
+        throw new Error('Data URI send failed');
+      }
+
+      // ── Strategy 4: Plain base64 string ──
+      if (typeof bufferOrUrl === 'string' && /^[A-Za-z0-9+/=\s]+$/.test(bufferOrUrl.slice(0, 100)) && bufferOrUrl.length > 100) {
+        logger.log(`[WPP] Sending media from base64 string`);
+        try {
+          if (client.sendImageFromBase64) {
+            const result = await client.sendImageFromBase64(to, bufferOrUrl, filename || 'image', caption || '');
+            if (result) return result;
+          }
+        } catch (e) {
+          logger.warn(`[WPP] sendImageFromBase64 failed: ${String(e)}`);
+        }
+        // Fallback: convert to buffer
+        try {
+          const buf = Buffer.from(bufferOrUrl, 'base64');
+          if (client.sendImage) {
+            const result = await client.sendImage(to, buf, filename || 'image', caption || '');
+            if (result) return result;
+          }
+        } catch (e) {
+          logger.warn(`[WPP] sendImage from base64 buffer failed: ${String(e)}`);
+        }
+        throw new Error('Base64 send failed');
+      }
+
+      // ── Strategy 5: Local file path ──
+      if (typeof bufferOrUrl === 'string') {
+        try {
+          logger.log(`[WPP] Trying to load file from path: ${bufferOrUrl}`);
+          const buf = await _fs.promises.readFile(bufferOrUrl);
+          if (client.sendImage) {
+            const result = await client.sendImage(to, buf, filename || 'image', caption || '');
+            if (result) return result;
+          }
+        } catch (e) {
+          logger.warn(`[WPP] File path send failed: ${String(e)}`);
         }
       }
-      throw new Error('No media send method succeeded');
+
+      throw new Error(`No media send method succeeded for ${filename}`);
     });
+  }
+
+  // Specialized image send method  
+  async sendImage(sessionOrId: string, to: string, bufferOrUrl: string | Buffer, caption?: string) {
+    const filename = typeof bufferOrUrl === 'string' && bufferOrUrl.startsWith('data:') 
+      ? 'image.jpg' 
+      : (typeof bufferOrUrl === 'string' ? 'image.jpg' : 'image');
+    return this.sendMedia(sessionOrId, to, bufferOrUrl, filename, caption);
+  }
+
+  // Specialized video send method
+  async sendVideo(sessionOrId: string, to: string, bufferOrUrl: string | Buffer, caption?: string) {
+    const filename = typeof bufferOrUrl === 'string' && bufferOrUrl.startsWith('data:') 
+      ? 'video.mp4' 
+      : (typeof bufferOrUrl === 'string' ? 'video.mp4' : 'video');
+    return this.sendMedia(sessionOrId, to, bufferOrUrl, filename, caption);
+  }
+
+  // Specialized audio send method
+  async sendAudio(sessionOrId: string, to: string, bufferOrUrl: string | Buffer) {
+    const filename = typeof bufferOrUrl === 'string' && bufferOrUrl.startsWith('data:') 
+      ? 'audio.mp3' 
+      : (typeof bufferOrUrl === 'string' ? 'audio.mp3' : 'audio');
+    return this.sendMedia(sessionOrId, to, bufferOrUrl, filename);
   }
 
   async sendSticker(sessionOrId: string, to: string, bufferOrUrl: string) {
@@ -816,6 +1095,17 @@ export class WppManagerService implements OnApplicationShutdown {
       );
     }
     return null;
+  }
+
+  private extFromMime(mime: string): string {
+    const map: Record<string, string> = {
+      'image/png': '.png', 'image/jpeg': '.jpg', 'image/gif': '.gif', 'image/webp': '.webp',
+      'video/mp4': '.mp4', 'video/webm': '.webm', 'video/3gpp': '.3gp',
+      'audio/mpeg': '.mp3', 'audio/ogg': '.ogg', 'audio/ogg; codecs=opus': '.ogg',
+      'audio/wav': '.wav', 'audio/mp4': '.m4a', 'audio/aac': '.aac',
+      'application/pdf': '.pdf', 'application/msword': '.doc',
+    };
+    return map[mime] || map[mime.split(';')[0]] || '.bin';
   }
 }
 // trigger

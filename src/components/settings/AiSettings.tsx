@@ -84,7 +84,7 @@ const AiSettings = forwardRef<AiSettingsRef, { onDirtyChange?: (dirty: boolean) 
       const API_BASE = import.meta.env.VITE_API_BASE || '/api';
       try {
         // Try backend
-        const res = await fetch(`${API_BASE}/nina_settings`);
+        const res = await fetch(`${API_BASE}/livechat_settings`);
         if (res.ok) {
           const json = await res.json();
           const data = json?.data ?? json;
@@ -117,7 +117,7 @@ const AiSettings = forwardRef<AiSettingsRef, { onDirtyChange?: (dirty: boolean) 
       const API_BASE = import.meta.env.VITE_API_BASE || '/api';
       const current = await (async () => {
         try {
-          const res = await fetch(`${API_BASE}/nina_settings`);
+          const res = await fetch(`${API_BASE}/livechat_settings`);
           if (res.ok) { const json = await res.json(); return json?.data ?? json ?? {}; }
         } catch {}
         return {};
@@ -159,7 +159,7 @@ const AiSettings = forwardRef<AiSettingsRef, { onDirtyChange?: (dirty: boolean) 
       };
       // Try backend first
       try {
-        const res = await fetch(`${API_BASE}/nina_settings`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(merged) });
+        const res = await fetch(`${API_BASE}/livechat_settings`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(merged) });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
       } catch (err) {
         console.error('[AiSettings] backend save failed', err);

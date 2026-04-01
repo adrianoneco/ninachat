@@ -14,7 +14,7 @@ export class PostgresListenerService implements OnModuleInit, OnModuleDestroy {
     const port = parseInt(process.env.POSTGRES_PORT || '5432', 10);
     const user = process.env.POSTGRES_USER || 'postgres';
     const password = process.env.POSTGRES_PASSWORD || 'postgres';
-    const database = process.env.POSTGRES_DB || 'nina';
+    const database = process.env.POSTGRES_DB || 'livechat';
 
     this.client = new Client({ host, port, user, password, database });
     try {

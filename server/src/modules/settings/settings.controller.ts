@@ -21,21 +21,21 @@ export class SettingsController {
     return this.svc.removeTag(id);
   }
 
-  // ─── Nina Settings ────────────────────────────────
-  @Get('nina_settings')
-  getNinaSettings() {
-    return this.svc.getNinaSettings();
+  // ─── LiveChat Settings ────────────────────────────────
+  @Get('livechat_settings')
+  getLiveChatSettings() {
+    return this.svc.getLiveChatSettings();
   }
 
-  @Post('nina_settings')
-  updateNinaSettings(@Body() body: any) {
-    return this.svc.updateNinaSettings(body);
+  @Post('livechat_settings')
+  updateLiveChatSettings(@Body() body: any) {
+    return this.svc.updateLiveChatSettings(body);
   }
 
   // ─── Company (alias for settings) ─────────────────
   @Get('company')
   getCompany() {
-    // lightweight placeholder – real company data could come from nina_settings or a future entity
+    // lightweight placeholder – real company data could come from livechat_settings or a future entity
     return { id: 'company-1', name: 'Minha Empresa', logo: null };
   }
 }

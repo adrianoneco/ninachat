@@ -657,7 +657,7 @@ const Kanban: React.FC = () => {
                         )}
                     </div>
 
-                    {/* Nina Insights Section */}
+                    {/* LiveChat Insights Section */}
                     {selectedDeal.clientMemory && (
                       <div className="p-6 border-t border-gray-200 dark:border-slate-800">
                         <h4 className="text-xs font-bold text-gray-500 dark:text-slate-500 uppercase tracking-wider mb-4 flex items-center gap-2">
@@ -764,14 +764,14 @@ const Kanban: React.FC = () => {
                                 className={`p-2 rounded-lg text-sm ${
                                   msg.from_type === 'user' 
                                     ? 'bg-gray-200 dark:bg-slate-800 text-gray-700 dark:text-slate-200 ml-0 mr-8' 
-                                    : msg.from_type === 'nina'
+                                    : msg.from_type === 'livechat'
                                       ? 'bg-cyan-900/30 text-cyan-100 ml-8 mr-0'
                                       : 'bg-emerald-900/30 text-emerald-100 ml-8 mr-0'
                                 }`}
                               >
                                 <div className="flex items-center gap-1.5 text-[10px] text-gray-500 dark:text-slate-500 mb-1">
                                   <span className="font-medium">
-                                    {msg.from_type === 'user' ? '👤 Lead' : msg.from_type === 'nina' ? `🤖 ${sdrName}` : '👨‍💼 Humano'}
+                                    {msg.from_type === 'user' ? '👤 Lead' : msg.from_type === 'livechat' ? `🤖 ${sdrName}` : '👨‍💼 Humano'}
                                   </span>
                                   <span>•</span>
                                   <span>{new Date(msg.sent_at).toLocaleString('pt-BR', { 

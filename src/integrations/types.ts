@@ -200,7 +200,7 @@ export type Database = {
           is_active: boolean
           last_message_at: string
           metadata: Json | null
-          nina_context: Json | null
+          livechat_context: Json | null
           started_at: string
           status: Database["public"]["Enums"]["conversation_status"]
           tags: string[] | null
@@ -216,7 +216,7 @@ export type Database = {
           is_active?: boolean
           last_message_at?: string
           metadata?: Json | null
-          nina_context?: Json | null
+          livechat_context?: Json | null
           started_at?: string
           status?: Database["public"]["Enums"]["conversation_status"]
           tags?: string[] | null
@@ -232,7 +232,7 @@ export type Database = {
           is_active?: boolean
           last_message_at?: string
           metadata?: Json | null
-          nina_context?: Json | null
+          livechat_context?: Json | null
           started_at?: string
           status?: Database["public"]["Enums"]["conversation_status"]
           tags?: string[] | null
@@ -505,8 +505,8 @@ export type Database = {
           media_type: string | null
           media_url: string | null
           metadata: Json | null
-          nina_response_time: number | null
-          processed_by_nina: boolean | null
+          livechat_response_time: number | null
+          processed_by_livechat: boolean | null
           read_at: string | null
           reply_to_id: string | null
           sent_at: string
@@ -524,8 +524,8 @@ export type Database = {
           media_type?: string | null
           media_url?: string | null
           metadata?: Json | null
-          nina_response_time?: number | null
-          processed_by_nina?: boolean | null
+          livechat_response_time?: number | null
+          processed_by_livechat?: boolean | null
           read_at?: string | null
           reply_to_id?: string | null
           sent_at?: string
@@ -543,8 +543,8 @@ export type Database = {
           media_type?: string | null
           media_url?: string | null
           metadata?: Json | null
-          nina_response_time?: number | null
-          processed_by_nina?: boolean | null
+          livechat_response_time?: number | null
+          processed_by_livechat?: boolean | null
           read_at?: string | null
           reply_to_id?: string | null
           sent_at?: string
@@ -569,7 +569,7 @@ export type Database = {
           },
         ]
       }
-      nina_processing_queue: {
+      livechat_processing_queue: {
         Row: {
           contact_id: string
           context_data: Json | null
@@ -617,7 +617,7 @@ export type Database = {
         }
         Relationships: []
       }
-      nina_settings: {
+      livechat_settings: {
         Row: {
           adaptive_response_enabled: boolean
           ai_model_mode: string | null
@@ -1092,7 +1092,7 @@ export type Database = {
           is_business: boolean | null
           last_activity: string | null
           name: string | null
-          nina_messages: number | null
+          livechat_messages: number | null
           notes: string | null
           phone_number: string | null
           profile_picture_url: string | null
@@ -1105,7 +1105,7 @@ export type Database = {
         }
         Relationships: []
       }
-      nina_settings_safe: {
+      livechat_settings_safe: {
         Row: {
           adaptive_response_enabled: boolean | null
           ai_model_mode: string | null
@@ -1199,7 +1199,7 @@ export type Database = {
           isSetofReturn: true
         }
       }
-      claim_nina_processing_batch: {
+      claim_livechat_processing_batch: {
         Args: { p_limit?: number }
         Returns: {
           contact_id: string
@@ -1218,7 +1218,7 @@ export type Database = {
         }[]
         SetofOptions: {
           from: "*"
-          to: "nina_processing_queue"
+          to: "livechat_processing_queue"
           isOneToOne: false
           isSetofReturn: true
         }
@@ -1312,10 +1312,10 @@ export type Database = {
     Enums: {
       app_role: "admin" | "user"
       appointment_type: "demo" | "meeting" | "support" | "followup"
-      conversation_status: "nina" | "human" | "paused"
+      conversation_status: "livechat" | "human" | "paused"
       member_role: "admin" | "manager" | "agent"
       member_status: "active" | "invited" | "disabled"
-      message_from: "user" | "nina" | "human"
+      message_from: "user" | "livechat" | "human"
       message_status: "sent" | "delivered" | "read" | "failed" | "processing"
       message_type: "text" | "audio" | "image" | "document" | "video"
       queue_status: "pending" | "processing" | "completed" | "failed"
@@ -1449,10 +1449,10 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "user"],
       appointment_type: ["demo", "meeting", "support", "followup"],
-      conversation_status: ["nina", "human", "paused"],
+      conversation_status: ["livechat", "human", "paused"],
       member_role: ["admin", "manager", "agent"],
       member_status: ["active", "invited", "disabled"],
-      message_from: ["user", "nina", "human"],
+      message_from: ["user", "livechat", "human"],
       message_status: ["sent", "delivered", "read", "failed", "processing"],
       message_type: ["text", "audio", "image", "document", "video"],
       queue_status: ["pending", "processing", "completed", "failed"],

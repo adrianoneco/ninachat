@@ -1,0 +1,4598 @@
+[
+    {
+        "pendingMsgs": false,
+        "labels": [],
+        "lastReceivedKey": {
+            "fromMe": false,
+            "remote": {
+                "server": "g.us",
+                "user": "554192319253-1539103087",
+                "_serialized": "554192319253-1539103087@g.us"
+            },
+            "id": "3EB036FE32A6C3C9BE352F",
+            "participant": {
+                "server": "lid",
+                "user": "210144327692492",
+                "_serialized": "210144327692492@lid"
+            },
+            "_serialized": "false_554192319253-1539103087@g.us_3EB036FE32A6C3C9BE352F_210144327692492@lid"
+        },
+        "id": {
+            "server": "g.us",
+            "user": "554192319253-1539103087",
+            "_serialized": "554192319253-1539103087@g.us"
+        },
+        "t": 1775052786,
+        "unreadCount": 12,
+        "unreadDividerOffset": 0,
+        "archive": false,
+        "isReadOnly": false,
+        "isLocked": false,
+        "isAnnounceGrpRestrict": false,
+        "muteExpiration": 0,
+        "isAutoMuted": false,
+        "name": "TI e Segurança - UBVA",
+        "notSpam": true,
+        "capiThreadControl": 0,
+        "ephemeralDuration": 0,
+        "ephemeralSettingTimestamp": 0,
+        "disappearingModeInitiator": "chat",
+        "disappearingModeTrigger": "chat_settings",
+        "unreadMentionsOfMe": [],
+        "unreadMentionCount": 0,
+        "hasUnreadMention": false,
+        "archiveAtMentionViewedInDrawer": false,
+        "hasChatBeenOpened": false,
+        "tcToken": null,
+        "tcTokenTimestamp": null,
+        "endOfHistoryTransferType": 0,
+        "pendingInitialLoading": false,
+        "celebrationAnimationLastPlayed": 0,
+        "hasRequestedWelcomeMsg": false,
+        "hasCtwaConsumerDataSharingDisclosureSystemMsg": false,
+        "limitSharing": {
+            "trigger": 0
+        },
+        "msgs": null,
+        "isGroup": true,
+        "isUser": false,
+        "contact": {
+            "id": {
+                "server": "g.us",
+                "user": "554192319253-1539103087",
+                "_serialized": "554192319253-1539103087@g.us"
+            },
+            "name": "TI e Segurança - UBVA",
+            "type": "in",
+            "labels": [],
+            "textStatusLastUpdateTime": -1,
+            "isUsernameContact": false,
+            "syncToAddressbook": false,
+            "formattedName": "TI e Segurança - UBVA",
+            "isMe": false,
+            "isMyContact": false,
+            "isPSA": {},
+            "isUser": {},
+            "isWAContact": false,
+            "profilePicThumbObj": {
+                "eurl": "https://pps.whatsapp.net/v/t61.24694-24/256117273_930082020949357_8601508261160657439_n.jpg?ccb=11-4&oh=01_Q5Aa4AE9sRnrsl0hOKkB5mtWYQCA65uVc5y610T7viA0tD-EGQ&oe=69DA0197&_nc_sid=5e03e0&_nc_cat=106",
+                "id": {
+                    "server": "g.us",
+                    "user": "554192319253-1539103087",
+                    "_serialized": "554192319253-1539103087@g.us"
+                },
+                "img": "https://pps.whatsapp.net/v/t61.24694-24/256117273_930082020949357_8601508261160657439_n.jpg?stp=dst-jpg_s96x96_tt6&ccb=11-4&oh=01_Q5Aa4AFzk-zg-pv_s1Okl2IEIME8NdyHdKLtZiadsEvKPSxo-Q&oe=69DA0197&_nc_sid=5e03e0&_nc_cat=106",
+                "imgFull": "https://pps.whatsapp.net/v/t61.24694-24/256117273_930082020949357_8601508261160657439_n.jpg?ccb=11-4&oh=01_Q5Aa4AE9sRnrsl0hOKkB5mtWYQCA65uVc5y610T7viA0tD-EGQ&oe=69DA0197&_nc_sid=5e03e0&_nc_cat=106",
+                "tag": "1639662592"
+            },
+            "msgs": null
+        },
+        "groupMetadata": {
+            "id": {
+                "server": "g.us",
+                "user": "554192319253-1539103087",
+                "_serialized": "554192319253-1539103087@g.us"
+            },
+            "creation": 1539103087,
+            "owner": {
+                "server": "lid",
+                "user": "210144327692492",
+                "_serialized": "210144327692492@lid"
+            },
+            "subject": "TI e Segurança - UBVA",
+            "subjectTime": 1641131761,
+            "desc": "Unidos venceremos, todos os desafios.🙏",
+            "descId": "D92549FF9FF385D1F1D2E3CF04508792",
+            "descTime": 1634238312,
+            "restrict": true,
+            "announce": false,
+            "noFrequentlyForwarded": false,
+            "ephemeralDuration": 0,
+            "disappearingModeTrigger": "chat_settings",
+            "membershipApprovalMode": false,
+            "memberAddMode": "admin_add",
+            "memberLinkMode": "admin_link",
+            "reportToAdminMode": false,
+            "size": 5,
+            "support": false,
+            "suspended": false,
+            "terminated": false,
+            "uniqueShortNameMap": {},
+            "isLidAddressingMode": true,
+            "isParentGroup": false,
+            "isParentGroupClosed": false,
+            "defaultSubgroup": false,
+            "generalSubgroup": false,
+            "groupSafetyCheck": false,
+            "generalChatAutoAddDisabled": false,
+            "allowNonAdminSubGroupCreation": false,
+            "lastActivityTimestamp": 0,
+            "lastSeenActivityTimestamp": 0,
+            "hasCapi": false,
+            "memberShareGroupHistoryMode": "all_member_share",
+            "participants": [
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "6623259013353",
+                        "_serialized": "6623259013353@lid"
+                    },
+                    "isAdmin": false,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "210144327692492",
+                        "_serialized": "210144327692492@lid"
+                    },
+                    "isAdmin": true,
+                    "isSuperAdmin": true
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "129046822314156",
+                        "_serialized": "129046822314156@lid"
+                    },
+                    "isAdmin": false,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "172730833965077",
+                        "_serialized": "172730833965077@lid"
+                    },
+                    "isAdmin": false,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "121561029865624",
+                        "_serialized": "121561029865624@lid"
+                    },
+                    "isAdmin": false,
+                    "isSuperAdmin": false
+                }
+            ],
+            "pendingParticipants": [],
+            "pastParticipants": [],
+            "membershipApprovalRequests": [],
+            "subgroupSuggestions": []
+        },
+        "presence": {
+            "id": {
+                "server": "g.us",
+                "user": "554192319253-1539103087",
+                "_serialized": "554192319253-1539103087@g.us"
+            },
+            "chatstates": [
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "121561029865624",
+                        "_serialized": "121561029865624@lid"
+                    }
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "210144327692492",
+                        "_serialized": "210144327692492@lid"
+                    }
+                }
+            ]
+        }
+    },
+    {
+        "pendingMsgs": false,
+        "labels": [],
+        "lastReceivedKey": {
+            "fromMe": false,
+            "remote": {
+                "server": "lid",
+                "user": "175759255674896",
+                "_serialized": "175759255674896@lid"
+            },
+            "id": "AC45607641394C0E2FE3E5586B799E98",
+            "_serialized": "false_175759255674896@lid_AC45607641394C0E2FE3E5586B799E98"
+        },
+        "id": {
+            "server": "lid",
+            "user": "175759255674896",
+            "_serialized": "175759255674896@lid"
+        },
+        "accountLid": {
+            "server": "lid",
+            "user": "175759255674896",
+            "_serialized": "175759255674896@lid"
+        },
+        "t": 1775052188,
+        "unreadCount": 7,
+        "unreadDividerOffset": 0,
+        "archive": false,
+        "isReadOnly": false,
+        "isLocked": false,
+        "muteExpiration": 0,
+        "isAutoMuted": false,
+        "notSpam": true,
+        "capiThreadControl": 0,
+        "ephemeralDuration": 0,
+        "ephemeralSettingTimestamp": 0,
+        "disappearingModeInitiator": "chat",
+        "disappearingModeTrigger": "chat_settings",
+        "unreadMentionsOfMe": [],
+        "unreadMentionCount": 0,
+        "hasUnreadMention": false,
+        "archiveAtMentionViewedInDrawer": false,
+        "hasChatBeenOpened": false,
+        "tcToken": {},
+        "tcTokenTimestamp": 1775004666,
+        "tcTokenSenderTimestamp": 1775039582,
+        "endOfHistoryTransferType": 1,
+        "pendingInitialLoading": false,
+        "celebrationAnimationLastPlayed": 0,
+        "hasRequestedWelcomeMsg": false,
+        "lidOriginType": "general",
+        "hasCtwaConsumerDataSharingDisclosureSystemMsg": false,
+        "limitSharing": {
+            "trigger": 0
+        },
+        "msgs": null,
+        "isGroup": false,
+        "isUser": true,
+        "contact": {
+            "id": {
+                "server": "lid",
+                "user": "175759255674896",
+                "_serialized": "175759255674896@lid"
+            },
+            "name": "Teste API",
+            "shortName": "Teste API",
+            "pushname": "EASYDEV-BOT",
+            "type": "in",
+            "parentStatusMute": false,
+            "labels": [],
+            "isContactSyncCompleted": 1,
+            "textStatusLastUpdateTime": -1,
+            "isUsernameContact": false,
+            "syncToAddressbook": false,
+            "formattedName": "Teste API",
+            "isMe": false,
+            "isMyContact": true,
+            "isPSA": {},
+            "isUser": {},
+            "isWAContact": true,
+            "profilePicThumbObj": {
+                "eurl": "https://pps.whatsapp.net/v/t61.24694-24/595136558_849100228052554_8265002170203272709_n.jpg?ccb=11-4&oh=01_Q5Aa4AGAPxr4ZaOAy-sp0_qxZyntakGdEucUZlwQWuu7BINxog&oe=69DA1523&_nc_sid=5e03e0&_nc_cat=105",
+                "id": {
+                    "server": "lid",
+                    "user": "175759255674896",
+                    "_serialized": "175759255674896@lid"
+                },
+                "img": "https://pps.whatsapp.net/v/t61.24694-24/595136558_849100228052554_8265002170203272709_n.jpg?stp=dst-jpg_s96x96_tt6&ccb=11-4&oh=01_Q5Aa4AGhduSB_nL2NyRgUud8-lP7OZLhA3YfUmhuXoIi4I9Yxw&oe=69DA1523&_nc_sid=5e03e0&_nc_cat=105",
+                "imgFull": "https://pps.whatsapp.net/v/t61.24694-24/595136558_849100228052554_8265002170203272709_n.jpg?ccb=11-4&oh=01_Q5Aa4AGAPxr4ZaOAy-sp0_qxZyntakGdEucUZlwQWuu7BINxog&oe=69DA1523&_nc_sid=5e03e0&_nc_cat=105",
+                "tag": "1936740065"
+            },
+            "msgs": null
+        },
+        "groupMetadata": null,
+        "presence": {
+            "id": {
+                "server": "lid",
+                "user": "175759255674896",
+                "_serialized": "175759255674896@lid"
+            },
+            "chatstates": []
+        }
+    },
+    {
+        "labels": [],
+        "lastReceivedKey": {
+            "fromMe": true,
+            "remote": {
+                "server": "lid",
+                "user": "168904001355802",
+                "_serialized": "168904001355802@lid"
+            },
+            "id": "ACA4FA72C4B832556E6BCD4D679C3655",
+            "_serialized": "true_168904001355802@lid_ACA4FA72C4B832556E6BCD4D679C3655"
+        },
+        "id": {
+            "server": "lid",
+            "user": "168904001355802",
+            "_serialized": "168904001355802@lid"
+        },
+        "accountLid": {
+            "server": "lid",
+            "user": "168904001355802",
+            "_serialized": "168904001355802@lid"
+        },
+        "t": 1775005123,
+        "unreadCount": 0,
+        "unreadDividerOffset": 0,
+        "archive": false,
+        "isReadOnly": false,
+        "isLocked": false,
+        "muteExpiration": 0,
+        "isAutoMuted": false,
+        "notSpam": true,
+        "capiThreadControl": 0,
+        "ephemeralDuration": 0,
+        "ephemeralSettingTimestamp": 0,
+        "disappearingModeInitiator": "chat",
+        "disappearingModeTrigger": "chat_settings",
+        "unreadMentionCount": 0,
+        "hasUnreadMention": false,
+        "archiveAtMentionViewedInDrawer": false,
+        "hasChatBeenOpened": false,
+        "tcToken": {},
+        "tcTokenTimestamp": 1773954215,
+        "tcTokenSenderTimestamp": 1773954809,
+        "endOfHistoryTransferType": 1,
+        "pendingInitialLoading": false,
+        "celebrationAnimationLastPlayed": 0,
+        "hasRequestedWelcomeMsg": false,
+        "lidOriginType": "general",
+        "hasCtwaConsumerDataSharingDisclosureSystemMsg": false,
+        "limitSharing": {
+            "trigger": 0
+        },
+        "msgs": null,
+        "isGroup": false,
+        "isUser": true,
+        "contact": {
+            "id": {
+                "server": "lid",
+                "user": "168904001355802",
+                "_serialized": "168904001355802@lid"
+            },
+            "name": "Rogger",
+            "shortName": "Rogger",
+            "pushname": "Rogger Brosco",
+            "type": "in",
+            "parentStatusMute": false,
+            "labels": [],
+            "isContactSyncCompleted": 1,
+            "textStatusLastUpdateTime": -1,
+            "isUsernameContact": false,
+            "syncToAddressbook": false,
+            "formattedName": "Rogger",
+            "isMe": false,
+            "isMyContact": true,
+            "isPSA": {},
+            "isUser": {},
+            "isWAContact": true,
+            "profilePicThumbObj": {
+                "eurl": "https://pps.whatsapp.net/v/t61.24694-24/408221106_1388710621854608_4639914478552662962_n.jpg?ccb=11-4&oh=01_Q5Aa4AGjOP5FmGqi46EAd7l9k5SvGpuXFdmpz_1jeFp4o8xm9g&oe=69D9E4D0&_nc_sid=5e03e0&_nc_cat=104",
+                "id": {
+                    "server": "lid",
+                    "user": "168904001355802",
+                    "_serialized": "168904001355802@lid"
+                },
+                "img": "https://pps.whatsapp.net/v/t61.24694-24/408221106_1388710621854608_4639914478552662962_n.jpg?stp=dst-jpg_s96x96_tt6&ccb=11-4&oh=01_Q5Aa4AHiq2KMvod4H-qCC_3zj6bE8B0KMUBPKR01GvG9j4LxFA&oe=69D9E4D0&_nc_sid=5e03e0&_nc_cat=104",
+                "imgFull": "https://pps.whatsapp.net/v/t61.24694-24/408221106_1388710621854608_4639914478552662962_n.jpg?ccb=11-4&oh=01_Q5Aa4AGjOP5FmGqi46EAd7l9k5SvGpuXFdmpz_1jeFp4o8xm9g&oe=69D9E4D0&_nc_sid=5e03e0&_nc_cat=104",
+                "tag": "662878987"
+            },
+            "msgs": null
+        },
+        "groupMetadata": null,
+        "presence": {
+            "id": {
+                "server": "lid",
+                "user": "168904001355802",
+                "_serialized": "168904001355802@lid"
+            },
+            "chatstates": []
+        }
+    },
+    {
+        "labels": [],
+        "lastReceivedKey": {
+            "fromMe": true,
+            "remote": {
+                "server": "lid",
+                "user": "95365470662748",
+                "_serialized": "95365470662748@lid"
+            },
+            "id": "AC1809B0819D60285CF7078FD23F0525",
+            "_serialized": "true_95365470662748@lid_AC1809B0819D60285CF7078FD23F0525"
+        },
+        "id": {
+            "server": "lid",
+            "user": "95365470662748",
+            "_serialized": "95365470662748@lid"
+        },
+        "accountLid": {
+            "server": "lid",
+            "user": "95365470662748",
+            "_serialized": "95365470662748@lid"
+        },
+        "t": 1775003069,
+        "unreadCount": 0,
+        "unreadDividerOffset": 0,
+        "archive": false,
+        "isReadOnly": false,
+        "isLocked": false,
+        "muteExpiration": 0,
+        "isAutoMuted": false,
+        "notSpam": true,
+        "capiThreadControl": 0,
+        "ephemeralDuration": 0,
+        "ephemeralSettingTimestamp": 0,
+        "disappearingModeInitiator": "chat",
+        "disappearingModeTrigger": "chat_settings",
+        "unreadMentionCount": 0,
+        "hasUnreadMention": false,
+        "archiveAtMentionViewedInDrawer": false,
+        "hasChatBeenOpened": false,
+        "tcToken": {},
+        "tcTokenTimestamp": 1775001424,
+        "tcTokenSenderTimestamp": 1774652308,
+        "endOfHistoryTransferType": 1,
+        "pendingInitialLoading": false,
+        "celebrationAnimationLastPlayed": 0,
+        "hasRequestedWelcomeMsg": false,
+        "lidOriginType": "general",
+        "hasCtwaConsumerDataSharingDisclosureSystemMsg": false,
+        "limitSharing": {
+            "trigger": 0
+        },
+        "msgs": null,
+        "isGroup": false,
+        "isUser": true,
+        "contact": {
+            "id": {
+                "server": "lid",
+                "user": "95365470662748",
+                "_serialized": "95365470662748@lid"
+            },
+            "pushname": "Pedro Neco",
+            "type": "in",
+            "parentStatusMute": false,
+            "labels": [],
+            "isContactSyncCompleted": 1,
+            "textStatusLastUpdateTime": -1,
+            "isUsernameContact": false,
+            "syncToAddressbook": false,
+            "formattedName": "+55 41 9867-6708",
+            "isMe": false,
+            "isMyContact": false,
+            "isPSA": {},
+            "isUser": {},
+            "isWAContact": true,
+            "profilePicThumbObj": {
+                "eurl": "https://pps.whatsapp.net/v/t61.24694-24/491868772_1412884636698474_2229983236866468608_n.jpg?ccb=11-4&oh=01_Q5Aa4AEkIhDP4VGmulGIKY5Jks3EmPU385_I2XSHPFTQVFWrWg&oe=69D9F4F6&_nc_sid=5e03e0&_nc_cat=107",
+                "id": {
+                    "server": "lid",
+                    "user": "95365470662748",
+                    "_serialized": "95365470662748@lid"
+                },
+                "img": "https://pps.whatsapp.net/v/t61.24694-24/491868772_1412884636698474_2229983236866468608_n.jpg?stp=dst-jpg_s96x96_tt6&ccb=11-4&oh=01_Q5Aa4AH6yN4m8X3cAQcpU-1cSvUlc_JRtrzoFmaBXsjiYlNbxg&oe=69D9F4F6&_nc_sid=5e03e0&_nc_cat=107",
+                "imgFull": "https://pps.whatsapp.net/v/t61.24694-24/491868772_1412884636698474_2229983236866468608_n.jpg?ccb=11-4&oh=01_Q5Aa4AEkIhDP4VGmulGIKY5Jks3EmPU385_I2XSHPFTQVFWrWg&oe=69D9F4F6&_nc_sid=5e03e0&_nc_cat=107",
+                "tag": "1528871070"
+            },
+            "msgs": null
+        },
+        "groupMetadata": null,
+        "presence": {
+            "id": {
+                "server": "lid",
+                "user": "95365470662748",
+                "_serialized": "95365470662748@lid"
+            },
+            "chatstates": []
+        }
+    },
+    {
+        "labels": [],
+        "lastReceivedKey": {
+            "fromMe": false,
+            "remote": {
+                "server": "lid",
+                "user": "207532886904864",
+                "_serialized": "207532886904864@lid"
+            },
+            "id": "0424C5168926B64CE5",
+            "_serialized": "false_207532886904864@lid_0424C5168926B64CE5"
+        },
+        "id": {
+            "server": "lid",
+            "user": "207532886904864",
+            "_serialized": "207532886904864@lid"
+        },
+        "accountLid": {
+            "server": "lid",
+            "user": "207532886904864",
+            "_serialized": "207532886904864@lid"
+        },
+        "t": 1775001564,
+        "unreadCount": 0,
+        "unreadDividerOffset": 0,
+        "archive": false,
+        "isReadOnly": false,
+        "isLocked": false,
+        "muteExpiration": 0,
+        "isAutoMuted": false,
+        "notSpam": false,
+        "capiThreadControl": 0,
+        "ephemeralDuration": 0,
+        "ephemeralSettingTimestamp": 0,
+        "disappearingModeInitiator": "chat",
+        "disappearingModeTrigger": "chat_settings",
+        "unreadMentionCount": 0,
+        "hasUnreadMention": false,
+        "archiveAtMentionViewedInDrawer": false,
+        "hasChatBeenOpened": false,
+        "tcToken": {},
+        "tcTokenTimestamp": 1775001438,
+        "endOfHistoryTransferType": 1,
+        "pendingInitialLoading": false,
+        "celebrationAnimationLastPlayed": 0,
+        "hasRequestedWelcomeMsg": false,
+        "lidOriginType": "general",
+        "hasCtwaConsumerDataSharingDisclosureSystemMsg": false,
+        "limitSharing": {
+            "trigger": 0
+        },
+        "msgs": null,
+        "isGroup": false,
+        "isUser": true,
+        "contact": {
+            "id": {
+                "server": "lid",
+                "user": "207532886904864",
+                "_serialized": "207532886904864@lid"
+            },
+            "type": "in",
+            "verifiedName": "PicPay",
+            "isBusiness": true,
+            "isEnterprise": true,
+            "verifiedLevel": 2,
+            "privacyMode": {
+                "actualActors": 2,
+                "hostStorage": 2,
+                "privacyModeTs": 1758026448
+            },
+            "parentStatusMute": false,
+            "labels": [],
+            "isContactSyncCompleted": 1,
+            "textStatusLastUpdateTime": -1,
+            "isUsernameContact": false,
+            "syncToAddressbook": false,
+            "formattedName": "PicPay",
+            "isMe": false,
+            "isMyContact": false,
+            "isPSA": {},
+            "isUser": {},
+            "isWAContact": true,
+            "profilePicThumbObj": {
+                "eurl": "https://pps.whatsapp.net/v/t61.24694-24/170625124_474727903837577_6104612034247811463_n.jpg?ccb=11-4&oh=01_Q5Aa4AFpL_mtr6Ms5AW2DoglVKAlsLGEftmslCOwTImYtcl_NA&oe=69D9FD7E&_nc_sid=5e03e0&_nc_cat=110",
+                "id": {
+                    "server": "lid",
+                    "user": "207532886904864",
+                    "_serialized": "207532886904864@lid"
+                },
+                "img": "https://pps.whatsapp.net/v/t61.24694-24/170625124_474727903837577_6104612034247811463_n.jpg?stp=dst-jpg_s96x96_tt6&ccb=11-4&oh=01_Q5Aa4AFo4k0dV-xLFuEu7YRbYGn88c-rS5SxL0HPeTro0YAiXA&oe=69D9FD7E&_nc_sid=5e03e0&_nc_cat=110",
+                "imgFull": "https://pps.whatsapp.net/v/t61.24694-24/170625124_474727903837577_6104612034247811463_n.jpg?ccb=11-4&oh=01_Q5Aa4AFpL_mtr6Ms5AW2DoglVKAlsLGEftmslCOwTImYtcl_NA&oe=69D9FD7E&_nc_sid=5e03e0&_nc_cat=110",
+                "tag": "815829390"
+            },
+            "msgs": null
+        },
+        "groupMetadata": null,
+        "presence": {
+            "id": {
+                "server": "lid",
+                "user": "207532886904864",
+                "_serialized": "207532886904864@lid"
+            },
+            "chatstates": []
+        }
+    },
+    {
+        "pendingMsgs": false,
+        "labels": [],
+        "lastReceivedKey": {
+            "fromMe": false,
+            "remote": {
+                "server": "g.us",
+                "user": "554197434316-1439592722",
+                "_serialized": "554197434316-1439592722@g.us"
+            },
+            "id": "AC6AF612A3DF7C1056983C3F97E98F6F",
+            "participant": {
+                "server": "lid",
+                "user": "243769626648628",
+                "_serialized": "243769626648628@lid"
+            },
+            "_serialized": "false_554197434316-1439592722@g.us_AC6AF612A3DF7C1056983C3F97E98F6F_243769626648628@lid"
+        },
+        "id": {
+            "server": "g.us",
+            "user": "554197434316-1439592722",
+            "_serialized": "554197434316-1439592722@g.us"
+        },
+        "t": 1774998740,
+        "unreadCount": 13,
+        "unreadDividerOffset": 0,
+        "archive": true,
+        "isReadOnly": false,
+        "isLocked": false,
+        "isAnnounceGrpRestrict": false,
+        "muteExpiration": 0,
+        "isAutoMuted": false,
+        "name": "Família Neco",
+        "notSpam": true,
+        "capiThreadControl": 0,
+        "ephemeralDuration": 604800,
+        "ephemeralSettingTimestamp": 0,
+        "disappearingModeInitiator": "chat",
+        "disappearingModeTrigger": "chat_settings",
+        "unreadMentionCount": 0,
+        "hasUnreadMention": false,
+        "archiveAtMentionViewedInDrawer": false,
+        "hasChatBeenOpened": false,
+        "tcToken": null,
+        "tcTokenTimestamp": null,
+        "endOfHistoryTransferType": 0,
+        "pendingInitialLoading": false,
+        "celebrationAnimationLastPlayed": 0,
+        "hasRequestedWelcomeMsg": false,
+        "hasCtwaConsumerDataSharingDisclosureSystemMsg": false,
+        "limitSharing": {
+            "trigger": 0
+        },
+        "msgs": null,
+        "isGroup": true,
+        "isUser": false,
+        "contact": {
+            "id": {
+                "server": "g.us",
+                "user": "554197434316-1439592722",
+                "_serialized": "554197434316-1439592722@g.us"
+            },
+            "name": "Família Neco",
+            "type": "in",
+            "labels": [],
+            "textStatusLastUpdateTime": -1,
+            "isUsernameContact": false,
+            "syncToAddressbook": false,
+            "formattedName": "Família Neco",
+            "isMe": false,
+            "isMyContact": false,
+            "isPSA": {},
+            "isUser": {},
+            "isWAContact": false,
+            "profilePicThumbObj": {},
+            "msgs": null
+        },
+        "groupMetadata": {
+            "id": {
+                "server": "g.us",
+                "user": "554197434316-1439592722",
+                "_serialized": "554197434316-1439592722@g.us"
+            },
+            "creation": 1439592722,
+            "subject": "Família Neco",
+            "subjectTime": 1616260929,
+            "desc": "Oo9ooooo",
+            "descId": "5F64C61AC418A794A35A833A059ABF71",
+            "descTime": 1666907774,
+            "descOwner": {
+                "server": "lid",
+                "user": "95365470662748",
+                "_serialized": "95365470662748@lid"
+            },
+            "restrict": false,
+            "announce": false,
+            "noFrequentlyForwarded": false,
+            "ephemeralDuration": 604800,
+            "disappearingModeTrigger": "chat_settings",
+            "membershipApprovalMode": false,
+            "memberAddMode": "admin_add",
+            "reportToAdminMode": false,
+            "size": 0,
+            "support": false,
+            "suspended": false,
+            "terminated": false,
+            "uniqueShortNameMap": {},
+            "isLidAddressingMode": true,
+            "isParentGroup": false,
+            "isParentGroupClosed": false,
+            "defaultSubgroup": false,
+            "generalSubgroup": false,
+            "generalChatAutoAddDisabled": false,
+            "allowNonAdminSubGroupCreation": false,
+            "lastActivityTimestamp": 0,
+            "lastSeenActivityTimestamp": 0,
+            "hasCapi": false,
+            "memberShareGroupHistoryMode": "all_member_share",
+            "participants": [
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "59962172670132",
+                        "_serialized": "59962172670132@lid"
+                    },
+                    "isAdmin": true,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "6623259013353",
+                        "_serialized": "6623259013353@lid"
+                    },
+                    "isAdmin": false,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "97710506016978",
+                        "_serialized": "97710506016978@lid"
+                    },
+                    "isAdmin": true,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "112708699570359",
+                        "_serialized": "112708699570359@lid"
+                    },
+                    "isAdmin": true,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "231713569517642",
+                        "_serialized": "231713569517642@lid"
+                    },
+                    "isAdmin": true,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "19318796492813",
+                        "_serialized": "19318796492813@lid"
+                    },
+                    "isAdmin": true,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "111037839868052",
+                        "_serialized": "111037839868052@lid"
+                    },
+                    "isAdmin": true,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "94553772154962",
+                        "_serialized": "94553772154962@lid"
+                    },
+                    "isAdmin": true,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "49658462212294",
+                        "_serialized": "49658462212294@lid"
+                    },
+                    "isAdmin": true,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "178022183370906",
+                        "_serialized": "178022183370906@lid"
+                    },
+                    "isAdmin": true,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "226027502600329",
+                        "_serialized": "226027502600329@lid"
+                    },
+                    "isAdmin": false,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "188905613717666",
+                        "_serialized": "188905613717666@lid"
+                    },
+                    "isAdmin": true,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "266902354059296",
+                        "_serialized": "266902354059296@lid"
+                    },
+                    "isAdmin": true,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "64574967525627",
+                        "_serialized": "64574967525627@lid"
+                    },
+                    "isAdmin": true,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "174809598156811",
+                        "_serialized": "174809598156811@lid"
+                    },
+                    "isAdmin": true,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "95365470662748",
+                        "_serialized": "95365470662748@lid"
+                    },
+                    "isAdmin": true,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "131151138152696",
+                        "_serialized": "131151138152696@lid"
+                    },
+                    "isAdmin": true,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "243769626648628",
+                        "_serialized": "243769626648628@lid"
+                    },
+                    "isAdmin": false,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "211724909174957",
+                        "_serialized": "211724909174957@lid"
+                    },
+                    "isAdmin": false,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "116269076504731",
+                        "_serialized": "116269076504731@lid"
+                    },
+                    "isAdmin": false,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "127388897804476",
+                        "_serialized": "127388897804476@lid"
+                    },
+                    "isAdmin": true,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "153755567837435",
+                        "_serialized": "153755567837435@lid"
+                    },
+                    "isAdmin": true,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "167018410074333",
+                        "_serialized": "167018410074333@lid"
+                    },
+                    "isAdmin": true,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "173237640155383",
+                        "_serialized": "173237640155383@lid"
+                    },
+                    "isAdmin": false,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "176570484408473",
+                        "_serialized": "176570484408473@lid"
+                    },
+                    "isAdmin": true,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "212411952930978",
+                        "_serialized": "212411952930978@lid"
+                    },
+                    "isAdmin": false,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "220516724019318",
+                        "_serialized": "220516724019318@lid"
+                    },
+                    "isAdmin": false,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "234101588160724",
+                        "_serialized": "234101588160724@lid"
+                    },
+                    "isAdmin": false,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "2362332725332",
+                        "_serialized": "2362332725332@lid"
+                    },
+                    "isAdmin": true,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "238448128618622",
+                        "_serialized": "238448128618622@lid"
+                    },
+                    "isAdmin": true,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "246982228631667",
+                        "_serialized": "246982228631667@lid"
+                    },
+                    "isAdmin": false,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "248068737921274",
+                        "_serialized": "248068737921274@lid"
+                    },
+                    "isAdmin": true,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "276389852930276",
+                        "_serialized": "276389852930276@lid"
+                    },
+                    "isAdmin": false,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "36404176408596",
+                        "_serialized": "36404176408596@lid"
+                    },
+                    "isAdmin": true,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "38985569165421",
+                        "_serialized": "38985569165421@lid"
+                    },
+                    "isAdmin": true,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "40355680489507",
+                        "_serialized": "40355680489507@lid"
+                    },
+                    "isAdmin": false,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "4801907691741",
+                        "_serialized": "4801907691741@lid"
+                    },
+                    "isAdmin": true,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "5029457080340",
+                        "_serialized": "5029457080340@lid"
+                    },
+                    "isAdmin": true,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "60078153580631",
+                        "_serialized": "60078153580631@lid"
+                    },
+                    "isAdmin": true,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "60700907057230",
+                        "_serialized": "60700907057230@lid"
+                    },
+                    "isAdmin": false,
+                    "isSuperAdmin": false
+                }
+            ],
+            "pendingParticipants": [],
+            "pastParticipants": [],
+            "membershipApprovalRequests": [],
+            "subgroupSuggestions": []
+        },
+        "presence": {
+            "id": {
+                "server": "g.us",
+                "user": "554197434316-1439592722",
+                "_serialized": "554197434316-1439592722@g.us"
+            },
+            "chatstates": []
+        }
+    },
+    {
+        "labels": [],
+        "lastReceivedKey": {
+            "fromMe": true,
+            "remote": {
+                "server": "lid",
+                "user": "97710506016978",
+                "_serialized": "97710506016978@lid"
+            },
+            "id": "AC3BBF218A67099B4147B0CDEDD8477D",
+            "_serialized": "true_97710506016978@lid_AC3BBF218A67099B4147B0CDEDD8477D"
+        },
+        "id": {
+            "server": "lid",
+            "user": "97710506016978",
+            "_serialized": "97710506016978@lid"
+        },
+        "accountLid": {
+            "server": "lid",
+            "user": "97710506016978",
+            "_serialized": "97710506016978@lid"
+        },
+        "t": 1774988133,
+        "unreadCount": 0,
+        "unreadDividerOffset": 0,
+        "archive": false,
+        "isReadOnly": false,
+        "isLocked": false,
+        "muteExpiration": 0,
+        "isAutoMuted": false,
+        "notSpam": true,
+        "capiThreadControl": 0,
+        "ephemeralDuration": 0,
+        "ephemeralSettingTimestamp": 0,
+        "disappearingModeInitiator": "chat",
+        "disappearingModeTrigger": "chat_settings",
+        "unreadMentionCount": 0,
+        "hasUnreadMention": false,
+        "archiveAtMentionViewedInDrawer": false,
+        "hasChatBeenOpened": false,
+        "tcToken": {},
+        "tcTokenTimestamp": 1774559319,
+        "tcTokenSenderTimestamp": 1773579905,
+        "endOfHistoryTransferType": 1,
+        "pendingInitialLoading": false,
+        "celebrationAnimationLastPlayed": 0,
+        "hasRequestedWelcomeMsg": false,
+        "lidOriginType": "general",
+        "hasCtwaConsumerDataSharingDisclosureSystemMsg": false,
+        "limitSharing": {
+            "trigger": 0
+        },
+        "msgs": null,
+        "isGroup": false,
+        "isUser": true,
+        "contact": {
+            "id": {
+                "server": "lid",
+                "user": "97710506016978",
+                "_serialized": "97710506016978@lid"
+            },
+            "name": "Mãe",
+            "shortName": "Mãe",
+            "pushname": "Onice",
+            "type": "in",
+            "parentStatusMute": false,
+            "labels": [],
+            "isContactSyncCompleted": 1,
+            "textStatusLastUpdateTime": -1,
+            "isUsernameContact": false,
+            "syncToAddressbook": true,
+            "formattedName": "Mãe",
+            "isMe": false,
+            "isMyContact": true,
+            "isPSA": {},
+            "isUser": {},
+            "isWAContact": true,
+            "profilePicThumbObj": {
+                "eurl": "https://pps.whatsapp.net/v/t61.24694-24/344698668_209612431834666_533873425812854774_n.jpg?ccb=11-4&oh=01_Q5Aa4AGCNq-N6TwDcHkSxhz2-IDE5D5cRNSN6jvslDBxAyhesg&oe=69D9ECB7&_nc_sid=5e03e0&_nc_cat=109",
+                "id": {
+                    "server": "lid",
+                    "user": "97710506016978",
+                    "_serialized": "97710506016978@lid"
+                },
+                "img": "https://pps.whatsapp.net/v/t61.24694-24/344698668_209612431834666_533873425812854774_n.jpg?stp=dst-jpg_s96x96_tt6&ccb=11-4&oh=01_Q5Aa4AFe9ZB9stgtW2qbHepwAW_i8Q21atkoNTLVSuCo5C26DQ&oe=69D9ECB7&_nc_sid=5e03e0&_nc_cat=109",
+                "imgFull": "https://pps.whatsapp.net/v/t61.24694-24/344698668_209612431834666_533873425812854774_n.jpg?ccb=11-4&oh=01_Q5Aa4AGCNq-N6TwDcHkSxhz2-IDE5D5cRNSN6jvslDBxAyhesg&oe=69D9ECB7&_nc_sid=5e03e0&_nc_cat=109",
+                "tag": "1757164189"
+            },
+            "msgs": null
+        },
+        "groupMetadata": null,
+        "presence": {
+            "id": {
+                "server": "lid",
+                "user": "97710506016978",
+                "_serialized": "97710506016978@lid"
+            },
+            "chatstates": []
+        }
+    },
+    {
+        "labels": [],
+        "lastReceivedKey": {
+            "fromMe": true,
+            "remote": {
+                "server": "lid",
+                "user": "121561029865624",
+                "_serialized": "121561029865624@lid"
+            },
+            "id": "ACA31C0E2D619134E16A9E0A650AD6F0",
+            "_serialized": "true_121561029865624@lid_ACA31C0E2D619134E16A9E0A650AD6F0"
+        },
+        "id": {
+            "server": "lid",
+            "user": "121561029865624",
+            "_serialized": "121561029865624@lid"
+        },
+        "accountLid": {
+            "server": "lid",
+            "user": "121561029865624",
+            "_serialized": "121561029865624@lid"
+        },
+        "t": 1774957679,
+        "unreadCount": 0,
+        "unreadDividerOffset": 0,
+        "archive": false,
+        "isReadOnly": false,
+        "isLocked": false,
+        "muteExpiration": 0,
+        "isAutoMuted": false,
+        "notSpam": true,
+        "capiThreadControl": 0,
+        "ephemeralDuration": 0,
+        "ephemeralSettingTimestamp": 0,
+        "disappearingModeInitiator": "chat",
+        "disappearingModeTrigger": "chat_settings",
+        "unreadMentionCount": 0,
+        "hasUnreadMention": false,
+        "archiveAtMentionViewedInDrawer": false,
+        "hasChatBeenOpened": false,
+        "tcToken": {},
+        "tcTokenTimestamp": 1774892270,
+        "tcTokenSenderTimestamp": 1773431320,
+        "endOfHistoryTransferType": 1,
+        "pendingInitialLoading": false,
+        "celebrationAnimationLastPlayed": 0,
+        "hasRequestedWelcomeMsg": false,
+        "lidOriginType": "general",
+        "hasCtwaConsumerDataSharingDisclosureSystemMsg": false,
+        "limitSharing": {
+            "trigger": 0
+        },
+        "msgs": null,
+        "isGroup": false,
+        "isUser": true,
+        "contact": {
+            "id": {
+                "server": "lid",
+                "user": "121561029865624",
+                "_serialized": "121561029865624@lid"
+            },
+            "pushname": "Rogger Brosco",
+            "type": "in",
+            "verifiedName": "Brosco",
+            "isBusiness": true,
+            "isEnterprise": false,
+            "verifiedLevel": 0,
+            "privacyMode": null,
+            "parentStatusMute": false,
+            "labels": [],
+            "isContactSyncCompleted": 1,
+            "textStatusLastUpdateTime": -1,
+            "isUsernameContact": false,
+            "syncToAddressbook": false,
+            "formattedName": "+55 41 9174-7318",
+            "isMe": false,
+            "isMyContact": false,
+            "isPSA": {},
+            "isUser": {},
+            "isWAContact": true,
+            "profilePicThumbObj": {
+                "eurl": "https://pps.whatsapp.net/v/t61.24694-24/469914930_2277330765957239_1044202493506362670_n.jpg?ccb=11-4&oh=01_Q5Aa4AEOOL95Xmii8xBFD24mK2l5jvqh-zkq209g8s2ZN3sq5g&oe=69DA1606&_nc_sid=5e03e0&_nc_cat=109",
+                "id": {
+                    "server": "lid",
+                    "user": "121561029865624",
+                    "_serialized": "121561029865624@lid"
+                },
+                "img": "https://pps.whatsapp.net/v/t61.24694-24/469914930_2277330765957239_1044202493506362670_n.jpg?stp=dst-jpg_s96x96_tt6&ccb=11-4&oh=01_Q5Aa4AG0e7Fpbb8L8fH09RuGR_ED9GyVXdoJ-u0Aaf-XQGwX7w&oe=69DA1606&_nc_sid=5e03e0&_nc_cat=109",
+                "imgFull": "https://pps.whatsapp.net/v/t61.24694-24/469914930_2277330765957239_1044202493506362670_n.jpg?ccb=11-4&oh=01_Q5Aa4AEOOL95Xmii8xBFD24mK2l5jvqh-zkq209g8s2ZN3sq5g&oe=69DA1606&_nc_sid=5e03e0&_nc_cat=109",
+                "tag": "1675307023"
+            },
+            "msgs": null
+        },
+        "groupMetadata": null,
+        "presence": {
+            "id": {
+                "server": "lid",
+                "user": "121561029865624",
+                "_serialized": "121561029865624@lid"
+            },
+            "chatstates": []
+        }
+    },
+    {
+        "labels": [],
+        "lastReceivedKey": {
+            "fromMe": false,
+            "remote": {
+                "server": "lid",
+                "user": "266447087497468",
+                "_serialized": "266447087497468@lid"
+            },
+            "id": "A88C3DA6D8F06EC41B",
+            "_serialized": "false_266447087497468@lid_A88C3DA6D8F06EC41B"
+        },
+        "id": {
+            "server": "lid",
+            "user": "266447087497468",
+            "_serialized": "266447087497468@lid"
+        },
+        "accountLid": {
+            "server": "lid",
+            "user": "266447087497468",
+            "_serialized": "266447087497468@lid"
+        },
+        "t": 1774902879,
+        "unreadCount": 1,
+        "unreadDividerOffset": 0,
+        "archive": false,
+        "isReadOnly": false,
+        "isLocked": false,
+        "muteExpiration": 0,
+        "isAutoMuted": false,
+        "notSpam": false,
+        "capiThreadControl": 0,
+        "ephemeralDuration": 0,
+        "ephemeralSettingTimestamp": 0,
+        "disappearingModeInitiator": "chat",
+        "disappearingModeTrigger": "chat_settings",
+        "unreadMentionCount": 0,
+        "hasUnreadMention": false,
+        "archiveAtMentionViewedInDrawer": false,
+        "hasChatBeenOpened": false,
+        "tcToken": {},
+        "tcTokenTimestamp": 1774902879,
+        "endOfHistoryTransferType": 1,
+        "pendingInitialLoading": false,
+        "celebrationAnimationLastPlayed": 0,
+        "hasRequestedWelcomeMsg": false,
+        "lidOriginType": "general",
+        "hasCtwaConsumerDataSharingDisclosureSystemMsg": false,
+        "limitSharing": {
+            "trigger": 0
+        },
+        "msgs": null,
+        "isGroup": false,
+        "isUser": true,
+        "contact": {
+            "id": {
+                "server": "lid",
+                "user": "266447087497468",
+                "_serialized": "266447087497468@lid"
+            },
+            "type": "in",
+            "verifiedName": "TIM Brasil",
+            "isBusiness": true,
+            "isEnterprise": true,
+            "verifiedLevel": 2,
+            "privacyMode": {
+                "actualActors": 1,
+                "hostStorage": 2,
+                "privacyModeTs": 1739847063
+            },
+            "parentStatusMute": false,
+            "labels": [],
+            "isContactSyncCompleted": 1,
+            "textStatusLastUpdateTime": -1,
+            "isUsernameContact": false,
+            "syncToAddressbook": false,
+            "formattedName": "TIM Brasil",
+            "isMe": false,
+            "isMyContact": false,
+            "isPSA": {},
+            "isUser": {},
+            "isWAContact": true,
+            "profilePicThumbObj": {
+                "eurl": "https://pps.whatsapp.net/v/t61.24694-24/214402858_360439575430957_1041017355204788452_n.jpg?ccb=11-4&oh=01_Q5Aa4AHTNg3fPwC8gzEp72CW_P8lNyAyXJOJhrgvZK1fHJtnIQ&oe=69DA1651&_nc_sid=5e03e0&_nc_cat=110",
+                "id": {
+                    "server": "lid",
+                    "user": "266447087497468",
+                    "_serialized": "266447087497468@lid"
+                },
+                "img": "https://pps.whatsapp.net/v/t61.24694-24/214402858_360439575430957_1041017355204788452_n.jpg?stp=dst-jpg_s96x96_tt6&ccb=11-4&oh=01_Q5Aa4AFZKhFKj4LvepRRQ9-Zy_eSbCu3Ao2rhjjWJ15AfywvsQ&oe=69DA1651&_nc_sid=5e03e0&_nc_cat=110",
+                "imgFull": "https://pps.whatsapp.net/v/t61.24694-24/214402858_360439575430957_1041017355204788452_n.jpg?ccb=11-4&oh=01_Q5Aa4AHTNg3fPwC8gzEp72CW_P8lNyAyXJOJhrgvZK1fHJtnIQ&oe=69DA1651&_nc_sid=5e03e0&_nc_cat=110",
+                "tag": "44456964"
+            },
+            "msgs": null
+        },
+        "groupMetadata": null,
+        "presence": {
+            "id": {
+                "server": "lid",
+                "user": "266447087497468",
+                "_serialized": "266447087497468@lid"
+            },
+            "chatstates": []
+        }
+    },
+    {
+        "labels": [],
+        "lastReceivedKey": {
+            "fromMe": false,
+            "remote": {
+                "server": "lid",
+                "user": "172730833965077",
+                "_serialized": "172730833965077@lid"
+            },
+            "id": "3EB03A616853E94645ECAF",
+            "_serialized": "false_172730833965077@lid_3EB03A616853E94645ECAF"
+        },
+        "id": {
+            "server": "lid",
+            "user": "172730833965077",
+            "_serialized": "172730833965077@lid"
+        },
+        "accountLid": {
+            "server": "lid",
+            "user": "172730833965077",
+            "_serialized": "172730833965077@lid"
+        },
+        "t": 1774885701,
+        "unreadCount": 2,
+        "unreadDividerOffset": 0,
+        "archive": false,
+        "isReadOnly": false,
+        "isLocked": false,
+        "muteExpiration": 0,
+        "isAutoMuted": false,
+        "notSpam": true,
+        "capiThreadControl": 0,
+        "ephemeralDuration": 0,
+        "ephemeralSettingTimestamp": 0,
+        "disappearingModeInitiator": "chat",
+        "disappearingModeTrigger": "chat_settings",
+        "unreadMentionCount": 0,
+        "hasUnreadMention": false,
+        "archiveAtMentionViewedInDrawer": false,
+        "hasChatBeenOpened": false,
+        "tcToken": {},
+        "tcTokenTimestamp": 1774885701,
+        "tcTokenSenderTimestamp": 1774351750,
+        "endOfHistoryTransferType": 1,
+        "pendingInitialLoading": false,
+        "celebrationAnimationLastPlayed": 0,
+        "hasRequestedWelcomeMsg": false,
+        "lidOriginType": "general",
+        "hasCtwaConsumerDataSharingDisclosureSystemMsg": false,
+        "limitSharing": {
+            "trigger": 0
+        },
+        "msgs": null,
+        "isGroup": false,
+        "isUser": true,
+        "contact": {
+            "id": {
+                "server": "lid",
+                "user": "172730833965077",
+                "_serialized": "172730833965077@lid"
+            },
+            "name": "Suporte UBVA",
+            "shortName": "Suporte UBVA",
+            "type": "in",
+            "verifiedName": "Chamados TI",
+            "isBusiness": true,
+            "isEnterprise": false,
+            "verifiedLevel": 0,
+            "privacyMode": null,
+            "parentStatusMute": false,
+            "labels": [],
+            "isContactSyncCompleted": 1,
+            "textStatusLastUpdateTime": -1,
+            "isUsernameContact": false,
+            "syncToAddressbook": true,
+            "formattedName": "Suporte UBVA",
+            "isMe": false,
+            "isMyContact": true,
+            "isPSA": {},
+            "isUser": {},
+            "isWAContact": true,
+            "profilePicThumbObj": {
+                "eurl": "https://pps.whatsapp.net/v/t61.24694-24/321190740_564839618552804_4308992418215568986_n.jpg?ccb=11-4&oh=01_Q5Aa4AEQCkVYTU83tr3WOhJgQ9yGf7rDnRVGo9sY2ImiAiUhvw&oe=69D9E2B8&_nc_sid=5e03e0&_nc_cat=109",
+                "id": {
+                    "server": "lid",
+                    "user": "172730833965077",
+                    "_serialized": "172730833965077@lid"
+                },
+                "img": "https://pps.whatsapp.net/v/t61.24694-24/321190740_564839618552804_4308992418215568986_n.jpg?stp=dst-jpg_s96x96_tt6&ccb=11-4&oh=01_Q5Aa4AGCTl4PTnowL0gBaW6OOumqn1uTjOjIEDUNUXjDKaqzkA&oe=69D9E2B8&_nc_sid=5e03e0&_nc_cat=109",
+                "imgFull": "https://pps.whatsapp.net/v/t61.24694-24/321190740_564839618552804_4308992418215568986_n.jpg?ccb=11-4&oh=01_Q5Aa4AEQCkVYTU83tr3WOhJgQ9yGf7rDnRVGo9sY2ImiAiUhvw&oe=69D9E2B8&_nc_sid=5e03e0&_nc_cat=109",
+                "tag": "865409910"
+            },
+            "msgs": null
+        },
+        "groupMetadata": null,
+        "presence": {
+            "id": {
+                "server": "lid",
+                "user": "172730833965077",
+                "_serialized": "172730833965077@lid"
+            },
+            "chatstates": []
+        }
+    },
+    {
+        "labels": [],
+        "lastReceivedKey": {
+            "fromMe": true,
+            "remote": {
+                "server": "lid",
+                "user": "59962172670132",
+                "_serialized": "59962172670132@lid"
+            },
+            "id": "AC0EF8556ACA83B75A826AD22B914F50",
+            "_serialized": "true_59962172670132@lid_AC0EF8556ACA83B75A826AD22B914F50"
+        },
+        "id": {
+            "server": "lid",
+            "user": "59962172670132",
+            "_serialized": "59962172670132@lid"
+        },
+        "accountLid": {
+            "server": "lid",
+            "user": "59962172670132",
+            "_serialized": "59962172670132@lid"
+        },
+        "t": 1774885169,
+        "unreadCount": 0,
+        "unreadDividerOffset": 0,
+        "archive": false,
+        "isReadOnly": false,
+        "isLocked": false,
+        "muteExpiration": 0,
+        "isAutoMuted": false,
+        "notSpam": true,
+        "capiThreadControl": 0,
+        "ephemeralDuration": 0,
+        "ephemeralSettingTimestamp": 0,
+        "disappearingModeInitiator": "chat",
+        "disappearingModeTrigger": "chat_settings",
+        "unreadMentionCount": 0,
+        "hasUnreadMention": false,
+        "archiveAtMentionViewedInDrawer": false,
+        "hasChatBeenOpened": false,
+        "tcToken": {},
+        "tcTokenTimestamp": 1774542754,
+        "tcTokenSenderTimestamp": 1774099758,
+        "endOfHistoryTransferType": 0,
+        "pendingInitialLoading": false,
+        "celebrationAnimationLastPlayed": 0,
+        "hasRequestedWelcomeMsg": false,
+        "lidOriginType": "general",
+        "hasCtwaConsumerDataSharingDisclosureSystemMsg": false,
+        "limitSharing": {
+            "trigger": 0
+        },
+        "msgs": null,
+        "isGroup": false,
+        "isUser": true,
+        "contact": {
+            "id": {
+                "server": "lid",
+                "user": "59962172670132",
+                "_serialized": "59962172670132@lid"
+            },
+            "name": "Adriana 🤴🏻👸🫶🏻🙏🏻",
+            "shortName": "Adriana 🤴🏻👸🫶🏻🙏🏻",
+            "pushname": "Adriana 🤴🏻👸🫶🏻🙏🏻",
+            "type": "in",
+            "parentStatusMute": false,
+            "labels": [],
+            "isContactSyncCompleted": 1,
+            "textStatusLastUpdateTime": -1,
+            "isUsernameContact": false,
+            "syncToAddressbook": false,
+            "formattedName": "Adriana 🤴🏻👸🫶🏻🙏🏻",
+            "isMe": false,
+            "isMyContact": true,
+            "isPSA": {},
+            "isUser": {},
+            "isWAContact": true,
+            "profilePicThumbObj": {
+                "eurl": "https://pps.whatsapp.net/v/t61.24694-24/534426908_2059113797994210_1516514032385765472_n.jpg?ccb=11-4&oh=01_Q5Aa4AEkYad6QWBO1upmZIdDegwCbyFK0o31BSsNk_xqtVZh2Q&oe=69D9E6DF&_nc_sid=5e03e0&_nc_cat=107",
+                "id": {
+                    "server": "lid",
+                    "user": "59962172670132",
+                    "_serialized": "59962172670132@lid"
+                },
+                "img": "https://pps.whatsapp.net/v/t61.24694-24/534426908_2059113797994210_1516514032385765472_n.jpg?stp=dst-jpg_s96x96_tt6&ccb=11-4&oh=01_Q5Aa4AEXrZOEOJvHCp8Sq0GrXy2LNfkSaA8SBSbodTBoV7RByw&oe=69D9E6DF&_nc_sid=5e03e0&_nc_cat=107",
+                "imgFull": "https://pps.whatsapp.net/v/t61.24694-24/534426908_2059113797994210_1516514032385765472_n.jpg?ccb=11-4&oh=01_Q5Aa4AEkYad6QWBO1upmZIdDegwCbyFK0o31BSsNk_xqtVZh2Q&oe=69D9E6DF&_nc_sid=5e03e0&_nc_cat=107",
+                "tag": "1915981396"
+            },
+            "msgs": null
+        },
+        "groupMetadata": null,
+        "presence": {
+            "id": {
+                "server": "lid",
+                "user": "59962172670132",
+                "_serialized": "59962172670132@lid"
+            },
+            "chatstates": []
+        }
+    },
+    {
+        "labels": [],
+        "lastReceivedKey": {
+            "fromMe": false,
+            "remote": {
+                "server": "g.us",
+                "user": "554188563412-1458433379",
+                "_serialized": "554188563412-1458433379@g.us"
+            },
+            "id": "ACAC51F39530F930E3AC80EBF3723F53",
+            "participant": {
+                "server": "lid",
+                "user": "263633749725256",
+                "_serialized": "263633749725256@lid"
+            },
+            "_serialized": "false_554188563412-1458433379@g.us_ACAC51F39530F930E3AC80EBF3723F53_263633749725256@lid"
+        },
+        "id": {
+            "server": "g.us",
+            "user": "554188563412-1458433379",
+            "_serialized": "554188563412-1458433379@g.us"
+        },
+        "t": 1774865529,
+        "unreadCount": 20,
+        "unreadDividerOffset": 0,
+        "archive": true,
+        "isReadOnly": false,
+        "isLocked": false,
+        "isAnnounceGrpRestrict": false,
+        "muteExpiration": 0,
+        "isAutoMuted": false,
+        "name": "Filhos e netos da Rainha❤",
+        "notSpam": true,
+        "capiThreadControl": 0,
+        "ephemeralDuration": 0,
+        "ephemeralSettingTimestamp": 0,
+        "disappearingModeInitiator": "chat",
+        "disappearingModeTrigger": "chat_settings",
+        "unreadMentionCount": 0,
+        "hasUnreadMention": false,
+        "archiveAtMentionViewedInDrawer": false,
+        "hasChatBeenOpened": false,
+        "tcToken": null,
+        "tcTokenTimestamp": null,
+        "endOfHistoryTransferType": 0,
+        "pendingInitialLoading": false,
+        "celebrationAnimationLastPlayed": 0,
+        "hasRequestedWelcomeMsg": false,
+        "hasCtwaConsumerDataSharingDisclosureSystemMsg": false,
+        "limitSharing": {
+            "trigger": 0
+        },
+        "msgs": null,
+        "isGroup": true,
+        "isUser": false,
+        "contact": {
+            "id": {
+                "server": "g.us",
+                "user": "554188563412-1458433379",
+                "_serialized": "554188563412-1458433379@g.us"
+            },
+            "name": "Filhos e netos da Rainha❤",
+            "type": "in",
+            "labels": [],
+            "textStatusLastUpdateTime": -1,
+            "isUsernameContact": false,
+            "syncToAddressbook": false,
+            "formattedName": "Filhos e netos da Rainha❤",
+            "isMe": false,
+            "isMyContact": false,
+            "isPSA": {},
+            "isUser": {},
+            "isWAContact": false,
+            "profilePicThumbObj": {},
+            "msgs": null
+        },
+        "groupMetadata": {
+            "id": {
+                "server": "g.us",
+                "user": "554188563412-1458433379",
+                "_serialized": "554188563412-1458433379@g.us"
+            },
+            "creation": 1458433379,
+            "owner": {
+                "server": "lid",
+                "user": "231653423202541",
+                "_serialized": "231653423202541@lid"
+            },
+            "subject": "Filhos e netos da Rainha❤",
+            "subjectTime": 1489510645,
+            "descTime": 0,
+            "restrict": false,
+            "announce": false,
+            "noFrequentlyForwarded": false,
+            "ephemeralDuration": 0,
+            "disappearingModeTrigger": "chat_settings",
+            "membershipApprovalMode": false,
+            "memberAddMode": "admin_add",
+            "reportToAdminMode": false,
+            "size": 0,
+            "support": false,
+            "suspended": false,
+            "terminated": false,
+            "uniqueShortNameMap": {},
+            "isLidAddressingMode": true,
+            "isParentGroup": false,
+            "isParentGroupClosed": false,
+            "defaultSubgroup": false,
+            "generalSubgroup": false,
+            "generalChatAutoAddDisabled": false,
+            "allowNonAdminSubGroupCreation": false,
+            "lastActivityTimestamp": 0,
+            "lastSeenActivityTimestamp": 0,
+            "hasCapi": false,
+            "memberShareGroupHistoryMode": "all_member_share",
+            "participants": [
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "59962172670132",
+                        "_serialized": "59962172670132@lid"
+                    },
+                    "isAdmin": true,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "6623259013353",
+                        "_serialized": "6623259013353@lid"
+                    },
+                    "isAdmin": false,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "97710506016978",
+                        "_serialized": "97710506016978@lid"
+                    },
+                    "isAdmin": false,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "33006924369973",
+                        "_serialized": "33006924369973@lid"
+                    },
+                    "isAdmin": true,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "263633749725256",
+                        "_serialized": "263633749725256@lid"
+                    },
+                    "isAdmin": false,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "23910082953250",
+                        "_serialized": "23910082953250@lid"
+                    },
+                    "isAdmin": false,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "105631130329233",
+                        "_serialized": "105631130329233@lid"
+                    },
+                    "isAdmin": false,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "133131302600818",
+                        "_serialized": "133131302600818@lid"
+                    },
+                    "isAdmin": false,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "55632711418070",
+                        "_serialized": "55632711418070@lid"
+                    },
+                    "isAdmin": false,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "64574967525627",
+                        "_serialized": "64574967525627@lid"
+                    },
+                    "isAdmin": false,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "66640779735083",
+                        "_serialized": "66640779735083@lid"
+                    },
+                    "isAdmin": false,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "216285996691489",
+                        "_serialized": "216285996691489@lid"
+                    },
+                    "isAdmin": false,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "231653423202541",
+                        "_serialized": "231653423202541@lid"
+                    },
+                    "isAdmin": true,
+                    "isSuperAdmin": true
+                }
+            ],
+            "pendingParticipants": [],
+            "pastParticipants": [
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "179899167944895",
+                        "_serialized": "179899167944895@lid"
+                    },
+                    "leaveTs": 1774822130,
+                    "leaveReason": "Removed"
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "184769560195287",
+                        "_serialized": "184769560195287@lid"
+                    },
+                    "leaveTs": 1773351686,
+                    "leaveReason": "Left"
+                }
+            ],
+            "membershipApprovalRequests": [],
+            "subgroupSuggestions": []
+        },
+        "presence": {
+            "id": {
+                "server": "g.us",
+                "user": "554188563412-1458433379",
+                "_serialized": "554188563412-1458433379@g.us"
+            },
+            "chatstates": []
+        }
+    },
+    {
+        "labels": [],
+        "lastReceivedKey": {
+            "fromMe": false,
+            "remote": {
+                "server": "lid",
+                "user": "55444202602559",
+                "_serialized": "55444202602559@lid"
+            },
+            "id": "6DE71F8D953F2A892C",
+            "_serialized": "false_55444202602559@lid_6DE71F8D953F2A892C"
+        },
+        "id": {
+            "server": "lid",
+            "user": "55444202602559",
+            "_serialized": "55444202602559@lid"
+        },
+        "accountLid": {
+            "server": "lid",
+            "user": "55444202602559",
+            "_serialized": "55444202602559@lid"
+        },
+        "t": 1774719224,
+        "unreadCount": 0,
+        "unreadDividerOffset": 0,
+        "archive": false,
+        "isReadOnly": false,
+        "isLocked": false,
+        "muteExpiration": 0,
+        "isAutoMuted": false,
+        "notSpam": true,
+        "capiThreadControl": 0,
+        "ephemeralDuration": 0,
+        "ephemeralSettingTimestamp": 0,
+        "disappearingModeInitiator": "chat",
+        "disappearingModeTrigger": "chat_settings",
+        "unreadMentionCount": 0,
+        "hasUnreadMention": false,
+        "archiveAtMentionViewedInDrawer": false,
+        "hasChatBeenOpened": false,
+        "tcToken": {},
+        "tcTokenTimestamp": 1774711757,
+        "tcTokenSenderTimestamp": 1774719200,
+        "endOfHistoryTransferType": 1,
+        "pendingInitialLoading": false,
+        "celebrationAnimationLastPlayed": 0,
+        "hasRequestedWelcomeMsg": false,
+        "lidOriginType": "general",
+        "hasCtwaConsumerDataSharingDisclosureSystemMsg": false,
+        "limitSharing": {
+            "trigger": 0
+        },
+        "msgs": null,
+        "isGroup": false,
+        "isUser": true,
+        "contact": {
+            "id": {
+                "server": "lid",
+                "user": "55444202602559",
+                "_serialized": "55444202602559@lid"
+            },
+            "type": "in",
+            "verifiedName": "Mercado Livre",
+            "isBusiness": true,
+            "isEnterprise": true,
+            "verifiedLevel": 2,
+            "privacyMode": {
+                "actualActors": 2,
+                "hostStorage": 2,
+                "privacyModeTs": 1761243124
+            },
+            "parentStatusMute": false,
+            "labels": [],
+            "isContactSyncCompleted": 1,
+            "textStatusLastUpdateTime": -1,
+            "isUsernameContact": false,
+            "syncToAddressbook": false,
+            "formattedName": "Mercado Livre",
+            "isMe": false,
+            "isMyContact": false,
+            "isPSA": {},
+            "isUser": {},
+            "isWAContact": true,
+            "profilePicThumbObj": {
+                "eurl": "https://pps.whatsapp.net/v/t61.24694-24/534424636_767070519364435_4921379820454342523_n.jpg?ccb=11-4&oh=01_Q5Aa4AHG8qocWx3vHFIjJmNH3wiw2Mbk4ZqPC_KYzRq3Osp_Kg&oe=69D9EC62&_nc_sid=5e03e0&_nc_cat=106",
+                "id": {
+                    "server": "lid",
+                    "user": "55444202602559",
+                    "_serialized": "55444202602559@lid"
+                },
+                "img": "https://pps.whatsapp.net/v/t61.24694-24/534424636_767070519364435_4921379820454342523_n.jpg?stp=dst-jpg_s96x96_tt6&ccb=11-4&oh=01_Q5Aa4AFI1tr6IXXkTR_iaL-swTYWKMUMC9Ip74_y5TgXLbp24Q&oe=69D9EC62&_nc_sid=5e03e0&_nc_cat=106",
+                "imgFull": "https://pps.whatsapp.net/v/t61.24694-24/534424636_767070519364435_4921379820454342523_n.jpg?ccb=11-4&oh=01_Q5Aa4AHG8qocWx3vHFIjJmNH3wiw2Mbk4ZqPC_KYzRq3Osp_Kg&oe=69D9EC62&_nc_sid=5e03e0&_nc_cat=106",
+                "tag": "150343977"
+            },
+            "msgs": null
+        },
+        "groupMetadata": null,
+        "presence": {
+            "id": {
+                "server": "lid",
+                "user": "55444202602559",
+                "_serialized": "55444202602559@lid"
+            },
+            "chatstates": []
+        }
+    },
+    {
+        "labels": [],
+        "lastReceivedKey": {
+            "fromMe": true,
+            "remote": {
+                "server": "lid",
+                "user": "194760224600177",
+                "_serialized": "194760224600177@lid"
+            },
+            "id": "ACFD35963BDD58B63708E082F3539D00",
+            "_serialized": "true_194760224600177@lid_ACFD35963BDD58B63708E082F3539D00"
+        },
+        "id": {
+            "server": "lid",
+            "user": "194760224600177",
+            "_serialized": "194760224600177@lid"
+        },
+        "accountLid": {
+            "server": "lid",
+            "user": "194760224600177",
+            "_serialized": "194760224600177@lid"
+        },
+        "t": 1774710651,
+        "unreadCount": 0,
+        "unreadDividerOffset": 0,
+        "archive": false,
+        "isReadOnly": false,
+        "isLocked": false,
+        "muteExpiration": 0,
+        "isAutoMuted": false,
+        "notSpam": true,
+        "capiThreadControl": 0,
+        "ephemeralDuration": 0,
+        "ephemeralSettingTimestamp": 0,
+        "disappearingModeInitiator": "chat",
+        "disappearingModeTrigger": "chat_settings",
+        "unreadMentionCount": 0,
+        "hasUnreadMention": false,
+        "archiveAtMentionViewedInDrawer": false,
+        "hasChatBeenOpened": false,
+        "tcToken": {},
+        "tcTokenTimestamp": 1774359449,
+        "tcTokenSenderTimestamp": 1773917444,
+        "endOfHistoryTransferType": 1,
+        "pendingInitialLoading": false,
+        "celebrationAnimationLastPlayed": 0,
+        "hasRequestedWelcomeMsg": false,
+        "lidOriginType": "general",
+        "hasCtwaConsumerDataSharingDisclosureSystemMsg": false,
+        "limitSharing": {
+            "trigger": 0
+        },
+        "msgs": null,
+        "isGroup": false,
+        "isUser": true,
+        "contact": {
+            "id": {
+                "server": "lid",
+                "user": "194760224600177",
+                "_serialized": "194760224600177@lid"
+            },
+            "name": "WEBGLASS",
+            "shortName": "WEBGLASS",
+            "type": "in",
+            "verifiedName": "Ubva",
+            "isBusiness": true,
+            "isEnterprise": false,
+            "verifiedLevel": 0,
+            "privacyMode": null,
+            "parentStatusMute": false,
+            "labels": [],
+            "isContactSyncCompleted": 1,
+            "textStatusLastUpdateTime": -1,
+            "isUsernameContact": false,
+            "syncToAddressbook": true,
+            "formattedName": "WEBGLASS",
+            "isMe": false,
+            "isMyContact": true,
+            "isPSA": {},
+            "isUser": {},
+            "isWAContact": true,
+            "profilePicThumbObj": {
+                "eurl": "https://pps.whatsapp.net/v/t61.24694-24/516813555_1657150954961739_1424422371409796856_n.jpg?ccb=11-4&oh=01_Q5Aa4AGX5MDlSCSb1ie0HpZ53YT2YdpVXReFpdqRb9dHWu2J7Q&oe=69DA19F5&_nc_sid=5e03e0&_nc_cat=109",
+                "id": {
+                    "server": "lid",
+                    "user": "194760224600177",
+                    "_serialized": "194760224600177@lid"
+                },
+                "img": "https://pps.whatsapp.net/v/t61.24694-24/516813555_1657150954961739_1424422371409796856_n.jpg?stp=dst-jpg_s96x96_tt6&ccb=11-4&oh=01_Q5Aa4AHNfcreXHg5Yx8GAkVB9jmtdQDDw8Bo2LklRV72SlXvig&oe=69DA19F5&_nc_sid=5e03e0&_nc_cat=109",
+                "imgFull": "https://pps.whatsapp.net/v/t61.24694-24/516813555_1657150954961739_1424422371409796856_n.jpg?ccb=11-4&oh=01_Q5Aa4AGX5MDlSCSb1ie0HpZ53YT2YdpVXReFpdqRb9dHWu2J7Q&oe=69DA19F5&_nc_sid=5e03e0&_nc_cat=109",
+                "tag": "1823556324"
+            },
+            "msgs": null
+        },
+        "groupMetadata": null,
+        "presence": {
+            "id": {
+                "server": "lid",
+                "user": "194760224600177",
+                "_serialized": "194760224600177@lid"
+            },
+            "chatstates": []
+        }
+    },
+    {
+        "labels": [],
+        "lastReceivedKey": {
+            "fromMe": false,
+            "remote": {
+                "server": "lid",
+                "user": "108053038932140",
+                "_serialized": "108053038932140@lid"
+            },
+            "id": "2AC6FDB0B26E661C4764",
+            "_serialized": "false_108053038932140@lid_2AC6FDB0B26E661C4764"
+        },
+        "id": {
+            "server": "lid",
+            "user": "108053038932140",
+            "_serialized": "108053038932140@lid"
+        },
+        "accountLid": {
+            "server": "lid",
+            "user": "108053038932140",
+            "_serialized": "108053038932140@lid"
+        },
+        "t": 1774700305,
+        "unreadCount": 0,
+        "unreadDividerOffset": 0,
+        "archive": false,
+        "isReadOnly": false,
+        "isLocked": false,
+        "muteExpiration": 0,
+        "isAutoMuted": false,
+        "notSpam": true,
+        "capiThreadControl": 0,
+        "ephemeralDuration": 0,
+        "ephemeralSettingTimestamp": 0,
+        "disappearingModeInitiator": "chat",
+        "disappearingModeTrigger": "chat_settings",
+        "unreadMentionCount": 0,
+        "hasUnreadMention": false,
+        "archiveAtMentionViewedInDrawer": false,
+        "hasChatBeenOpened": false,
+        "tcToken": {},
+        "tcTokenTimestamp": 1774001796,
+        "tcTokenSenderTimestamp": 1774101466,
+        "endOfHistoryTransferType": 1,
+        "pendingInitialLoading": false,
+        "celebrationAnimationLastPlayed": 0,
+        "hasRequestedWelcomeMsg": false,
+        "lidOriginType": "general",
+        "hasCtwaConsumerDataSharingDisclosureSystemMsg": false,
+        "limitSharing": {
+            "trigger": 0
+        },
+        "msgs": null,
+        "isGroup": false,
+        "isUser": true,
+        "contact": {
+            "id": {
+                "server": "lid",
+                "user": "108053038932140",
+                "_serialized": "108053038932140@lid"
+            },
+            "name": "Barbearia",
+            "shortName": "Barbearia",
+            "type": "in",
+            "verifiedName": "Barbearia Rei Da Tribo",
+            "isBusiness": true,
+            "isEnterprise": false,
+            "verifiedLevel": 0,
+            "privacyMode": null,
+            "parentStatusMute": false,
+            "labels": [],
+            "isContactSyncCompleted": 1,
+            "textStatusLastUpdateTime": -1,
+            "isUsernameContact": false,
+            "syncToAddressbook": false,
+            "formattedName": "Barbearia",
+            "isMe": false,
+            "isMyContact": true,
+            "isPSA": {},
+            "isUser": {},
+            "isWAContact": true,
+            "profilePicThumbObj": {
+                "eurl": "https://pps.whatsapp.net/v/t61.24694-24/454502849_1213332679823764_5460631708743732404_n.jpg?ccb=11-4&oh=01_Q5Aa4AGsGQHgZxECNvDpHCwNNqOsNmS3576b9cllRxeAD78-uQ&oe=69D9EE0C&_nc_sid=5e03e0&_nc_cat=109",
+                "id": {
+                    "server": "lid",
+                    "user": "108053038932140",
+                    "_serialized": "108053038932140@lid"
+                },
+                "img": "https://pps.whatsapp.net/v/t61.24694-24/454502849_1213332679823764_5460631708743732404_n.jpg?stp=dst-jpg_s96x96_tt6&ccb=11-4&oh=01_Q5Aa4AGu4Y2kEc-wyXnUTgZIZjbBzqWkSTaALX6ClkAnP7DOkQ&oe=69D9EE0C&_nc_sid=5e03e0&_nc_cat=109",
+                "imgFull": "https://pps.whatsapp.net/v/t61.24694-24/454502849_1213332679823764_5460631708743732404_n.jpg?ccb=11-4&oh=01_Q5Aa4AGsGQHgZxECNvDpHCwNNqOsNmS3576b9cllRxeAD78-uQ&oe=69D9EE0C&_nc_sid=5e03e0&_nc_cat=109",
+                "tag": "1401778244"
+            },
+            "msgs": null
+        },
+        "groupMetadata": null,
+        "presence": {
+            "id": {
+                "server": "lid",
+                "user": "108053038932140",
+                "_serialized": "108053038932140@lid"
+            },
+            "chatstates": []
+        }
+    },
+    {
+        "labels": [],
+        "lastReceivedKey": {
+            "fromMe": false,
+            "remote": {
+                "server": "c.us",
+                "user": "0",
+                "_serialized": "0@c.us"
+            },
+            "id": "759236650564027-1",
+            "participant": {
+                "server": "c.us",
+                "user": "0",
+                "_serialized": "0@c.us"
+            },
+            "_serialized": "false_0@c.us_759236650564027-1_0@c.us"
+        },
+        "id": {
+            "server": "c.us",
+            "user": "0",
+            "_serialized": "0@c.us"
+        },
+        "t": 1774665723,
+        "unreadCount": 1,
+        "unreadDividerOffset": 0,
+        "archive": false,
+        "isReadOnly": false,
+        "isLocked": false,
+        "muteExpiration": 0,
+        "isAutoMuted": false,
+        "name": "WhatsApp",
+        "notSpam": false,
+        "capiThreadControl": 0,
+        "ephemeralDuration": 0,
+        "ephemeralSettingTimestamp": 0,
+        "disappearingModeInitiator": "chat",
+        "disappearingModeTrigger": "chat_settings",
+        "unreadMentionCount": 0,
+        "hasUnreadMention": false,
+        "archiveAtMentionViewedInDrawer": false,
+        "hasChatBeenOpened": false,
+        "tcToken": null,
+        "tcTokenTimestamp": null,
+        "endOfHistoryTransferType": 1,
+        "pendingInitialLoading": false,
+        "celebrationAnimationLastPlayed": 0,
+        "hasRequestedWelcomeMsg": false,
+        "hasCtwaConsumerDataSharingDisclosureSystemMsg": false,
+        "limitSharing": {
+            "trigger": 0
+        },
+        "msgs": null,
+        "isGroup": false,
+        "isUser": true,
+        "contact": {
+            "id": {
+                "server": "c.us",
+                "user": "0",
+                "_serialized": "0@c.us"
+            },
+            "name": "WhatsApp",
+            "shortName": "WhatsApp",
+            "type": "in",
+            "labels": [],
+            "textStatusLastUpdateTime": -1,
+            "isUsernameContact": false,
+            "syncToAddressbook": false,
+            "formattedName": "WhatsApp",
+            "isMe": false,
+            "isMyContact": true,
+            "isPSA": {},
+            "isUser": {},
+            "isWAContact": true,
+            "profilePicThumbObj": {
+                "id": {
+                    "server": "c.us",
+                    "user": "0",
+                    "_serialized": "0@c.us"
+                },
+                "img": null,
+                "imgFull": null,
+                "tag": null
+            },
+            "msgs": null
+        },
+        "groupMetadata": null,
+        "presence": {
+            "id": {
+                "server": "c.us",
+                "user": "0",
+                "_serialized": "0@c.us"
+            },
+            "chatstates": []
+        }
+    },
+    {
+        "labels": [],
+        "lastReceivedKey": {
+            "fromMe": false,
+            "remote": {
+                "server": "lid",
+                "user": "37877366915178",
+                "_serialized": "37877366915178@lid"
+            },
+            "id": "E47E50A2393ED3871C",
+            "_serialized": "false_37877366915178@lid_E47E50A2393ED3871C"
+        },
+        "id": {
+            "server": "lid",
+            "user": "37877366915178",
+            "_serialized": "37877366915178@lid"
+        },
+        "accountLid": {
+            "server": "lid",
+            "user": "37877366915178",
+            "_serialized": "37877366915178@lid"
+        },
+        "t": 1774649016,
+        "unreadCount": 0,
+        "unreadDividerOffset": 0,
+        "archive": false,
+        "isReadOnly": false,
+        "isLocked": false,
+        "muteExpiration": 0,
+        "isAutoMuted": false,
+        "notSpam": false,
+        "capiThreadControl": 0,
+        "ephemeralDuration": 0,
+        "ephemeralSettingTimestamp": 0,
+        "disappearingModeInitiator": "chat",
+        "disappearingModeTrigger": "chat_settings",
+        "unreadMentionCount": 0,
+        "hasUnreadMention": false,
+        "archiveAtMentionViewedInDrawer": false,
+        "hasChatBeenOpened": false,
+        "tcToken": {},
+        "tcTokenTimestamp": 1774649016,
+        "endOfHistoryTransferType": 1,
+        "pendingInitialLoading": false,
+        "celebrationAnimationLastPlayed": 0,
+        "hasRequestedWelcomeMsg": false,
+        "lidOriginType": "general",
+        "hasCtwaConsumerDataSharingDisclosureSystemMsg": false,
+        "limitSharing": {
+            "trigger": 0
+        },
+        "msgs": null,
+        "isGroup": false,
+        "isUser": true,
+        "contact": {
+            "id": {
+                "server": "lid",
+                "user": "37877366915178",
+                "_serialized": "37877366915178@lid"
+            },
+            "type": "in",
+            "verifiedName": "Mercado Livre",
+            "isBusiness": true,
+            "isEnterprise": true,
+            "verifiedLevel": 2,
+            "privacyMode": {
+                "actualActors": 2,
+                "hostStorage": 2,
+                "privacyModeTs": 1761243124
+            },
+            "parentStatusMute": false,
+            "labels": [],
+            "isContactSyncCompleted": 1,
+            "textStatusLastUpdateTime": -1,
+            "isUsernameContact": false,
+            "syncToAddressbook": false,
+            "formattedName": "Mercado Livre",
+            "isMe": false,
+            "isMyContact": false,
+            "isPSA": {},
+            "isUser": {},
+            "isWAContact": true,
+            "profilePicThumbObj": {
+                "eurl": "https://pps.whatsapp.net/v/t61.24694-24/308690542_450048876940007_5284232417791170617_n.jpg?ccb=11-4&oh=01_Q5Aa4AGVTspDUP-2syPeLOXipIHmfknVAl7VibRp1FfYLdFB8Q&oe=69D9E6EE&_nc_sid=5e03e0&_nc_cat=110",
+                "id": {
+                    "server": "lid",
+                    "user": "37877366915178",
+                    "_serialized": "37877366915178@lid"
+                },
+                "img": "https://pps.whatsapp.net/v/t61.24694-24/308690542_450048876940007_5284232417791170617_n.jpg?stp=dst-jpg_s96x96_tt6&ccb=11-4&oh=01_Q5Aa4AEw2IvhYPO31keHCE7mNaBRldq4TzP5HZO33PW5kLcK3A&oe=69D9E6EE&_nc_sid=5e03e0&_nc_cat=110",
+                "imgFull": "https://pps.whatsapp.net/v/t61.24694-24/308690542_450048876940007_5284232417791170617_n.jpg?ccb=11-4&oh=01_Q5Aa4AGVTspDUP-2syPeLOXipIHmfknVAl7VibRp1FfYLdFB8Q&oe=69D9E6EE&_nc_sid=5e03e0&_nc_cat=110",
+                "tag": "205134471"
+            },
+            "msgs": null
+        },
+        "groupMetadata": null,
+        "presence": {
+            "id": {
+                "server": "lid",
+                "user": "37877366915178",
+                "_serialized": "37877366915178@lid"
+            },
+            "chatstates": []
+        }
+    },
+    {
+        "labels": [],
+        "lastReceivedKey": {
+            "fromMe": false,
+            "remote": {
+                "server": "lid",
+                "user": "206683104129131",
+                "_serialized": "206683104129131@lid"
+            },
+            "id": "499BC8F7E285F3F833",
+            "_serialized": "false_206683104129131@lid_499BC8F7E285F3F833"
+        },
+        "id": {
+            "server": "lid",
+            "user": "206683104129131",
+            "_serialized": "206683104129131@lid"
+        },
+        "accountLid": {
+            "server": "lid",
+            "user": "206683104129131",
+            "_serialized": "206683104129131@lid"
+        },
+        "t": 1774616948,
+        "unreadCount": 1,
+        "unreadDividerOffset": 0,
+        "archive": false,
+        "isReadOnly": false,
+        "isLocked": false,
+        "muteExpiration": 0,
+        "isAutoMuted": false,
+        "notSpam": false,
+        "capiThreadControl": 0,
+        "ephemeralDuration": 0,
+        "ephemeralSettingTimestamp": 0,
+        "disappearingModeInitiator": "chat",
+        "disappearingModeTrigger": "chat_settings",
+        "unreadMentionCount": 0,
+        "hasUnreadMention": false,
+        "archiveAtMentionViewedInDrawer": false,
+        "hasChatBeenOpened": false,
+        "tcToken": {},
+        "tcTokenTimestamp": 1774616948,
+        "endOfHistoryTransferType": 1,
+        "pendingInitialLoading": false,
+        "celebrationAnimationLastPlayed": 0,
+        "hasRequestedWelcomeMsg": false,
+        "lidOriginType": "general",
+        "hasCtwaConsumerDataSharingDisclosureSystemMsg": false,
+        "limitSharing": {
+            "trigger": 0
+        },
+        "msgs": null,
+        "isGroup": false,
+        "isUser": true,
+        "contact": {
+            "id": {
+                "server": "lid",
+                "user": "206683104129131",
+                "_serialized": "206683104129131@lid"
+            },
+            "type": "in",
+            "verifiedName": "Comercial Milvus - Rafael",
+            "isBusiness": true,
+            "isEnterprise": true,
+            "verifiedLevel": 1,
+            "privacyMode": {
+                "actualActors": 2,
+                "hostStorage": 2,
+                "privacyModeTs": 1769983652
+            },
+            "parentStatusMute": false,
+            "labels": [],
+            "isContactSyncCompleted": 1,
+            "textStatusLastUpdateTime": -1,
+            "isUsernameContact": false,
+            "syncToAddressbook": false,
+            "formattedName": "+55 11 3163-5327",
+            "isMe": false,
+            "isMyContact": false,
+            "isPSA": {},
+            "isUser": {},
+            "isWAContact": true,
+            "profilePicThumbObj": {
+                "eurl": "https://pps.whatsapp.net/v/t61.24694-24/620163837_753688347784999_6498340317477879347_n.jpg?ccb=11-4&oh=01_Q5Aa4AF23x-86PaVdukt7G8c37iyN7gfm2S3f8X2WWojKIF9TQ&oe=69D9F81E&_nc_sid=5e03e0&_nc_cat=108",
+                "id": {
+                    "server": "lid",
+                    "user": "206683104129131",
+                    "_serialized": "206683104129131@lid"
+                },
+                "img": "https://pps.whatsapp.net/v/t61.24694-24/620163837_753688347784999_6498340317477879347_n.jpg?stp=dst-jpg_s96x96_tt6&ccb=11-4&oh=01_Q5Aa4AEAR17PQap2nGgLFfSIc0IPUv4y_ZWlIAZJj3tRigMMAQ&oe=69D9F81E&_nc_sid=5e03e0&_nc_cat=108",
+                "imgFull": "https://pps.whatsapp.net/v/t61.24694-24/620163837_753688347784999_6498340317477879347_n.jpg?ccb=11-4&oh=01_Q5Aa4AF23x-86PaVdukt7G8c37iyN7gfm2S3f8X2WWojKIF9TQ&oe=69D9F81E&_nc_sid=5e03e0&_nc_cat=108",
+                "tag": "2053711430"
+            },
+            "msgs": null
+        },
+        "groupMetadata": null,
+        "presence": {
+            "id": {
+                "server": "lid",
+                "user": "206683104129131",
+                "_serialized": "206683104129131@lid"
+            },
+            "chatstates": []
+        }
+    },
+    {
+        "labels": [],
+        "lastReceivedKey": {
+            "fromMe": false,
+            "remote": {
+                "server": "lid",
+                "user": "36490411290638",
+                "_serialized": "36490411290638@lid"
+            },
+            "id": "E46F90BF460C83B9AB",
+            "_serialized": "false_36490411290638@lid_E46F90BF460C83B9AB"
+        },
+        "id": {
+            "server": "lid",
+            "user": "36490411290638",
+            "_serialized": "36490411290638@lid"
+        },
+        "accountLid": {
+            "server": "lid",
+            "user": "36490411290638",
+            "_serialized": "36490411290638@lid"
+        },
+        "t": 1774558717,
+        "unreadCount": 1,
+        "unreadDividerOffset": 0,
+        "archive": false,
+        "isReadOnly": false,
+        "isLocked": false,
+        "muteExpiration": 0,
+        "isAutoMuted": false,
+        "notSpam": false,
+        "capiThreadControl": 0,
+        "ephemeralDuration": 0,
+        "ephemeralSettingTimestamp": 0,
+        "disappearingModeInitiator": "chat",
+        "disappearingModeTrigger": "chat_settings",
+        "unreadMentionCount": 0,
+        "hasUnreadMention": false,
+        "archiveAtMentionViewedInDrawer": false,
+        "hasChatBeenOpened": false,
+        "tcToken": {},
+        "tcTokenTimestamp": 1774558717,
+        "endOfHistoryTransferType": 1,
+        "pendingInitialLoading": false,
+        "celebrationAnimationLastPlayed": 0,
+        "hasRequestedWelcomeMsg": false,
+        "lidOriginType": "general",
+        "hasCtwaConsumerDataSharingDisclosureSystemMsg": false,
+        "limitSharing": {
+            "trigger": 0
+        },
+        "msgs": null,
+        "isGroup": false,
+        "isUser": true,
+        "contact": {
+            "id": {
+                "server": "lid",
+                "user": "36490411290638",
+                "_serialized": "36490411290638@lid"
+            },
+            "type": "in",
+            "verifiedName": "Zé Delivery",
+            "isBusiness": true,
+            "isEnterprise": true,
+            "verifiedLevel": 2,
+            "privacyMode": {
+                "actualActors": 2,
+                "hostStorage": 2,
+                "privacyModeTs": 1700589626
+            },
+            "parentStatusMute": false,
+            "labels": [],
+            "isContactSyncCompleted": 1,
+            "textStatusLastUpdateTime": -1,
+            "isUsernameContact": false,
+            "syncToAddressbook": false,
+            "formattedName": "Zé Delivery",
+            "isMe": false,
+            "isMyContact": false,
+            "isPSA": {},
+            "isUser": {},
+            "isWAContact": true,
+            "profilePicThumbObj": {
+                "eurl": "https://pps.whatsapp.net/v/t61.24694-24/468240804_1988484224990288_6751868611535010921_n.jpg?ccb=11-4&oh=01_Q5Aa4AFDEMrkrSBjcz06NIzOPa2Qwj0RWxJnX1z9aZaR0CaUYA&oe=69D9E7D3&_nc_sid=5e03e0&_nc_cat=106",
+                "id": {
+                    "server": "lid",
+                    "user": "36490411290638",
+                    "_serialized": "36490411290638@lid"
+                },
+                "img": "https://pps.whatsapp.net/v/t61.24694-24/468240804_1988484224990288_6751868611535010921_n.jpg?stp=dst-jpg_s96x96_tt6&ccb=11-4&oh=01_Q5Aa4AE3OkiM6vgk_IMgJmG5_dMZ8JZviNqm_wVedpdjC5Q6AA&oe=69D9E7D3&_nc_sid=5e03e0&_nc_cat=106",
+                "imgFull": "https://pps.whatsapp.net/v/t61.24694-24/468240804_1988484224990288_6751868611535010921_n.jpg?ccb=11-4&oh=01_Q5Aa4AFDEMrkrSBjcz06NIzOPa2Qwj0RWxJnX1z9aZaR0CaUYA&oe=69D9E7D3&_nc_sid=5e03e0&_nc_cat=106",
+                "tag": "1692187877"
+            },
+            "msgs": null
+        },
+        "groupMetadata": null,
+        "presence": {
+            "id": {
+                "server": "lid",
+                "user": "36490411290638",
+                "_serialized": "36490411290638@lid"
+            },
+            "chatstates": []
+        }
+    },
+    {
+        "labels": [],
+        "lastReceivedKey": {
+            "fromMe": true,
+            "remote": {
+                "server": "lid",
+                "user": "6623259013353",
+                "_serialized": "6623259013353@lid"
+            },
+            "id": "3EB04B667D85B6CBE65690",
+            "self": "out",
+            "_serialized": "true_6623259013353@lid_3EB04B667D85B6CBE65690_out"
+        },
+        "id": {
+            "server": "lid",
+            "user": "6623259013353",
+            "_serialized": "6623259013353@lid"
+        },
+        "accountLid": {
+            "server": "lid",
+            "user": "6623259013353",
+            "_serialized": "6623259013353@lid"
+        },
+        "t": 1774536487,
+        "unreadCount": 0,
+        "unreadDividerOffset": 0,
+        "archive": false,
+        "isReadOnly": false,
+        "isLocked": false,
+        "muteExpiration": 0,
+        "isAutoMuted": false,
+        "notSpam": true,
+        "capiThreadControl": 0,
+        "ephemeralDuration": 0,
+        "ephemeralSettingTimestamp": 0,
+        "disappearingModeInitiator": "chat",
+        "disappearingModeTrigger": "chat_settings",
+        "unreadMentionCount": 0,
+        "hasUnreadMention": false,
+        "archiveAtMentionViewedInDrawer": false,
+        "hasChatBeenOpened": false,
+        "tcToken": {},
+        "tcTokenTimestamp": 1774536486,
+        "tcTokenSenderTimestamp": 1773913820,
+        "endOfHistoryTransferType": 1,
+        "pendingInitialLoading": false,
+        "celebrationAnimationLastPlayed": 0,
+        "hasRequestedWelcomeMsg": false,
+        "lidOriginType": "general",
+        "hasCtwaConsumerDataSharingDisclosureSystemMsg": false,
+        "limitSharing": {
+            "trigger": 0
+        },
+        "msgs": null,
+        "isGroup": false,
+        "isUser": true,
+        "contact": {
+            "id": {
+                "server": "lid",
+                "user": "6623259013353",
+                "_serialized": "6623259013353@lid"
+            },
+            "name": "Adriano Neco",
+            "shortName": "Adriano Neco",
+            "type": "in",
+            "labels": [],
+            "isContactSyncCompleted": 1,
+            "disappearingModeDuration": 0,
+            "disappearingModeSettingTimestamp": 1736243269,
+            "textStatusLastUpdateTime": -1,
+            "isUsernameContact": false,
+            "syncToAddressbook": false,
+            "formattedName": "Você",
+            "isMe": true,
+            "isMyContact": true,
+            "isPSA": {},
+            "isUser": {},
+            "isWAContact": true,
+            "profilePicThumbObj": null,
+            "msgs": null
+        },
+        "groupMetadata": null,
+        "presence": {
+            "id": {
+                "server": "lid",
+                "user": "6623259013353",
+                "_serialized": "6623259013353@lid"
+            },
+            "chatstates": []
+        }
+    },
+    {
+        "labels": [],
+        "lastReceivedKey": {
+            "fromMe": false,
+            "remote": {
+                "server": "lid",
+                "user": "210633920377066",
+                "_serialized": "210633920377066@lid"
+            },
+            "id": "133769A1201DFE14B6",
+            "_serialized": "false_210633920377066@lid_133769A1201DFE14B6"
+        },
+        "id": {
+            "server": "lid",
+            "user": "210633920377066",
+            "_serialized": "210633920377066@lid"
+        },
+        "accountLid": {
+            "server": "lid",
+            "user": "210633920377066",
+            "_serialized": "210633920377066@lid"
+        },
+        "t": 1774469399,
+        "unreadCount": 0,
+        "unreadDividerOffset": 0,
+        "archive": false,
+        "isReadOnly": false,
+        "isLocked": false,
+        "muteExpiration": 0,
+        "isAutoMuted": false,
+        "notSpam": true,
+        "capiThreadControl": 0,
+        "ephemeralDuration": 0,
+        "ephemeralSettingTimestamp": 0,
+        "disappearingModeInitiator": "chat",
+        "disappearingModeTrigger": "chat_settings",
+        "unreadMentionCount": 0,
+        "hasUnreadMention": false,
+        "archiveAtMentionViewedInDrawer": false,
+        "hasChatBeenOpened": false,
+        "tcToken": {},
+        "tcTokenTimestamp": 1774469345,
+        "tcTokenSenderTimestamp": 1774469341,
+        "endOfHistoryTransferType": 1,
+        "pendingInitialLoading": false,
+        "celebrationAnimationLastPlayed": 0,
+        "hasRequestedWelcomeMsg": false,
+        "lidOriginType": "general",
+        "hasCtwaConsumerDataSharingDisclosureSystemMsg": false,
+        "limitSharing": {
+            "trigger": 0
+        },
+        "msgs": null,
+        "isGroup": false,
+        "isUser": true,
+        "contact": {
+            "id": {
+                "server": "lid",
+                "user": "210633920377066",
+                "_serialized": "210633920377066@lid"
+            },
+            "type": "in",
+            "verifiedName": "Medicos de Olhos API",
+            "isBusiness": true,
+            "isEnterprise": true,
+            "verifiedLevel": 1,
+            "privacyMode": {
+                "actualActors": 2,
+                "hostStorage": 2,
+                "privacyModeTs": 1744650791
+            },
+            "parentStatusMute": false,
+            "labels": [],
+            "isContactSyncCompleted": 1,
+            "textStatusLastUpdateTime": -1,
+            "isUsernameContact": false,
+            "syncToAddressbook": false,
+            "formattedName": "+55 41 3020-4646",
+            "isMe": false,
+            "isMyContact": false,
+            "isPSA": {},
+            "isUser": {},
+            "isWAContact": true,
+            "profilePicThumbObj": {
+                "eurl": "https://pps.whatsapp.net/v/t61.24694-24/491900128_578278857948066_5060829515815192647_n.jpg?ccb=11-4&oh=01_Q5Aa4AFqE4CpTwzkiSBosF5fu_G6jH-c3ak8a9v0m7b2MVf5cg&oe=69D9F60F&_nc_sid=5e03e0&_nc_cat=108",
+                "id": {
+                    "server": "lid",
+                    "user": "210633920377066",
+                    "_serialized": "210633920377066@lid"
+                },
+                "img": "https://pps.whatsapp.net/v/t61.24694-24/491900128_578278857948066_5060829515815192647_n.jpg?stp=dst-jpg_s96x96_tt6&ccb=11-4&oh=01_Q5Aa4AFjqzeUelvSrdj8OL5eSrKgBTMhnXnYXqvv1PvPRzImkw&oe=69D9F60F&_nc_sid=5e03e0&_nc_cat=108",
+                "imgFull": "https://pps.whatsapp.net/v/t61.24694-24/491900128_578278857948066_5060829515815192647_n.jpg?ccb=11-4&oh=01_Q5Aa4AFqE4CpTwzkiSBosF5fu_G6jH-c3ak8a9v0m7b2MVf5cg&oe=69D9F60F&_nc_sid=5e03e0&_nc_cat=108",
+                "tag": "1060449275"
+            },
+            "msgs": null
+        },
+        "groupMetadata": null,
+        "presence": {
+            "id": {
+                "server": "lid",
+                "user": "210633920377066",
+                "_serialized": "210633920377066@lid"
+            },
+            "chatstates": []
+        }
+    },
+    {
+        "labels": [],
+        "lastReceivedKey": {
+            "fromMe": false,
+            "remote": {
+                "server": "lid",
+                "user": "256173492142313",
+                "_serialized": "256173492142313@lid"
+            },
+            "id": "8EBB75E76D33A3712B",
+            "_serialized": "false_256173492142313@lid_8EBB75E76D33A3712B"
+        },
+        "id": {
+            "server": "lid",
+            "user": "256173492142313",
+            "_serialized": "256173492142313@lid"
+        },
+        "accountLid": {
+            "server": "lid",
+            "user": "256173492142313",
+            "_serialized": "256173492142313@lid"
+        },
+        "t": 1774461157,
+        "unreadCount": 0,
+        "unreadDividerOffset": 0,
+        "archive": true,
+        "isReadOnly": false,
+        "isLocked": false,
+        "muteExpiration": 0,
+        "isAutoMuted": false,
+        "notSpam": false,
+        "capiThreadControl": 0,
+        "ephemeralDuration": 0,
+        "ephemeralSettingTimestamp": 0,
+        "disappearingModeInitiator": "chat",
+        "disappearingModeTrigger": "chat_settings",
+        "unreadMentionCount": 0,
+        "hasUnreadMention": false,
+        "archiveAtMentionViewedInDrawer": false,
+        "hasChatBeenOpened": false,
+        "tcToken": {},
+        "tcTokenTimestamp": 1774461157,
+        "endOfHistoryTransferType": 1,
+        "pendingInitialLoading": false,
+        "celebrationAnimationLastPlayed": 0,
+        "hasRequestedWelcomeMsg": false,
+        "lidOriginType": "general",
+        "hasCtwaConsumerDataSharingDisclosureSystemMsg": false,
+        "limitSharing": {
+            "trigger": 0
+        },
+        "msgs": null,
+        "isGroup": false,
+        "isUser": true,
+        "contact": {
+            "id": {
+                "server": "lid",
+                "user": "256173492142313",
+                "_serialized": "256173492142313@lid"
+            },
+            "type": "in",
+            "verifiedName": "Itaú",
+            "isBusiness": true,
+            "isEnterprise": true,
+            "verifiedLevel": 2,
+            "privacyMode": {
+                "actualActors": 1,
+                "hostStorage": 2,
+                "privacyModeTs": 1731980492
+            },
+            "parentStatusMute": false,
+            "labels": [],
+            "isContactSyncCompleted": 1,
+            "textStatusLastUpdateTime": -1,
+            "isUsernameContact": false,
+            "syncToAddressbook": false,
+            "formattedName": "Itaú",
+            "isMe": false,
+            "isMyContact": false,
+            "isPSA": {},
+            "isUser": {},
+            "isWAContact": true,
+            "profilePicThumbObj": {},
+            "msgs": null
+        },
+        "groupMetadata": null,
+        "presence": {
+            "id": {
+                "server": "lid",
+                "user": "256173492142313",
+                "_serialized": "256173492142313@lid"
+            },
+            "chatstates": []
+        }
+    },
+    {
+        "labels": [],
+        "lastReceivedKey": {
+            "fromMe": false,
+            "remote": {
+                "server": "lid",
+                "user": "192788868104420",
+                "_serialized": "192788868104420@lid"
+            },
+            "id": "A5846E9963CC0D6BB19669E8997C68F0",
+            "_serialized": "false_192788868104420@lid_A5846E9963CC0D6BB19669E8997C68F0"
+        },
+        "id": {
+            "server": "lid",
+            "user": "192788868104420",
+            "_serialized": "192788868104420@lid"
+        },
+        "accountLid": {
+            "server": "lid",
+            "user": "192788868104420",
+            "_serialized": "192788868104420@lid"
+        },
+        "t": 1774435602,
+        "unreadCount": 0,
+        "unreadDividerOffset": 0,
+        "archive": false,
+        "isReadOnly": false,
+        "isLocked": false,
+        "muteExpiration": 0,
+        "isAutoMuted": false,
+        "notSpam": true,
+        "capiThreadControl": 0,
+        "ephemeralDuration": 0,
+        "ephemeralSettingTimestamp": 0,
+        "disappearingModeInitiator": "chat",
+        "disappearingModeTrigger": "chat_settings",
+        "unreadMentionCount": 0,
+        "hasUnreadMention": false,
+        "archiveAtMentionViewedInDrawer": false,
+        "hasChatBeenOpened": false,
+        "tcToken": {},
+        "tcTokenTimestamp": 1774277955,
+        "tcTokenSenderTimestamp": 1774277939,
+        "endOfHistoryTransferType": 1,
+        "pendingInitialLoading": false,
+        "chatlistPreview": {
+            "type": "reaction",
+            "msgKey": "false_192788868104420@lid_A58421EBD611E4063E44EDBD4A51C867",
+            "parentMsgKey": "true_192788868104420@lid_AC2A9FB603ECEA263CA6F3953BC6F3DB",
+            "reactionText": "✅",
+            "sender": "192788868104420@lid",
+            "timestamp": 1772792184293
+        },
+        "celebrationAnimationLastPlayed": 0,
+        "hasRequestedWelcomeMsg": false,
+        "lidOriginType": "general",
+        "hasCtwaConsumerDataSharingDisclosureSystemMsg": false,
+        "limitSharing": {
+            "trigger": 0
+        },
+        "msgs": null,
+        "isGroup": false,
+        "isUser": true,
+        "contact": {
+            "id": {
+                "server": "lid",
+                "user": "192788868104420",
+                "_serialized": "192788868104420@lid"
+            },
+            "name": "Cloud Conex",
+            "shortName": "Cloud",
+            "type": "in",
+            "verifiedName": "Cloud Conex",
+            "isBusiness": true,
+            "isEnterprise": false,
+            "verifiedLevel": 0,
+            "privacyMode": null,
+            "parentStatusMute": false,
+            "labels": [],
+            "isContactSyncCompleted": 1,
+            "textStatusLastUpdateTime": -1,
+            "isUsernameContact": false,
+            "syncToAddressbook": false,
+            "formattedName": "Cloud Conex",
+            "isMe": false,
+            "isMyContact": true,
+            "isPSA": {},
+            "isUser": {},
+            "isWAContact": true,
+            "profilePicThumbObj": {
+                "eurl": "https://pps.whatsapp.net/v/t61.24694-24/516503733_1231092722034748_2585610280725044289_n.jpg?ccb=11-4&oh=01_Q5Aa4AGwYMGJPyuriF-INEbSrB6pqZcBR6CAPDJUMp7kw3FjGQ&oe=69D9FDE9&_nc_sid=5e03e0&_nc_cat=101",
+                "id": {
+                    "server": "lid",
+                    "user": "192788868104420",
+                    "_serialized": "192788868104420@lid"
+                },
+                "img": "https://pps.whatsapp.net/v/t61.24694-24/516503733_1231092722034748_2585610280725044289_n.jpg?stp=dst-jpg_s96x96_tt6&ccb=11-4&oh=01_Q5Aa4AFP0FQl7G9uuUF1iEhNRNM1OiGXPrGZ1jn_MNExdaYpSg&oe=69D9FDE9&_nc_sid=5e03e0&_nc_cat=101",
+                "imgFull": "https://pps.whatsapp.net/v/t61.24694-24/516503733_1231092722034748_2585610280725044289_n.jpg?ccb=11-4&oh=01_Q5Aa4AGwYMGJPyuriF-INEbSrB6pqZcBR6CAPDJUMp7kw3FjGQ&oe=69D9FDE9&_nc_sid=5e03e0&_nc_cat=101",
+                "tag": "1279117169"
+            },
+            "msgs": null
+        },
+        "groupMetadata": null,
+        "presence": {
+            "id": {
+                "server": "lid",
+                "user": "192788868104420",
+                "_serialized": "192788868104420@lid"
+            },
+            "chatstates": []
+        }
+    },
+    {
+        "labels": [],
+        "lastReceivedKey": {
+            "fromMe": false,
+            "remote": {
+                "server": "lid",
+                "user": "52077216723118",
+                "_serialized": "52077216723118@lid"
+            },
+            "id": "3EB0F87664642549F119F1",
+            "_serialized": "false_52077216723118@lid_3EB0F87664642549F119F1"
+        },
+        "id": {
+            "server": "lid",
+            "user": "52077216723118",
+            "_serialized": "52077216723118@lid"
+        },
+        "accountLid": {
+            "server": "lid",
+            "user": "52077216723118",
+            "_serialized": "52077216723118@lid"
+        },
+        "t": 1774380887,
+        "unreadCount": 0,
+        "unreadDividerOffset": 0,
+        "archive": false,
+        "isReadOnly": false,
+        "isLocked": false,
+        "muteExpiration": 0,
+        "isAutoMuted": false,
+        "notSpam": true,
+        "capiThreadControl": 0,
+        "ephemeralDuration": 0,
+        "ephemeralSettingTimestamp": 0,
+        "disappearingModeInitiator": "chat",
+        "disappearingModeTrigger": "chat_settings",
+        "unreadMentionCount": 0,
+        "hasUnreadMention": false,
+        "archiveAtMentionViewedInDrawer": false,
+        "hasChatBeenOpened": false,
+        "tcToken": {},
+        "tcTokenTimestamp": 1774380776,
+        "tcTokenSenderTimestamp": 1774285568,
+        "endOfHistoryTransferType": 1,
+        "pendingInitialLoading": false,
+        "celebrationAnimationLastPlayed": 0,
+        "hasRequestedWelcomeMsg": false,
+        "lidOriginType": "general",
+        "hasCtwaConsumerDataSharingDisclosureSystemMsg": false,
+        "limitSharing": {
+            "trigger": 0
+        },
+        "msgs": null,
+        "isGroup": false,
+        "isUser": true,
+        "contact": {
+            "id": {
+                "server": "lid",
+                "user": "52077216723118",
+                "_serialized": "52077216723118@lid"
+            },
+            "name": "easydevbrasil",
+            "shortName": "easydevbrasil",
+            "type": "in",
+            "verifiedName": "easydevbrasil",
+            "isBusiness": true,
+            "isEnterprise": false,
+            "verifiedLevel": 0,
+            "privacyMode": null,
+            "parentStatusMute": false,
+            "labels": [],
+            "isContactSyncCompleted": 1,
+            "textStatusLastUpdateTime": -1,
+            "isUsernameContact": false,
+            "syncToAddressbook": true,
+            "formattedName": "easydevbrasil",
+            "isMe": false,
+            "isMyContact": true,
+            "isPSA": {},
+            "isUser": {},
+            "isWAContact": true,
+            "profilePicThumbObj": {
+                "eurl": null,
+                "id": {
+                    "server": "lid",
+                    "user": "52077216723118",
+                    "_serialized": "52077216723118@lid"
+                },
+                "tag": null
+            },
+            "msgs": null
+        },
+        "groupMetadata": null,
+        "presence": {
+            "id": {
+                "server": "lid",
+                "user": "52077216723118",
+                "_serialized": "52077216723118@lid"
+            },
+            "chatstates": []
+        }
+    },
+    {
+        "labels": [],
+        "lastReceivedKey": {
+            "fromMe": true,
+            "remote": {
+                "server": "lid",
+                "user": "210144327692492",
+                "_serialized": "210144327692492@lid"
+            },
+            "id": "3EB06AD9653B3F593C5E86",
+            "_serialized": "true_210144327692492@lid_3EB06AD9653B3F593C5E86"
+        },
+        "id": {
+            "server": "lid",
+            "user": "210144327692492",
+            "_serialized": "210144327692492@lid"
+        },
+        "accountLid": {
+            "server": "lid",
+            "user": "210144327692492",
+            "_serialized": "210144327692492@lid"
+        },
+        "t": 1774292509,
+        "unreadCount": 0,
+        "unreadDividerOffset": 0,
+        "archive": false,
+        "isReadOnly": false,
+        "isLocked": false,
+        "muteExpiration": 0,
+        "isAutoMuted": false,
+        "notSpam": true,
+        "capiThreadControl": 0,
+        "ephemeralDuration": 0,
+        "ephemeralSettingTimestamp": 0,
+        "disappearingModeInitiator": "chat",
+        "disappearingModeTrigger": "chat_settings",
+        "unreadMentionCount": 0,
+        "hasUnreadMention": false,
+        "archiveAtMentionViewedInDrawer": false,
+        "hasChatBeenOpened": false,
+        "tcToken": {},
+        "tcTokenTimestamp": 1774264496,
+        "tcTokenSenderTimestamp": 1774262127,
+        "endOfHistoryTransferType": 1,
+        "pendingInitialLoading": false,
+        "chatlistPreview": {
+            "type": "reaction",
+            "msgKey": "false_210144327692492@lid_3EB079C68A8E1C20FF438E",
+            "parentMsgKey": "true_210144327692492@lid_AC7DA61189F66245717909331E441F57",
+            "reactionText": "👍",
+            "sender": "210144327692492@lid",
+            "timestamp": 1772567936000
+        },
+        "celebrationAnimationLastPlayed": 0,
+        "hasRequestedWelcomeMsg": false,
+        "lidOriginType": "general",
+        "hasCtwaConsumerDataSharingDisclosureSystemMsg": false,
+        "limitSharing": {
+            "trigger": 0
+        },
+        "msgs": null,
+        "isGroup": false,
+        "isUser": true,
+        "contact": {
+            "id": {
+                "server": "lid",
+                "user": "210144327692492",
+                "_serialized": "210144327692492@lid"
+            },
+            "name": "Junior",
+            "shortName": "Junior",
+            "pushname": "Junior Cirilo",
+            "type": "in",
+            "parentStatusMute": false,
+            "labels": [],
+            "isContactSyncCompleted": 1,
+            "textStatusLastUpdateTime": -1,
+            "isUsernameContact": false,
+            "syncToAddressbook": false,
+            "formattedName": "Junior",
+            "isMe": false,
+            "isMyContact": true,
+            "isPSA": {},
+            "isUser": {},
+            "isWAContact": true,
+            "profilePicThumbObj": {
+                "eurl": "https://pps.whatsapp.net/v/t61.24694-24/103203922_848493409006274_4953612414730608860_n.jpg?ccb=11-4&oh=01_Q5Aa4AH24KI769NwBglWHZPierYubFQTTdOORQ599wH_qUSE6g&oe=69DA089A&_nc_sid=5e03e0&_nc_cat=110",
+                "id": {
+                    "server": "lid",
+                    "user": "210144327692492",
+                    "_serialized": "210144327692492@lid"
+                },
+                "img": "https://pps.whatsapp.net/v/t61.24694-24/103203922_848493409006274_4953612414730608860_n.jpg?stp=dst-jpg_s96x96_tt6&ccb=11-4&oh=01_Q5Aa4AFI8X712CR8IPfIzO0NtLpuKqUQpE7KZ_7np_mDqFXxxQ&oe=69DA089A&_nc_sid=5e03e0&_nc_cat=110",
+                "imgFull": "https://pps.whatsapp.net/v/t61.24694-24/103203922_848493409006274_4953612414730608860_n.jpg?ccb=11-4&oh=01_Q5Aa4AH24KI769NwBglWHZPierYubFQTTdOORQ599wH_qUSE6g&oe=69DA089A&_nc_sid=5e03e0&_nc_cat=110",
+                "tag": "1009550468"
+            },
+            "msgs": null
+        },
+        "groupMetadata": null,
+        "presence": {
+            "id": {
+                "server": "lid",
+                "user": "210144327692492",
+                "_serialized": "210144327692492@lid"
+            },
+            "chatstates": []
+        }
+    },
+    {
+        "labels": [],
+        "lastReceivedKey": {
+            "fromMe": true,
+            "remote": {
+                "server": "lid",
+                "user": "54464497078477",
+                "_serialized": "54464497078477@lid"
+            },
+            "id": "AC078A7B12BA2363ED85DBB4689EB08F",
+            "_serialized": "true_54464497078477@lid_AC078A7B12BA2363ED85DBB4689EB08F"
+        },
+        "id": {
+            "server": "lid",
+            "user": "54464497078477",
+            "_serialized": "54464497078477@lid"
+        },
+        "accountLid": {
+            "server": "lid",
+            "user": "54464497078477",
+            "_serialized": "54464497078477@lid"
+        },
+        "t": 1774110395,
+        "unreadCount": 0,
+        "unreadDividerOffset": 0,
+        "archive": false,
+        "isReadOnly": false,
+        "isLocked": false,
+        "muteExpiration": 0,
+        "isAutoMuted": false,
+        "notSpam": true,
+        "capiThreadControl": 0,
+        "ephemeralDuration": 86400,
+        "ephemeralSettingTimestamp": 1703638078,
+        "disappearingModeInitiator": "chat",
+        "disappearingModeTrigger": "chat_settings",
+        "unreadMentionCount": 0,
+        "hasUnreadMention": false,
+        "archiveAtMentionViewedInDrawer": false,
+        "hasChatBeenOpened": false,
+        "tcToken": {},
+        "tcTokenTimestamp": 1774108050,
+        "tcTokenSenderTimestamp": 1774106172,
+        "endOfHistoryTransferType": 1,
+        "pendingInitialLoading": false,
+        "celebrationAnimationLastPlayed": 0,
+        "hasRequestedWelcomeMsg": false,
+        "lidOriginType": "general",
+        "hasCtwaConsumerDataSharingDisclosureSystemMsg": false,
+        "limitSharing": {
+            "trigger": 0
+        },
+        "msgs": null,
+        "isGroup": false,
+        "isUser": true,
+        "contact": {
+            "id": {
+                "server": "lid",
+                "user": "54464497078477",
+                "_serialized": "54464497078477@lid"
+            },
+            "pushname": "GESAEL MOTA",
+            "type": "in",
+            "parentStatusMute": false,
+            "labels": [],
+            "isContactSyncCompleted": 1,
+            "disappearingModeDuration": 0,
+            "disappearingModeSettingTimestamp": 1654984886,
+            "textStatusLastUpdateTime": -1,
+            "isUsernameContact": false,
+            "syncToAddressbook": false,
+            "formattedName": "+55 41 9874-8188",
+            "isMe": false,
+            "isMyContact": false,
+            "isPSA": {},
+            "isUser": {},
+            "isWAContact": true,
+            "profilePicThumbObj": {
+                "eurl": "https://pps.whatsapp.net/v/t61.24694-24/604285913_914642437803120_6484887105197833735_n.jpg?ccb=11-4&oh=01_Q5Aa4AEYFMmGeYQn_WPmjx2Ip8A4xUv-WUj9v96qZOZXhBI-NA&oe=69D9E573&_nc_sid=5e03e0&_nc_cat=104",
+                "id": {
+                    "server": "lid",
+                    "user": "54464497078477",
+                    "_serialized": "54464497078477@lid"
+                },
+                "img": "https://pps.whatsapp.net/v/t61.24694-24/604285913_914642437803120_6484887105197833735_n.jpg?stp=dst-jpg_s96x96_tt6&ccb=11-4&oh=01_Q5Aa4AFPVV5DNIfIoEmI6J2VtsCRiekCMjc3L38gTSOz9zL8DA&oe=69D9E573&_nc_sid=5e03e0&_nc_cat=104",
+                "imgFull": "https://pps.whatsapp.net/v/t61.24694-24/604285913_914642437803120_6484887105197833735_n.jpg?ccb=11-4&oh=01_Q5Aa4AEYFMmGeYQn_WPmjx2Ip8A4xUv-WUj9v96qZOZXhBI-NA&oe=69D9E573&_nc_sid=5e03e0&_nc_cat=104",
+                "tag": "54401711"
+            },
+            "msgs": null
+        },
+        "groupMetadata": null,
+        "presence": {
+            "id": {
+                "server": "lid",
+                "user": "54464497078477",
+                "_serialized": "54464497078477@lid"
+            },
+            "chatstates": []
+        }
+    },
+    {
+        "labels": [],
+        "lastReceivedKey": {
+            "fromMe": false,
+            "remote": {
+                "server": "lid",
+                "user": "140158204645501",
+                "_serialized": "140158204645501@lid"
+            },
+            "id": "26A48793D1FC8F8AAC",
+            "_serialized": "false_140158204645501@lid_26A48793D1FC8F8AAC"
+        },
+        "id": {
+            "server": "lid",
+            "user": "140158204645501",
+            "_serialized": "140158204645501@lid"
+        },
+        "accountLid": {
+            "server": "lid",
+            "user": "140158204645501",
+            "_serialized": "140158204645501@lid"
+        },
+        "t": 1774055349,
+        "unreadCount": 0,
+        "unreadDividerOffset": 0,
+        "archive": false,
+        "isReadOnly": false,
+        "isLocked": false,
+        "muteExpiration": 0,
+        "isAutoMuted": false,
+        "notSpam": false,
+        "capiThreadControl": 0,
+        "ephemeralDuration": 0,
+        "ephemeralSettingTimestamp": 0,
+        "disappearingModeInitiator": "chat",
+        "disappearingModeTrigger": "chat_settings",
+        "unreadMentionCount": 0,
+        "hasUnreadMention": false,
+        "archiveAtMentionViewedInDrawer": false,
+        "hasChatBeenOpened": false,
+        "tcToken": {},
+        "tcTokenTimestamp": 1774055350,
+        "endOfHistoryTransferType": 1,
+        "pendingInitialLoading": false,
+        "celebrationAnimationLastPlayed": 0,
+        "hasRequestedWelcomeMsg": false,
+        "lidOriginType": "general",
+        "hasCtwaConsumerDataSharingDisclosureSystemMsg": false,
+        "limitSharing": {
+            "trigger": 0
+        },
+        "msgs": null,
+        "isGroup": false,
+        "isUser": true,
+        "contact": {
+            "id": {
+                "server": "lid",
+                "user": "140158204645501",
+                "_serialized": "140158204645501@lid"
+            },
+            "type": "in",
+            "verifiedName": "Viver de IA",
+            "isBusiness": true,
+            "isEnterprise": true,
+            "verifiedLevel": 1,
+            "privacyMode": {
+                "actualActors": 1,
+                "hostStorage": 2,
+                "privacyModeTs": 1724207955
+            },
+            "parentStatusMute": false,
+            "labels": [],
+            "isContactSyncCompleted": 1,
+            "textStatusLastUpdateTime": -1,
+            "isUsernameContact": false,
+            "syncToAddressbook": false,
+            "formattedName": "+55 48 9105-0105",
+            "isMe": false,
+            "isMyContact": false,
+            "isPSA": {},
+            "isUser": {},
+            "isWAContact": true,
+            "profilePicThumbObj": {
+                "eurl": "https://pps.whatsapp.net/v/t61.24694-24/639534554_2349219115599857_3713501258775243614_n.jpg?ccb=11-4&oh=01_Q5Aa4AHLdakgLy71jcWitewcZfm_bieyAlmNG4iytYBX6uSewA&oe=69D9EB99&_nc_sid=5e03e0&_nc_cat=100",
+                "id": {
+                    "server": "lid",
+                    "user": "140158204645501",
+                    "_serialized": "140158204645501@lid"
+                },
+                "img": "https://pps.whatsapp.net/v/t61.24694-24/639534554_2349219115599857_3713501258775243614_n.jpg?stp=dst-jpg_s96x96_tt6&ccb=11-4&oh=01_Q5Aa4AEklfMPvBqytARj7PIo9BPMUbkc15BRMCUF_mf8cuyviA&oe=69D9EB99&_nc_sid=5e03e0&_nc_cat=100",
+                "imgFull": "https://pps.whatsapp.net/v/t61.24694-24/639534554_2349219115599857_3713501258775243614_n.jpg?ccb=11-4&oh=01_Q5Aa4AHLdakgLy71jcWitewcZfm_bieyAlmNG4iytYBX6uSewA&oe=69D9EB99&_nc_sid=5e03e0&_nc_cat=100",
+                "tag": "169237750"
+            },
+            "msgs": null
+        },
+        "groupMetadata": null,
+        "presence": {
+            "id": {
+                "server": "lid",
+                "user": "140158204645501",
+                "_serialized": "140158204645501@lid"
+            },
+            "chatstates": []
+        }
+    },
+    {
+        "labels": [],
+        "lastReceivedKey": {
+            "fromMe": false,
+            "remote": {
+                "server": "lid",
+                "user": "129046822314156",
+                "_serialized": "129046822314156@lid"
+            },
+            "id": "3EB05533BE7CC6086475F8",
+            "_serialized": "false_129046822314156@lid_3EB05533BE7CC6086475F8"
+        },
+        "id": {
+            "server": "lid",
+            "user": "129046822314156",
+            "_serialized": "129046822314156@lid"
+        },
+        "accountLid": {
+            "server": "lid",
+            "user": "129046822314156",
+            "_serialized": "129046822314156@lid"
+        },
+        "t": 1774033908,
+        "unreadCount": 0,
+        "unreadDividerOffset": 0,
+        "archive": false,
+        "isReadOnly": false,
+        "isLocked": false,
+        "muteExpiration": 0,
+        "isAutoMuted": false,
+        "notSpam": true,
+        "capiThreadControl": 0,
+        "ephemeralDuration": 0,
+        "ephemeralSettingTimestamp": 0,
+        "disappearingModeInitiator": "chat",
+        "disappearingModeTrigger": "chat_settings",
+        "unreadMentionCount": 0,
+        "hasUnreadMention": false,
+        "archiveAtMentionViewedInDrawer": false,
+        "hasChatBeenOpened": false,
+        "tcToken": {},
+        "tcTokenTimestamp": 1774290390,
+        "tcTokenSenderTimestamp": 1773948712,
+        "endOfHistoryTransferType": 1,
+        "pendingInitialLoading": false,
+        "celebrationAnimationLastPlayed": 0,
+        "hasRequestedWelcomeMsg": false,
+        "lidOriginType": "general",
+        "hasCtwaConsumerDataSharingDisclosureSystemMsg": false,
+        "limitSharing": {
+            "trigger": 0
+        },
+        "msgs": null,
+        "isGroup": false,
+        "isUser": true,
+        "contact": {
+            "id": {
+                "server": "lid",
+                "user": "129046822314156",
+                "_serialized": "129046822314156@lid"
+            },
+            "name": "Junior TI",
+            "shortName": "Junior TI",
+            "type": "in",
+            "verifiedName": "Junior Cirilo - UBVA",
+            "isBusiness": true,
+            "isEnterprise": false,
+            "verifiedLevel": 0,
+            "privacyMode": null,
+            "parentStatusMute": false,
+            "labels": [],
+            "isContactSyncCompleted": 1,
+            "textStatusLastUpdateTime": -1,
+            "isUsernameContact": false,
+            "syncToAddressbook": true,
+            "formattedName": "Junior TI",
+            "isMe": false,
+            "isMyContact": true,
+            "isPSA": {},
+            "isUser": {},
+            "isWAContact": true,
+            "profilePicThumbObj": {
+                "eurl": "https://pps.whatsapp.net/v/t61.24694-24/217693787_514732663557380_4389771417115591971_n.jpg?ccb=11-4&oh=01_Q5Aa4AH4PTaTPx_qDnb3YrrEsTx9bfMs6gqevcuKHRVtacJK5Q&oe=69D9F68C&_nc_sid=5e03e0&_nc_cat=100",
+                "id": {
+                    "server": "lid",
+                    "user": "129046822314156",
+                    "_serialized": "129046822314156@lid"
+                },
+                "img": "https://pps.whatsapp.net/v/t61.24694-24/217693787_514732663557380_4389771417115591971_n.jpg?stp=dst-jpg_s96x96_tt6&ccb=11-4&oh=01_Q5Aa4AG0C0FK5qdVrJBDvjWHokVQu02d-zSYiAw0hpzCbgkbgw&oe=69D9F68C&_nc_sid=5e03e0&_nc_cat=100",
+                "imgFull": "https://pps.whatsapp.net/v/t61.24694-24/217693787_514732663557380_4389771417115591971_n.jpg?ccb=11-4&oh=01_Q5Aa4AH4PTaTPx_qDnb3YrrEsTx9bfMs6gqevcuKHRVtacJK5Q&oe=69D9F68C&_nc_sid=5e03e0&_nc_cat=100",
+                "tag": "493331817"
+            },
+            "msgs": null
+        },
+        "groupMetadata": null,
+        "presence": {
+            "id": {
+                "server": "lid",
+                "user": "129046822314156",
+                "_serialized": "129046822314156@lid"
+            },
+            "chatstates": []
+        }
+    },
+    {
+        "labels": [],
+        "lastReceivedKey": {
+            "fromMe": true,
+            "remote": {
+                "server": "lid",
+                "user": "246939782250602",
+                "_serialized": "246939782250602@lid"
+            },
+            "id": "AC57064A44CF1ACAC8C93AC468708274",
+            "_serialized": "true_246939782250602@lid_AC57064A44CF1ACAC8C93AC468708274"
+        },
+        "id": {
+            "server": "lid",
+            "user": "246939782250602",
+            "_serialized": "246939782250602@lid"
+        },
+        "accountLid": {
+            "server": "lid",
+            "user": "246939782250602",
+            "_serialized": "246939782250602@lid"
+        },
+        "t": 1774022504,
+        "unreadCount": 0,
+        "unreadDividerOffset": 0,
+        "archive": false,
+        "isReadOnly": false,
+        "isLocked": false,
+        "muteExpiration": 0,
+        "isAutoMuted": false,
+        "notSpam": false,
+        "capiThreadControl": 0,
+        "ephemeralDuration": 0,
+        "ephemeralSettingTimestamp": 0,
+        "disappearingModeInitiator": "chat",
+        "disappearingModeTrigger": "chat_settings",
+        "unreadMentionCount": 0,
+        "hasUnreadMention": false,
+        "archiveAtMentionViewedInDrawer": false,
+        "hasChatBeenOpened": false,
+        "tcToken": {},
+        "tcTokenTimestamp": 1774022504,
+        "endOfHistoryTransferType": 1,
+        "pendingInitialLoading": false,
+        "celebrationAnimationLastPlayed": 0,
+        "hasRequestedWelcomeMsg": false,
+        "lidOriginType": "general",
+        "hasCtwaConsumerDataSharingDisclosureSystemMsg": false,
+        "limitSharing": {
+            "trigger": 0
+        },
+        "msgs": null,
+        "isGroup": false,
+        "isUser": true,
+        "contact": {
+            "id": {
+                "server": "lid",
+                "user": "246939782250602",
+                "_serialized": "246939782250602@lid"
+            },
+            "type": "in",
+            "parentStatusMute": false,
+            "labels": [],
+            "isContactSyncCompleted": 1,
+            "textStatusLastUpdateTime": -1,
+            "isUsernameContact": false,
+            "syncToAddressbook": false,
+            "formattedName": "+55 61 9985-6617",
+            "isMe": false,
+            "isMyContact": false,
+            "isPSA": {},
+            "isUser": {},
+            "isWAContact": true,
+            "profilePicThumbObj": {
+                "eurl": "https://pps.whatsapp.net/v/t61.24694-24/619261408_984208520625089_5077116156351864298_n.jpg?ccb=11-4&oh=01_Q5Aa4AEotNMBCZkqrcFQ_fw_QvH_QOdW_wF-1jjuJQIO-4oNNg&oe=69D9ED1D&_nc_sid=5e03e0&_nc_cat=109",
+                "id": {
+                    "server": "lid",
+                    "user": "246939782250602",
+                    "_serialized": "246939782250602@lid"
+                },
+                "img": "https://pps.whatsapp.net/v/t61.24694-24/619261408_984208520625089_5077116156351864298_n.jpg?stp=dst-jpg_s96x96_tt6&ccb=11-4&oh=01_Q5Aa4AGGMiMMDq9cq0opYdA1r8mOe3A_1kRgll1dsRe-YH5-0A&oe=69D9ED1D&_nc_sid=5e03e0&_nc_cat=109",
+                "imgFull": "https://pps.whatsapp.net/v/t61.24694-24/619261408_984208520625089_5077116156351864298_n.jpg?ccb=11-4&oh=01_Q5Aa4AEotNMBCZkqrcFQ_fw_QvH_QOdW_wF-1jjuJQIO-4oNNg&oe=69D9ED1D&_nc_sid=5e03e0&_nc_cat=109",
+                "tag": "337624992"
+            },
+            "msgs": null
+        },
+        "groupMetadata": null,
+        "presence": {
+            "id": {
+                "server": "lid",
+                "user": "246939782250602",
+                "_serialized": "246939782250602@lid"
+            },
+            "chatstates": []
+        }
+    },
+    {
+        "labels": [],
+        "lastReceivedKey": {
+            "fromMe": false,
+            "remote": {
+                "server": "lid",
+                "user": "100099279597782",
+                "_serialized": "100099279597782@lid"
+            },
+            "id": "A243C85DC954487174",
+            "_serialized": "false_100099279597782@lid_A243C85DC954487174"
+        },
+        "id": {
+            "server": "lid",
+            "user": "100099279597782",
+            "_serialized": "100099279597782@lid"
+        },
+        "accountLid": {
+            "server": "lid",
+            "user": "100099279597782",
+            "_serialized": "100099279597782@lid"
+        },
+        "t": 1773846192,
+        "unreadCount": 0,
+        "unreadDividerOffset": 0,
+        "archive": false,
+        "isReadOnly": false,
+        "isLocked": false,
+        "muteExpiration": 0,
+        "isAutoMuted": false,
+        "notSpam": false,
+        "capiThreadControl": 0,
+        "ephemeralDuration": 0,
+        "ephemeralSettingTimestamp": 0,
+        "disappearingModeInitiator": "chat",
+        "disappearingModeTrigger": "chat_settings",
+        "unreadMentionCount": 0,
+        "hasUnreadMention": false,
+        "archiveAtMentionViewedInDrawer": false,
+        "hasChatBeenOpened": false,
+        "tcToken": {},
+        "tcTokenTimestamp": 1773846192,
+        "endOfHistoryTransferType": 1,
+        "pendingInitialLoading": false,
+        "celebrationAnimationLastPlayed": 0,
+        "hasRequestedWelcomeMsg": false,
+        "lidOriginType": "general",
+        "hasCtwaConsumerDataSharingDisclosureSystemMsg": false,
+        "limitSharing": {
+            "trigger": 0
+        },
+        "msgs": null,
+        "isGroup": false,
+        "isUser": true,
+        "contact": {
+            "id": {
+                "server": "lid",
+                "user": "100099279597782",
+                "_serialized": "100099279597782@lid"
+            },
+            "type": "in",
+            "verifiedName": "Linha Virtual Infos",
+            "isBusiness": true,
+            "isEnterprise": true,
+            "verifiedLevel": 1,
+            "privacyMode": {
+                "actualActors": 1,
+                "hostStorage": 2,
+                "privacyModeTs": 1766006108
+            },
+            "parentStatusMute": false,
+            "labels": [],
+            "isContactSyncCompleted": 1,
+            "textStatusLastUpdateTime": -1,
+            "isUsernameContact": false,
+            "syncToAddressbook": false,
+            "formattedName": "+55 21 2160-0035",
+            "isMe": false,
+            "isMyContact": false,
+            "isPSA": {},
+            "isUser": {},
+            "isWAContact": true,
+            "profilePicThumbObj": {
+                "eurl": "https://pps.whatsapp.net/v/t61.24694-24/590760488_877136201634837_7943986848024419341_n.jpg?ccb=11-4&oh=01_Q5Aa4AGB6K52srlr9V1ih7E1TB6c4adIGRovK31F5BfTUxi3aw&oe=69D9FAD9&_nc_sid=5e03e0&_nc_cat=107",
+                "id": {
+                    "server": "lid",
+                    "user": "100099279597782",
+                    "_serialized": "100099279597782@lid"
+                },
+                "img": "https://pps.whatsapp.net/v/t61.24694-24/590760488_877136201634837_7943986848024419341_n.jpg?stp=dst-jpg_s96x96_tt6&ccb=11-4&oh=01_Q5Aa4AFOZc8DmLRuQ8EFWrjCB65R8f71uMR-rKHXANQYNnzoog&oe=69D9FAD9&_nc_sid=5e03e0&_nc_cat=107",
+                "imgFull": "https://pps.whatsapp.net/v/t61.24694-24/590760488_877136201634837_7943986848024419341_n.jpg?ccb=11-4&oh=01_Q5Aa4AGB6K52srlr9V1ih7E1TB6c4adIGRovK31F5BfTUxi3aw&oe=69D9FAD9&_nc_sid=5e03e0&_nc_cat=107",
+                "tag": "1905294179"
+            },
+            "msgs": null
+        },
+        "groupMetadata": null,
+        "presence": {
+            "id": {
+                "server": "lid",
+                "user": "100099279597782",
+                "_serialized": "100099279597782@lid"
+            },
+            "chatstates": []
+        }
+    },
+    {
+        "labels": [],
+        "lastReceivedKey": {
+            "fromMe": false,
+            "remote": {
+                "server": "lid",
+                "user": "49328018215052",
+                "_serialized": "49328018215052@lid"
+            },
+            "id": "9FD32B99F18029E246",
+            "_serialized": "false_49328018215052@lid_9FD32B99F18029E246"
+        },
+        "id": {
+            "server": "lid",
+            "user": "49328018215052",
+            "_serialized": "49328018215052@lid"
+        },
+        "accountLid": {
+            "server": "lid",
+            "user": "49328018215052",
+            "_serialized": "49328018215052@lid"
+        },
+        "t": 1773781498,
+        "unreadCount": 0,
+        "unreadDividerOffset": 0,
+        "archive": false,
+        "isReadOnly": false,
+        "isLocked": false,
+        "muteExpiration": 0,
+        "isAutoMuted": false,
+        "notSpam": false,
+        "capiThreadControl": 0,
+        "ephemeralDuration": 0,
+        "ephemeralSettingTimestamp": 0,
+        "disappearingModeInitiator": "chat",
+        "disappearingModeTrigger": "chat_settings",
+        "unreadMentionCount": 0,
+        "hasUnreadMention": false,
+        "archiveAtMentionViewedInDrawer": false,
+        "hasChatBeenOpened": false,
+        "tcToken": {},
+        "tcTokenTimestamp": 1773781501,
+        "endOfHistoryTransferType": 1,
+        "pendingInitialLoading": false,
+        "celebrationAnimationLastPlayed": 0,
+        "hasRequestedWelcomeMsg": false,
+        "lidOriginType": "general",
+        "hasCtwaConsumerDataSharingDisclosureSystemMsg": false,
+        "limitSharing": {
+            "trigger": 0
+        },
+        "msgs": null,
+        "isGroup": false,
+        "isUser": true,
+        "contact": {
+            "id": {
+                "server": "lid",
+                "user": "49328018215052",
+                "_serialized": "49328018215052@lid"
+            },
+            "type": "in",
+            "verifiedName": "Serasa",
+            "isBusiness": true,
+            "isEnterprise": true,
+            "verifiedLevel": 2,
+            "privacyMode": {
+                "actualActors": 2,
+                "hostStorage": 2,
+                "privacyModeTs": 1693417564
+            },
+            "parentStatusMute": false,
+            "labels": [],
+            "isContactSyncCompleted": 1,
+            "textStatusLastUpdateTime": -1,
+            "isUsernameContact": false,
+            "syncToAddressbook": false,
+            "formattedName": "Serasa",
+            "isMe": false,
+            "isMyContact": false,
+            "isPSA": {},
+            "isUser": {},
+            "isWAContact": true,
+            "profilePicThumbObj": {
+                "eurl": "https://pps.whatsapp.net/v/t61.24694-24/454363940_1056894838999704_1222027117389815327_n.jpg?ccb=11-4&oh=01_Q5Aa4AGfPwFRrP-qvBQykuGT4SAJ8JwaVPOmFUMK7f1frFQk1g&oe=69D9FDFF&_nc_sid=5e03e0&_nc_cat=105",
+                "id": {
+                    "server": "lid",
+                    "user": "49328018215052",
+                    "_serialized": "49328018215052@lid"
+                },
+                "img": "https://pps.whatsapp.net/v/t61.24694-24/454363940_1056894838999704_1222027117389815327_n.jpg?stp=dst-jpg_s96x96_tt6&ccb=11-4&oh=01_Q5Aa4AEfeLLfxSNvEKf3gpa421ouKCjcHBisReFP7seUo-9gXQ&oe=69D9FDFF&_nc_sid=5e03e0&_nc_cat=105",
+                "imgFull": "https://pps.whatsapp.net/v/t61.24694-24/454363940_1056894838999704_1222027117389815327_n.jpg?ccb=11-4&oh=01_Q5Aa4AGfPwFRrP-qvBQykuGT4SAJ8JwaVPOmFUMK7f1frFQk1g&oe=69D9FDFF&_nc_sid=5e03e0&_nc_cat=105",
+                "tag": "1411890474"
+            },
+            "msgs": null
+        },
+        "groupMetadata": null,
+        "presence": {
+            "id": {
+                "server": "lid",
+                "user": "49328018215052",
+                "_serialized": "49328018215052@lid"
+            },
+            "chatstates": []
+        }
+    },
+    {
+        "labels": [],
+        "lastReceivedKey": {
+            "fromMe": true,
+            "remote": {
+                "server": "lid",
+                "user": "108736324628591",
+                "_serialized": "108736324628591@lid"
+            },
+            "id": "ACCE43D4997393D531F92B3C7DBE6CAD",
+            "_serialized": "true_108736324628591@lid_ACCE43D4997393D531F92B3C7DBE6CAD"
+        },
+        "id": {
+            "server": "lid",
+            "user": "108736324628591",
+            "_serialized": "108736324628591@lid"
+        },
+        "accountLid": {
+            "server": "lid",
+            "user": "108736324628591",
+            "_serialized": "108736324628591@lid"
+        },
+        "t": 1773527677,
+        "unreadCount": 0,
+        "unreadDividerOffset": 0,
+        "archive": false,
+        "isReadOnly": false,
+        "isLocked": false,
+        "muteExpiration": 0,
+        "isAutoMuted": false,
+        "notSpam": true,
+        "capiThreadControl": 0,
+        "ephemeralDuration": 0,
+        "ephemeralSettingTimestamp": 0,
+        "disappearingModeInitiator": "chat",
+        "disappearingModeTrigger": "chat_settings",
+        "unreadMentionCount": 0,
+        "hasUnreadMention": false,
+        "archiveAtMentionViewedInDrawer": false,
+        "hasChatBeenOpened": false,
+        "tcToken": {},
+        "tcTokenTimestamp": 1773520475,
+        "tcTokenSenderTimestamp": 1773520475,
+        "endOfHistoryTransferType": 1,
+        "pendingInitialLoading": false,
+        "celebrationAnimationLastPlayed": 0,
+        "hasRequestedWelcomeMsg": false,
+        "lidOriginType": "general",
+        "hasCtwaConsumerDataSharingDisclosureSystemMsg": false,
+        "limitSharing": {
+            "trigger": 0
+        },
+        "msgs": null,
+        "isGroup": false,
+        "isUser": true,
+        "contact": {
+            "id": {
+                "server": "lid",
+                "user": "108736324628591",
+                "_serialized": "108736324628591@lid"
+            },
+            "name": "PREMIUM DESENTUPIDORA",
+            "shortName": "PREMIUM",
+            "type": "in",
+            "verifiedName": "PREMIUM DESENTUPIDORA",
+            "isBusiness": true,
+            "isEnterprise": false,
+            "verifiedLevel": 0,
+            "privacyMode": null,
+            "parentStatusMute": false,
+            "labels": [],
+            "isContactSyncCompleted": 1,
+            "textStatusLastUpdateTime": -1,
+            "isUsernameContact": false,
+            "syncToAddressbook": true,
+            "formattedName": "PREMIUM DESENTUPIDORA",
+            "isMe": false,
+            "isMyContact": true,
+            "isPSA": {},
+            "isUser": {},
+            "isWAContact": true,
+            "profilePicThumbObj": {
+                "eurl": "https://pps.whatsapp.net/v/t61.24694-24/534426970_1517945706297926_4240806615493757921_n.jpg?ccb=11-4&oh=01_Q5Aa4AFZEoH5jqyupx_KQuADZQz8xtSE2ZAgU2cjJpkcE7hB3w&oe=69DA12C9&_nc_sid=5e03e0&_nc_cat=102",
+                "id": {
+                    "server": "lid",
+                    "user": "108736324628591",
+                    "_serialized": "108736324628591@lid"
+                },
+                "img": "https://pps.whatsapp.net/v/t61.24694-24/534426970_1517945706297926_4240806615493757921_n.jpg?stp=dst-jpg_s96x96_tt6&ccb=11-4&oh=01_Q5Aa4AEhbPElDOY8PKoKA_qB9wm-G1JhgMNEuzc4BQ6tCTRcDA&oe=69DA12C9&_nc_sid=5e03e0&_nc_cat=102",
+                "imgFull": "https://pps.whatsapp.net/v/t61.24694-24/534426970_1517945706297926_4240806615493757921_n.jpg?ccb=11-4&oh=01_Q5Aa4AFZEoH5jqyupx_KQuADZQz8xtSE2ZAgU2cjJpkcE7hB3w&oe=69DA12C9&_nc_sid=5e03e0&_nc_cat=102",
+                "tag": "1700008693"
+            },
+            "msgs": null
+        },
+        "groupMetadata": null,
+        "presence": {
+            "id": {
+                "server": "lid",
+                "user": "108736324628591",
+                "_serialized": "108736324628591@lid"
+            },
+            "chatstates": []
+        }
+    },
+    {
+        "labels": [],
+        "lastReceivedKey": {
+            "fromMe": true,
+            "remote": {
+                "server": "lid",
+                "user": "86707252814040",
+                "_serialized": "86707252814040@lid"
+            },
+            "id": "ACC5333AB2C2A38CFA1829C5B8A1C502",
+            "_serialized": "true_86707252814040@lid_ACC5333AB2C2A38CFA1829C5B8A1C502"
+        },
+        "id": {
+            "server": "lid",
+            "user": "86707252814040",
+            "_serialized": "86707252814040@lid"
+        },
+        "accountLid": {
+            "server": "lid",
+            "user": "86707252814040",
+            "_serialized": "86707252814040@lid"
+        },
+        "t": 1773410197,
+        "unreadCount": 0,
+        "unreadDividerOffset": 0,
+        "archive": false,
+        "isReadOnly": false,
+        "isLocked": false,
+        "muteExpiration": 0,
+        "isAutoMuted": false,
+        "notSpam": true,
+        "capiThreadControl": 0,
+        "ephemeralDuration": 0,
+        "ephemeralSettingTimestamp": 0,
+        "disappearingModeInitiator": "chat",
+        "disappearingModeTrigger": "chat_settings",
+        "unreadMentionCount": 0,
+        "hasUnreadMention": false,
+        "archiveAtMentionViewedInDrawer": false,
+        "hasChatBeenOpened": false,
+        "tcToken": {},
+        "tcTokenTimestamp": 1773161362,
+        "tcTokenSenderTimestamp": 1773399908,
+        "endOfHistoryTransferType": 1,
+        "pendingInitialLoading": false,
+        "celebrationAnimationLastPlayed": 0,
+        "hasRequestedWelcomeMsg": false,
+        "lidOriginType": "general",
+        "hasCtwaConsumerDataSharingDisclosureSystemMsg": false,
+        "limitSharing": {
+            "trigger": 0
+        },
+        "msgs": null,
+        "isGroup": false,
+        "isUser": true,
+        "contact": {
+            "id": {
+                "server": "lid",
+                "user": "86707252814040",
+                "_serialized": "86707252814040@lid"
+            },
+            "type": "in",
+            "verifiedName": "BR DID",
+            "isBusiness": true,
+            "isEnterprise": true,
+            "verifiedLevel": 1,
+            "privacyMode": {
+                "actualActors": 2,
+                "hostStorage": 2,
+                "privacyModeTs": 1758156913
+            },
+            "parentStatusMute": false,
+            "labels": [],
+            "isContactSyncCompleted": 1,
+            "textStatusLastUpdateTime": -1,
+            "isUsernameContact": false,
+            "syncToAddressbook": false,
+            "formattedName": "+55 19 93505-6201",
+            "isMe": false,
+            "isMyContact": false,
+            "isPSA": {},
+            "isUser": {},
+            "isWAContact": true,
+            "profilePicThumbObj": {
+                "eurl": "https://pps.whatsapp.net/v/t61.24694-24/428056485_401120206153091_5397577089055809479_n.jpg?ccb=11-4&oh=01_Q5Aa4AFD619f9IZ-7pCsIccZfeEVIdio5mbkbT22IUeq6Piapw&oe=69DA0485&_nc_sid=5e03e0&_nc_cat=107",
+                "id": {
+                    "server": "lid",
+                    "user": "86707252814040",
+                    "_serialized": "86707252814040@lid"
+                },
+                "img": "https://pps.whatsapp.net/v/t61.24694-24/428056485_401120206153091_5397577089055809479_n.jpg?stp=dst-jpg_s96x96_tt6&ccb=11-4&oh=01_Q5Aa4AEh1M2NsB0-aH_YaSP5ZaS1oUm6dIBPNdJTPwFyBrhWWg&oe=69DA0485&_nc_sid=5e03e0&_nc_cat=107",
+                "imgFull": "https://pps.whatsapp.net/v/t61.24694-24/428056485_401120206153091_5397577089055809479_n.jpg?ccb=11-4&oh=01_Q5Aa4AFD619f9IZ-7pCsIccZfeEVIdio5mbkbT22IUeq6Piapw&oe=69DA0485&_nc_sid=5e03e0&_nc_cat=107",
+                "tag": "1760259327"
+            },
+            "msgs": null
+        },
+        "groupMetadata": null,
+        "presence": {
+            "id": {
+                "server": "lid",
+                "user": "86707252814040",
+                "_serialized": "86707252814040@lid"
+            },
+            "chatstates": []
+        }
+    },
+    {
+        "labels": [],
+        "lastReceivedKey": {
+            "fromMe": false,
+            "remote": {
+                "server": "lid",
+                "user": "181161804480690",
+                "_serialized": "181161804480690@lid"
+            },
+            "id": "98C9FB1EEEDACF0191",
+            "_serialized": "false_181161804480690@lid_98C9FB1EEEDACF0191"
+        },
+        "id": {
+            "server": "lid",
+            "user": "181161804480690",
+            "_serialized": "181161804480690@lid"
+        },
+        "accountLid": {
+            "server": "lid",
+            "user": "181161804480690",
+            "_serialized": "181161804480690@lid"
+        },
+        "t": 1773218766,
+        "unreadCount": 0,
+        "unreadDividerOffset": 0,
+        "archive": true,
+        "isReadOnly": false,
+        "isLocked": false,
+        "muteExpiration": 0,
+        "isAutoMuted": false,
+        "notSpam": true,
+        "capiThreadControl": 0,
+        "ephemeralDuration": 0,
+        "ephemeralSettingTimestamp": 0,
+        "disappearingModeInitiator": "chat",
+        "disappearingModeTrigger": "chat_settings",
+        "unreadMentionCount": 0,
+        "hasUnreadMention": false,
+        "archiveAtMentionViewedInDrawer": false,
+        "hasChatBeenOpened": false,
+        "tcToken": null,
+        "tcTokenTimestamp": null,
+        "tcTokenSenderTimestamp": 1773166497,
+        "endOfHistoryTransferType": 1,
+        "pendingInitialLoading": false,
+        "celebrationAnimationLastPlayed": 0,
+        "hasRequestedWelcomeMsg": false,
+        "lidOriginType": "general",
+        "hasCtwaConsumerDataSharingDisclosureSystemMsg": false,
+        "limitSharing": {
+            "trigger": 0
+        },
+        "msgs": null,
+        "isGroup": false,
+        "isUser": true,
+        "contact": {
+            "id": {
+                "server": "lid",
+                "user": "181161804480690",
+                "_serialized": "181161804480690@lid"
+            },
+            "type": "in",
+            "verifiedName": "Principia",
+            "isBusiness": true,
+            "isEnterprise": true,
+            "verifiedLevel": 2,
+            "privacyMode": {
+                "actualActors": 2,
+                "hostStorage": 2,
+                "privacyModeTs": 1708363041
+            },
+            "parentStatusMute": false,
+            "labels": [],
+            "isContactSyncCompleted": 1,
+            "textStatusLastUpdateTime": -1,
+            "isUsernameContact": false,
+            "syncToAddressbook": false,
+            "formattedName": "Principia",
+            "isMe": false,
+            "isMyContact": false,
+            "isPSA": {},
+            "isUser": {},
+            "isWAContact": true,
+            "profilePicThumbObj": {},
+            "msgs": null
+        },
+        "groupMetadata": null,
+        "presence": {
+            "id": {
+                "server": "lid",
+                "user": "181161804480690",
+                "_serialized": "181161804480690@lid"
+            },
+            "chatstates": []
+        }
+    },
+    {
+        "labels": [],
+        "lastReceivedKey": {
+            "fromMe": true,
+            "remote": {
+                "server": "lid",
+                "user": "170029903544549",
+                "_serialized": "170029903544549@lid"
+            },
+            "id": "AC9E1E539F98B8546D5F63E4B0646009",
+            "_serialized": "true_170029903544549@lid_AC9E1E539F98B8546D5F63E4B0646009"
+        },
+        "id": {
+            "server": "lid",
+            "user": "170029903544549",
+            "_serialized": "170029903544549@lid"
+        },
+        "accountLid": {
+            "server": "lid",
+            "user": "170029903544549",
+            "_serialized": "170029903544549@lid"
+        },
+        "t": 1773158419,
+        "unreadCount": 0,
+        "unreadDividerOffset": 0,
+        "archive": false,
+        "isReadOnly": false,
+        "isLocked": false,
+        "muteExpiration": 0,
+        "isAutoMuted": false,
+        "notSpam": true,
+        "capiThreadControl": 0,
+        "ephemeralDuration": 0,
+        "ephemeralSettingTimestamp": 0,
+        "disappearingModeInitiator": "chat",
+        "disappearingModeTrigger": "chat_settings",
+        "unreadMentionCount": 0,
+        "hasUnreadMention": false,
+        "archiveAtMentionViewedInDrawer": false,
+        "hasChatBeenOpened": false,
+        "tcToken": {},
+        "tcTokenTimestamp": 1773154658,
+        "tcTokenSenderTimestamp": 1773154266,
+        "endOfHistoryTransferType": 1,
+        "pendingInitialLoading": false,
+        "celebrationAnimationLastPlayed": 0,
+        "hasRequestedWelcomeMsg": false,
+        "lidOriginType": "general",
+        "hasCtwaConsumerDataSharingDisclosureSystemMsg": false,
+        "limitSharing": {
+            "trigger": 0
+        },
+        "msgs": null,
+        "isGroup": false,
+        "isUser": true,
+        "contact": {
+            "id": {
+                "server": "lid",
+                "user": "170029903544549",
+                "_serialized": "170029903544549@lid"
+            },
+            "type": "in",
+            "verifiedName": "Little Shark",
+            "isBusiness": true,
+            "isEnterprise": false,
+            "verifiedLevel": 0,
+            "privacyMode": null,
+            "parentStatusMute": false,
+            "labels": [],
+            "isContactSyncCompleted": 1,
+            "textStatusLastUpdateTime": -1,
+            "isUsernameContact": false,
+            "syncToAddressbook": false,
+            "formattedName": "+55 11 99981-8029",
+            "isMe": false,
+            "isMyContact": false,
+            "isPSA": {},
+            "isUser": {},
+            "isWAContact": true,
+            "profilePicThumbObj": {
+                "eurl": "https://pps.whatsapp.net/v/t61.24694-24/640219865_1301625518554949_3823005184391604882_n.jpg?ccb=11-4&oh=01_Q5Aa4AFfK1xrBv6doLc-c4eq1I6uaYSPvSXaDwUO0ZTcbKIyrw&oe=69DA0AEF&_nc_sid=5e03e0&_nc_cat=104",
+                "id": {
+                    "server": "lid",
+                    "user": "170029903544549",
+                    "_serialized": "170029903544549@lid"
+                },
+                "img": "https://pps.whatsapp.net/v/t61.24694-24/640219865_1301625518554949_3823005184391604882_n.jpg?stp=dst-jpg_s96x96_tt6&ccb=11-4&oh=01_Q5Aa4AF-pbHU9mSYy-W6mbx5o1KkQO6GNwWsLTWfOgYSy6_-Ag&oe=69DA0AEF&_nc_sid=5e03e0&_nc_cat=104",
+                "imgFull": "https://pps.whatsapp.net/v/t61.24694-24/640219865_1301625518554949_3823005184391604882_n.jpg?ccb=11-4&oh=01_Q5Aa4AFfK1xrBv6doLc-c4eq1I6uaYSPvSXaDwUO0ZTcbKIyrw&oe=69DA0AEF&_nc_sid=5e03e0&_nc_cat=104",
+                "tag": "268457043"
+            },
+            "msgs": null
+        },
+        "groupMetadata": null,
+        "presence": {
+            "id": {
+                "server": "lid",
+                "user": "170029903544549",
+                "_serialized": "170029903544549@lid"
+            },
+            "chatstates": []
+        }
+    },
+    {
+        "labels": [],
+        "lastReceivedKey": {
+            "fromMe": true,
+            "remote": {
+                "server": "lid",
+                "user": "212550046203959",
+                "_serialized": "212550046203959@lid"
+            },
+            "id": "AC6861A16F912FB6B14BDD02C683A0E0",
+            "_serialized": "true_212550046203959@lid_AC6861A16F912FB6B14BDD02C683A0E0"
+        },
+        "id": {
+            "server": "lid",
+            "user": "212550046203959",
+            "_serialized": "212550046203959@lid"
+        },
+        "accountLid": {
+            "server": "lid",
+            "user": "212550046203959",
+            "_serialized": "212550046203959@lid"
+        },
+        "t": 1773064063,
+        "unreadCount": 0,
+        "unreadDividerOffset": 0,
+        "archive": false,
+        "isReadOnly": false,
+        "isLocked": false,
+        "muteExpiration": 0,
+        "isAutoMuted": false,
+        "notSpam": true,
+        "capiThreadControl": 0,
+        "ephemeralDuration": 0,
+        "ephemeralSettingTimestamp": 0,
+        "disappearingModeInitiator": "chat",
+        "disappearingModeTrigger": "chat_settings",
+        "unreadMentionCount": 0,
+        "hasUnreadMention": false,
+        "archiveAtMentionViewedInDrawer": false,
+        "hasChatBeenOpened": false,
+        "tcToken": {},
+        "tcTokenTimestamp": 1773060588,
+        "tcTokenSenderTimestamp": 1773060601,
+        "endOfHistoryTransferType": 1,
+        "pendingInitialLoading": false,
+        "celebrationAnimationLastPlayed": 0,
+        "hasRequestedWelcomeMsg": false,
+        "lidOriginType": "general",
+        "hasCtwaConsumerDataSharingDisclosureSystemMsg": false,
+        "limitSharing": {
+            "trigger": 0
+        },
+        "msgs": null,
+        "isGroup": false,
+        "isUser": true,
+        "contact": {
+            "id": {
+                "server": "lid",
+                "user": "212550046203959",
+                "_serialized": "212550046203959@lid"
+            },
+            "type": "in",
+            "verifiedName": "BR DID 2744",
+            "isBusiness": true,
+            "isEnterprise": true,
+            "verifiedLevel": 0,
+            "privacyMode": {
+                "actualActors": 2,
+                "hostStorage": 2,
+                "privacyModeTs": 1769717102
+            },
+            "parentStatusMute": false,
+            "labels": [],
+            "isContactSyncCompleted": 1,
+            "textStatusLastUpdateTime": -1,
+            "isUsernameContact": false,
+            "syncToAddressbook": false,
+            "formattedName": "+55 11 5104-2744",
+            "isMe": false,
+            "isMyContact": false,
+            "isPSA": {},
+            "isUser": {},
+            "isWAContact": true,
+            "profilePicThumbObj": {
+                "eurl": "https://pps.whatsapp.net/v/t61.24694-24/616300968_2300163857135048_6251038947170382063_n.jpg?ccb=11-4&oh=01_Q5Aa4AELf3g8aPw3VJAXMWuUhYVLxk8dpHYoWx0qq6Znr2iA4w&oe=69D9F297&_nc_sid=5e03e0&_nc_cat=103",
+                "id": {
+                    "server": "lid",
+                    "user": "212550046203959",
+                    "_serialized": "212550046203959@lid"
+                },
+                "img": "https://pps.whatsapp.net/v/t61.24694-24/616300968_2300163857135048_6251038947170382063_n.jpg?stp=dst-jpg_s96x96_tt6&ccb=11-4&oh=01_Q5Aa4AGyHG2gUgioxed31eNQjRo1VJm1OeVzeF9VsKU9lTxCgA&oe=69D9F297&_nc_sid=5e03e0&_nc_cat=103",
+                "imgFull": "https://pps.whatsapp.net/v/t61.24694-24/616300968_2300163857135048_6251038947170382063_n.jpg?ccb=11-4&oh=01_Q5Aa4AELf3g8aPw3VJAXMWuUhYVLxk8dpHYoWx0qq6Znr2iA4w&oe=69D9F297&_nc_sid=5e03e0&_nc_cat=103",
+                "tag": "762767206"
+            },
+            "msgs": null
+        },
+        "groupMetadata": null,
+        "presence": {
+            "id": {
+                "server": "lid",
+                "user": "212550046203959",
+                "_serialized": "212550046203959@lid"
+            },
+            "chatstates": []
+        }
+    },
+    {
+        "labels": [],
+        "lastReceivedKey": {
+            "fromMe": true,
+            "remote": {
+                "server": "lid",
+                "user": "64574967525627",
+                "_serialized": "64574967525627@lid"
+            },
+            "id": "AC4D2B7366FACEC93B6ACF319B9C8B27",
+            "_serialized": "true_64574967525627@lid_AC4D2B7366FACEC93B6ACF319B9C8B27"
+        },
+        "id": {
+            "server": "lid",
+            "user": "64574967525627",
+            "_serialized": "64574967525627@lid"
+        },
+        "accountLid": {
+            "server": "lid",
+            "user": "64574967525627",
+            "_serialized": "64574967525627@lid"
+        },
+        "t": 1772994492,
+        "unreadCount": 0,
+        "unreadDividerOffset": 0,
+        "archive": false,
+        "isReadOnly": false,
+        "isLocked": false,
+        "muteExpiration": 0,
+        "isAutoMuted": false,
+        "notSpam": true,
+        "capiThreadControl": 0,
+        "ephemeralDuration": 0,
+        "ephemeralSettingTimestamp": 0,
+        "disappearingModeInitiator": "chat",
+        "disappearingModeTrigger": "chat_settings",
+        "unreadMentionCount": 0,
+        "hasUnreadMention": false,
+        "archiveAtMentionViewedInDrawer": false,
+        "hasChatBeenOpened": false,
+        "tcToken": {},
+        "tcTokenTimestamp": 1772993267,
+        "tcTokenSenderTimestamp": 1772993323,
+        "endOfHistoryTransferType": 1,
+        "pendingInitialLoading": false,
+        "celebrationAnimationLastPlayed": 0,
+        "hasRequestedWelcomeMsg": false,
+        "lidOriginType": "general",
+        "hasCtwaConsumerDataSharingDisclosureSystemMsg": false,
+        "limitSharing": {
+            "trigger": 0
+        },
+        "msgs": null,
+        "isGroup": false,
+        "isUser": true,
+        "contact": {
+            "id": {
+                "server": "lid",
+                "user": "64574967525627",
+                "_serialized": "64574967525627@lid"
+            },
+            "pushname": "Nilton Godoi",
+            "type": "in",
+            "parentStatusMute": false,
+            "labels": [],
+            "isContactSyncCompleted": 1,
+            "textStatusLastUpdateTime": -1,
+            "isUsernameContact": false,
+            "syncToAddressbook": false,
+            "formattedName": "+55 41 9694-8094",
+            "isMe": false,
+            "isMyContact": false,
+            "isPSA": {},
+            "isUser": {},
+            "isWAContact": true,
+            "profilePicThumbObj": {
+                "eurl": "https://pps.whatsapp.net/v/t61.24694-24/583292764_1780712679258551_4944354517224992325_n.jpg?ccb=11-4&oh=01_Q5Aa4AG-spI4hJrqV_B2MbDnO80AumOMzaMUsRypI-EWF2B9aw&oe=69DA08B0&_nc_sid=5e03e0&_nc_cat=110",
+                "id": {
+                    "server": "lid",
+                    "user": "64574967525627",
+                    "_serialized": "64574967525627@lid"
+                },
+                "img": "https://pps.whatsapp.net/v/t61.24694-24/583292764_1780712679258551_4944354517224992325_n.jpg?stp=dst-jpg_s96x96_tt6&ccb=11-4&oh=01_Q5Aa4AFtS92YWsxUBXyYuRbqlKm0_Lc3VJsvYd7cx947UuWzng&oe=69DA08B0&_nc_sid=5e03e0&_nc_cat=110",
+                "imgFull": "https://pps.whatsapp.net/v/t61.24694-24/583292764_1780712679258551_4944354517224992325_n.jpg?ccb=11-4&oh=01_Q5Aa4AG-spI4hJrqV_B2MbDnO80AumOMzaMUsRypI-EWF2B9aw&oe=69DA08B0&_nc_sid=5e03e0&_nc_cat=110",
+                "tag": "1644991770"
+            },
+            "msgs": null
+        },
+        "groupMetadata": null,
+        "presence": {
+            "id": {
+                "server": "lid",
+                "user": "64574967525627",
+                "_serialized": "64574967525627@lid"
+            },
+            "chatstates": []
+        }
+    },
+    {
+        "labels": [],
+        "id": {
+            "server": "g.us",
+            "user": "120363402466664679",
+            "_serialized": "120363402466664679@g.us"
+        },
+        "t": 1757016499,
+        "unreadCount": 0,
+        "unreadDividerOffset": 0,
+        "archive": false,
+        "isReadOnly": false,
+        "isLocked": false,
+        "isAnnounceGrpRestrict": false,
+        "muteExpiration": 0,
+        "isAutoMuted": false,
+        "name": "EasyDev",
+        "notSpam": true,
+        "capiThreadControl": 0,
+        "ephemeralDuration": 0,
+        "ephemeralSettingTimestamp": 0,
+        "disappearingModeInitiator": "chat",
+        "disappearingModeTrigger": "chat_settings",
+        "unreadMentionCount": 0,
+        "hasUnreadMention": false,
+        "archiveAtMentionViewedInDrawer": false,
+        "hasChatBeenOpened": false,
+        "tcToken": null,
+        "tcTokenTimestamp": null,
+        "endOfHistoryTransferType": 0,
+        "pendingInitialLoading": false,
+        "celebrationAnimationLastPlayed": 0,
+        "hasRequestedWelcomeMsg": false,
+        "hasCtwaConsumerDataSharingDisclosureSystemMsg": false,
+        "limitSharing": {
+            "trigger": 0
+        },
+        "msgs": null,
+        "isGroup": true,
+        "isUser": false,
+        "contact": {
+            "id": {
+                "server": "g.us",
+                "user": "120363402466664679",
+                "_serialized": "120363402466664679@g.us"
+            },
+            "name": "EasyDev",
+            "type": "in",
+            "labels": [],
+            "textStatusLastUpdateTime": -1,
+            "isUsernameContact": false,
+            "syncToAddressbook": false,
+            "formattedName": "EasyDev",
+            "isMe": false,
+            "isMyContact": false,
+            "isPSA": {},
+            "isUser": {},
+            "isWAContact": false,
+            "profilePicThumbObj": {
+                "eurl": "https://pps.whatsapp.net/v/t61.24694-24/519907675_1396695829127413_8008763591270455091_n.jpg?ccb=11-4&oh=01_Q5Aa4AEzTvYseQTXoQBioNakjB71ARw7QpS3D3eosxHTuX9xTQ&oe=69DA0C04&_nc_sid=5e03e0&_nc_cat=102",
+                "id": {
+                    "server": "g.us",
+                    "user": "120363402466664679",
+                    "_serialized": "120363402466664679@g.us"
+                },
+                "img": "https://pps.whatsapp.net/v/t61.24694-24/519907675_1396695829127413_8008763591270455091_n.jpg?stp=dst-jpg_s96x96_tt6&ccb=11-4&oh=01_Q5Aa4AGP9V9IsQ5uRn2GN3YPqLY4tBomsjfWHNMNamLgxyC-7A&oe=69DA0C04&_nc_sid=5e03e0&_nc_cat=102",
+                "imgFull": "https://pps.whatsapp.net/v/t61.24694-24/519907675_1396695829127413_8008763591270455091_n.jpg?ccb=11-4&oh=01_Q5Aa4AEzTvYseQTXoQBioNakjB71ARw7QpS3D3eosxHTuX9xTQ&oe=69DA0C04&_nc_sid=5e03e0&_nc_cat=102",
+                "tag": "1757016809"
+            },
+            "msgs": null
+        },
+        "groupMetadata": {
+            "id": {
+                "server": "g.us",
+                "user": "120363402466664679",
+                "_serialized": "120363402466664679@g.us"
+            },
+            "creation": 1757016499,
+            "owner": {
+                "server": "lid",
+                "user": "121561029865624",
+                "_serialized": "121561029865624@lid"
+            },
+            "subject": "EasyDev",
+            "subjectTime": 1757016499,
+            "descTime": 0,
+            "restrict": false,
+            "announce": false,
+            "noFrequentlyForwarded": false,
+            "ephemeralDuration": 0,
+            "disappearingModeTrigger": "chat_settings",
+            "membershipApprovalMode": false,
+            "memberAddMode": "admin_add",
+            "memberLinkMode": "admin_link",
+            "reportToAdminMode": false,
+            "size": 2,
+            "support": false,
+            "suspended": false,
+            "terminated": false,
+            "uniqueShortNameMap": {},
+            "isLidAddressingMode": true,
+            "isParentGroup": false,
+            "isParentGroupClosed": false,
+            "defaultSubgroup": false,
+            "generalSubgroup": false,
+            "groupSafetyCheck": false,
+            "generalChatAutoAddDisabled": false,
+            "allowNonAdminSubGroupCreation": false,
+            "lastActivityTimestamp": 0,
+            "lastSeenActivityTimestamp": 0,
+            "hasCapi": false,
+            "memberShareGroupHistoryMode": "all_member_share",
+            "participants": [
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "6623259013353",
+                        "_serialized": "6623259013353@lid"
+                    },
+                    "isAdmin": true,
+                    "isSuperAdmin": false
+                },
+                {
+                    "id": {
+                        "server": "lid",
+                        "user": "121561029865624",
+                        "_serialized": "121561029865624@lid"
+                    },
+                    "isAdmin": true,
+                    "isSuperAdmin": true
+                }
+            ],
+            "pendingParticipants": [],
+            "pastParticipants": [],
+            "membershipApprovalRequests": [],
+            "subgroupSuggestions": []
+        },
+        "presence": {
+            "id": {
+                "server": "g.us",
+                "user": "120363402466664679",
+                "_serialized": "120363402466664679@g.us"
+            },
+            "chatstates": []
+        }
+    }
+]

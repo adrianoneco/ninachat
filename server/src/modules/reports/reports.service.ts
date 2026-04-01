@@ -135,7 +135,7 @@ export class ReportsService {
     const statusMap: Record<string, number> = {};
     for (const r of statusRows) statusMap[r.status] = Number(r.cnt);
     const statusDistribution = [
-      { name: 'Abertas', value: statusMap['open'] ?? statusMap['nina'] ?? 0 },
+      { name: 'Abertas', value: statusMap['open'] ?? statusMap['livechat'] ?? 0 },
       { name: 'Fechadas', value: statusMap['closed'] ?? 0 },
       { name: 'Arquivadas', value: statusMap['archived'] ?? 0 },
     ];

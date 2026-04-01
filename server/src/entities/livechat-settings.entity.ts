@@ -1,7 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 
-@Entity({ name: 'nina_settings' })
-export class NinaSettings {
+@Entity({ name: 'livechat_settings' })
+export class LiveChatSettings {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 

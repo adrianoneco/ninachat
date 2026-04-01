@@ -7,11 +7,13 @@ import { MessagesService } from './messages.service';
 import { MessagesController } from './messages.controller';
 import { EventsGateway } from '../../ws/events.gateway';
 import { InstancesModule } from '../instances/instances.module';
+import { StorageModule } from '../storage/storage.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Message, Conversation, Contact]),
     InstancesModule,
+    StorageModule,
   ],
   controllers: [MessagesController],
   providers: [MessagesService, EventsGateway],

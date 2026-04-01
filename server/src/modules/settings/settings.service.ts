@@ -2,13 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { TagDefinition } from '../../entities/tag-definition.entity';
-import { NinaSettings } from '../../entities/nina-settings.entity';
+import { LiveChatSettings } from '../../entities/livechat-settings.entity';
 
 @Injectable()
 export class SettingsService {
   constructor(
     @InjectRepository(TagDefinition) private tagRepo: Repository<TagDefinition>,
-    @InjectRepository(NinaSettings) private ninaRepo: Repository<NinaSettings>,
+    @InjectRepository(LiveChatSettings) private livechatRepo: Repository<LiveChatSettings>,
   ) {}
 
   // ─── Tag Definitions ──────────────────────────────
@@ -40,17 +40,17 @@ export class SettingsService {
     await this.tagRepo.delete(id);
   }
 
-  // ─── Nina Settings ────────────────────────────────
-  async getNinaSettings() {
-    const row = await this.ninaRepo.findOne({ where: {} });
+  // ─── LiveChat Settings ────────────────────────────────
+  async getLiveChatSettings() {
+    const row = await this.livechatRepo.findOne({ where: {} });
     if (row) return row;
-    const defaults = this.ninaRepo.create({ is_active: true } as any);
-    return this.ninaRepo.save(defaults as any);
+    const defaults = this.livechatRepo.create({ is_active: true } as any);
+    return this.livechatRepo.save(defaults as any);
   }
 
-  async updateNinaSettings(data: Partial<NinaSettings>) {
-    const current = await this.getNinaSettings();
+  async updateLiveChatSettings(data: Partial<LiveChatSettings>) {
+    const current = await this.getLiveChatSettings();
     Object.assign(current, data);
-    return this.ninaRepo.save(current as any);
+    return this.livechatRepo.save(current as any);
   }
 }

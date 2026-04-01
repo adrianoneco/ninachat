@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import * as Collapsible from '@radix-ui/react-collapsible';
 import { useCompanySettings } from '@/hooks/useCompanySettings';
 
-interface NinaSettings {
+interface LiveChatSettings {
   whatsapp_access_token: string | null;
   whatsapp_phone_number_id: string | null;
   whatsapp_verify_token: string | null;
@@ -65,7 +65,7 @@ const ApiSettings = forwardRef<ApiSettingsRef, { onDirtyChange?: (dirty: boolean
 
   // zapi integration removed
 
-  const [settings, setSettings] = useState<NinaSettings>({
+  const [settings, setSettings] = useState<LiveChatSettings>({
     whatsapp_access_token: null,
     whatsapp_phone_number_id: null,
     whatsapp_verify_token: generateUniqueToken(),
@@ -94,7 +94,7 @@ const ApiSettings = forwardRef<ApiSettingsRef, { onDirtyChange?: (dirty: boolean
     try {
       // Try backend first
       try {
-        const res = await fetch(`${API_BASE}/nina_settings`);
+        const res = await fetch(`${API_BASE}/livechat_settings`);
         if (res.ok) {
           const json = await res.json();
           const data = json?.data ?? json;
@@ -149,7 +149,7 @@ const ApiSettings = forwardRef<ApiSettingsRef, { onDirtyChange?: (dirty: boolean
       // Save to backend first, fallback to local
       const current = await (async () => {
         try {
-          const res = await fetch(`${API_BASE}/nina_settings`);
+          const res = await fetch(`${API_BASE}/livechat_settings`);
           if (res.ok) { const json = await res.json(); return json?.data ?? json ?? {}; }
         } catch {}
         return {};
@@ -164,7 +164,7 @@ const ApiSettings = forwardRef<ApiSettingsRef, { onDirtyChange?: (dirty: boolean
 
       // Try saving to backend
       try {
-        const res = await fetch(`${API_BASE}/nina_settings`, {
+        const res = await fetch(`${API_BASE}/livechat_settings`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(merged),

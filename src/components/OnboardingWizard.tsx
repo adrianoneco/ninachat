@@ -13,7 +13,7 @@ import { StepVerification } from './onboarding/StepVerification';
 import { StepFinish } from './onboarding/StepFinish';
 import { toast } from 'sonner';
 import PromptGeneratorSheet from './settings/PromptGeneratorSheet';
-import { DEFAULT_NINA_PROMPT } from '@/prompts/default-nina-prompt';
+import { DEFAULT_LIVECHAT_PROMPT } from '@/prompts/default-livechat-prompt';
 
 interface OnboardingWizardProps {
   isOpen: boolean;
@@ -149,7 +149,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onCl
         // Try backend first
         const API_BASE = import.meta.env.VITE_API_BASE || '/api';
         try {
-          const res = await fetch(`${API_BASE}/nina_settings`);
+          const res = await fetch(`${API_BASE}/livechat_settings`);
           if (res.ok) {
             const json = await res.json();
             const data = json?.data ?? json;
@@ -160,7 +160,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onCl
               setPhoneNumberId(data.whatsapp_phone_number_id || '');
               setBusinessAccountId(data.whatsapp_business_account_id || '');
               setVerifyToken(data.whatsapp_verify_token || '');
-              setSystemPrompt(data.system_prompt_override || DEFAULT_NINA_PROMPT);
+              setSystemPrompt(data.system_prompt_override || DEFAULT_LIVECHAT_PROMPT);
               setAiModelMode(data.ai_model_mode || 'flash');
               setElevenLabsApiKey(data.elevenlabs_api_key || '');
               setElevenLabsVoiceId(data.elevenlabs_voice_id || '33B4UnXyTNbgLmdEDh5P');
@@ -209,7 +209,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onCl
       const API_BASE = import.meta.env.VITE_API_BASE || '/api';
       let current: any = {};
       try {
-        const res = await fetch(`${API_BASE}/nina_settings`);
+        const res = await fetch(`${API_BASE}/livechat_settings`);
         if (res.ok) { const json = await res.json(); current = json?.data ?? json ?? {}; }
       } catch {}
       if (!current || !Object.keys(current).length) current = {};
@@ -221,7 +221,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onCl
         whatsapp_phone_number_id: phoneNumberId?.trim() || null,
         whatsapp_business_account_id: businessAccountId?.trim() || null,
         whatsapp_verify_token: verifyToken?.trim() || null,
-        system_prompt_override: systemPrompt?.trim() || DEFAULT_NINA_PROMPT,
+        system_prompt_override: systemPrompt?.trim() || DEFAULT_LIVECHAT_PROMPT,
         ai_model_mode: aiModelMode || 'flash',
         elevenlabs_api_key: elevenLabsApiKey?.trim() || null,
         elevenlabs_voice_id: elevenLabsVoiceId || '33B4UnXyTNbgLmdEDh5P',
@@ -240,7 +240,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onCl
       };
       // Persist to backend
       try {
-        const res = await fetch(`${API_BASE}/nina_settings`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(settings) });
+        const res = await fetch(`${API_BASE}/livechat_settings`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(settings) });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
       } catch (err) {
         console.error('[OnboardingWizard] Failed to save to backend', err);
