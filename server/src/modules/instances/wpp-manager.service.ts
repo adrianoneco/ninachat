@@ -14,11 +14,11 @@ import * as wppconnect from '@wppconnect-team/wppconnect';
 import { StorageService } from '../storage/storage.service';
 
 import _fs from 'fs';
-import shouldIgnore from 'src/utils/shouldIgnore';
+import shouldIgnore from '../../utils/shouldIgnore';
 import { syncContacts } from '../sync/contactsSync';
 import e from 'express';
 import { syncConversations } from '../sync/conversationsSync';
-import { getContactByPushName } from 'src/utils/getContact';
+import { getContactByPushName } from '../../utils/getContact';
 
 const logger = new Logger('WppManager');
 
@@ -420,11 +420,15 @@ export class WppManagerService implements OnApplicationShutdown {
       }
     })().catch(() => { /* swallow — non-critical */ });
 
+
+
+
+
     client.onMessage(async (message: any) => {
       try {
         const _contact = await getContactByPushName(message.sender.pushname, client).catch(() => null);
 
-        fs.writeFileSync(`/home/neco/Documentos/nina_chat/test/contact.json`, JSON.stringify(_contact, null, 4));
+        fs.writeFileSync(`/home/neco/Documentos/nina_chat/test/message.json`, JSON.stringify(message, null, 4));
 
         // Find contact by whatsapp_id or phone_number
         const contact = await this.contactRepo.findOne({
@@ -433,6 +437,8 @@ export class WppManagerService implements OnApplicationShutdown {
             { phone_number: _contact?.phone_number }
           ]
         }).catch(() => null);
+
+        logger.debug(`[${instance.name}] onMessage: contact found = ${!!contact}, id=${contact?.id}`);
 
         // Build conversation values
         const convValues: any = {
@@ -446,18 +452,21 @@ export class WppManagerService implements OnApplicationShutdown {
           convValues.contact_id = contact.id;
         }
 
-        await this.convRepo.createQueryBuilder()
+        const convInsertResult = await this.convRepo.createQueryBuilder()
           .insert()
           .into('conversations')
           .values(convValues)
           .orIgnore()
           .execute();
-
+        
+        logger.debug(`[${instance.name}] conversation insert result:`, JSON.stringify(convInsertResult));
 
         const conv = await this.convRepo.findOneBy({ chat_id: `${instance.id}-${message.chatId}` }).catch(() => null);
         const convId = conv?.id || null;
+        
+        logger.debug(`[${instance.name}] conversation found after insert: ${!!conv}, id=${convId}`);
 
-        this.msgRepo.createQueryBuilder()
+        const msgInsertResult = this.msgRepo.createQueryBuilder()
           .insert()
           .into('messages')
           .values({
@@ -472,11 +481,17 @@ export class WppManagerService implements OnApplicationShutdown {
           })
           .orIgnore()
           .execute()
-          .catch(() => { });
+          .catch((e) => {
+            logger.warn(`[${instance.name}] message insert failed: ${String(e)}`);
+          });
+
+        logger.debug(`[${instance.name}] message insert result:`, JSON.stringify(msgInsertResult));
 
         const contactName = contact?.name || contact?.call_name || message.sender?.pushname || 'Novo contato';
         const contactPhone = contact?.phone_formated || contact?.phone_number || message.from.split('@')[0];
         const contactAvatar = contact?.profile_picture_url || null;
+
+        logger.debug(`[${instance.name}] emitting message:new`, { convId, contactName, contactPhone, msg: message.body?.substring(0, 30) });
 
         this.events.emitTo(session, 'message:new', {
           instance_id: instance.id,
@@ -496,7 +511,63 @@ export class WppManagerService implements OnApplicationShutdown {
 
     // ── Presence tracking ──────────────────────────────────────────────────────
     client.onPresenceChanged(async (presence: any) => {
-      console.warn(`[${instance.name}] Presence changed: ${JSON.stringify(presence)}`);
+      try {
+        const presenceId = presence?.id || '';
+        const phone = presenceId.split('@')[0]; // Extract phone from JID
+        const state = presence?.state || 'unavailable';
+        const isOnline = presence?.isOnline || false;
+        const isContact = presence?.isContact || false;
+
+        if (!presenceId || !phone) {
+          logger.debug(`[${instance.name}] onPresenceChanged: invalid presence id`);
+          return;
+        }
+
+        // Convert state to user-friendly label
+        const presenceMap: Record<string, string> = {
+          'available': 'online',
+          'unavailable': 'offline',
+          'composing': 'typing',
+          'recording': 'recording',
+          'paused': 'paused',
+        };
+        const presenceLabel = presenceMap[state] || state;
+
+        // Find contact by whatsapp_id or phone_number
+        const contact = await this.contactRepo.findOne({
+          where: [
+            { whatsapp_id: presenceId },
+            { phone_number: phone }
+          ]
+        }).catch(() => null);
+
+        // Build presence event payload matching frontend expectation
+        const presencePayload = {
+          phone,
+          presence: presenceLabel,
+          contact_name: contact?.name || contact?.call_name || phone,
+          contact_avatar: contact?.profile_picture_url || null,
+        };
+
+        // Emit presence event to frontend
+        this.events.emitTo(session, 'contact:presence', presencePayload);
+        this.events.emit('contact:presence', presencePayload);
+
+        logger.debug(
+          `[${instance.name}] presence: ${presenceLabel} from ${phone}`
+        );
+
+        // Update contact presence in DB
+        await this.contactRepo.createQueryBuilder()
+          .update()
+          .set({ presense: presenceLabel })
+          .where('whatsapp_id = :id OR phone_number = :phone', { id: presenceId, phone })
+          .execute()
+          .catch(() => { /* ignore */ });
+
+      } catch (e) {
+        logger.warn(`[${instance.name}] onPresenceChanged error: ${String(e)}`);
+      }
     });
 
     client.onStateChange(async (state: string) => {
@@ -696,45 +767,221 @@ export class WppManagerService implements OnApplicationShutdown {
   ) {
     const client = this.getClient(sessionOrId);
     if (!client) throw new Error('Client not running for ' + sessionOrId);
+    
     return this.withRetry(async () => {
+      let tempFilePath: string | undefined;
+      let payloadBase64: string | undefined;
+      
+      // If it's a Buffer, prepare file path and base64 as fallbacks
+      if (Buffer.isBuffer(bufferOrUrl)) {
+        const mimeType = this.getMimeTypeFromFilename(filename || 'file');
+        logger.debug(`[WPP] sendMedia buffer: filename=${filename}, mimeType=${mimeType}, size=${bufferOrUrl.length} bytes`);
+        
+        // Save buffer to temp file
+        const uploadsDir = path.join(process.env.DATA_DIR || 'data/wpp_data', sessionOrId, 'uploads');
+        await fs.ensureDir(uploadsDir);
+        tempFilePath = path.join(uploadsDir, `temp-${Date.now()}-${filename || 'file'}`);
+        await fs.writeFile(tempFilePath, bufferOrUrl);
+        logger.debug(`[WPP] Saved buffer to temp file: ${tempFilePath}`);
+        
+        // Prepare base64 as fallback only
+        const base64 = bufferOrUrl.toString('base64');
+        payloadBase64 = `data:${mimeType};base64,${base64}`;
+      }
+
       const tryCalls = [
-        async () =>
-          client.sendImage &&
-          client.sendImage(to, bufferOrUrl, filename || 'image', caption),
-        async () =>
-          client.sendFile &&
-          client.sendFile(to, bufferOrUrl, filename || 'file', caption),
-        async () =>
-          client.sendFileFromBase64 &&
-          client.sendFileFromBase64(to, bufferOrUrl, filename || 'file', caption),
-        async () =>
-          client.sendImageFromUrl &&
-          client.sendImageFromUrl(to, bufferOrUrl, caption),
-        async () =>
-          client.sendFileFromUrl &&
-          client.sendFileFromUrl(to, bufferOrUrl, filename || 'file', caption),
+        // For buffers, try file path methods first (most reliable)
+        ...(tempFilePath && Buffer.isBuffer(bufferOrUrl)
+          ? [
+              async () => {
+                if (!client.sendFileFromPath) return null;
+                logger.debug(`[WPP] Trying sendFileFromPath for ${tempFilePath}`);
+                return await client.sendFileFromPath(to, tempFilePath, filename || 'file', caption);
+              },
+              async () => {
+                if (!client.sendMediaFile) return null;
+                logger.debug(`[WPP] Trying sendMediaFile for ${tempFilePath}`);
+                return await client.sendMediaFile(to, tempFilePath, caption);
+              },
+            ]
+          : []),
+        // Then try Buffer methods directly
+        ...(Buffer.isBuffer(bufferOrUrl)
+          ? [
+              async () => {
+                if (!client.sendMedia) return null;
+                logger.debug(`[WPP] Trying sendMedia with Buffer for ${filename}`);
+                return await client.sendMedia(to, bufferOrUrl, { filename, caption });
+              },
+              async () => {
+                if (!client.sendImage) return null;
+                logger.debug(`[WPP] Trying sendImage with Buffer for ${filename}`);
+                return await client.sendImage(to, bufferOrUrl as Buffer, filename || 'image', caption);
+              },
+              async () => {
+                if (!client.sendFile) return null;
+                logger.debug(`[WPP] Trying sendFile with Buffer for ${filename}`);
+                return await client.sendFile(to, bufferOrUrl as Buffer, filename || 'file', caption);
+              },
+              // Fallback to base64 if Buffer methods fail
+              async () => {
+                if (!client.sendFileFromBase64 || !payloadBase64) return null;
+                logger.debug(`[WPP] Trying sendFileFromBase64 for ${filename}`);
+                return await client.sendFileFromBase64(to, payloadBase64, filename || 'file', caption);
+              },
+            ]
+          : []),
+        // For URLs, try image/file from URL methods
+        ...(typeof bufferOrUrl === 'string' && bufferOrUrl.startsWith('http')
+          ? [
+              async () => {
+                if (!client.sendImageFromUrl) return null;
+                logger.debug(`[WPP] Trying sendImageFromUrl for ${bufferOrUrl}`);
+                return await client.sendImageFromUrl(to, bufferOrUrl, caption);
+              },
+              async () => {
+                if (!client.sendFileFromUrl) return null;
+                logger.debug(`[WPP] Trying sendFileFromUrl for ${bufferOrUrl}`);
+                return await client.sendFileFromUrl(to, bufferOrUrl, filename || 'file', caption);
+              },
+            ]
+          : []),
       ];
+
+      let lastError: Error | undefined;
       for (const fn of tryCalls) {
         try {
           const res = await fn();
-          if (res) return res;
+          if (res) {
+            logger.debug(`[WPP] sendMedia succeeded`);
+            // Clean up temp file if created
+            if (tempFilePath) {
+              fs.unlink(tempFilePath).catch(e => logger.warn(`Failed to clean temp file: ${String(e)}`));
+            }
+            return res;
+          }
         } catch (e) {
-          // try next
+          const errMsg = String(e).slice(0, 150);
+          logger.warn(`[WPP] sendMedia attempt failed: ${errMsg}`);
+          lastError = e as Error;
         }
       }
-      throw new Error('No media send method succeeded');
+      
+      // Clean up temp file on failure
+      if (tempFilePath) {
+        fs.unlink(tempFilePath).catch(e => logger.warn(`Failed to clean temp file: ${String(e)}`));
+      }
+      
+      throw lastError || new Error('No media send method succeeded');
     });
+  }
+
+  private getMimeTypeFromFilename(filename: string): string {
+    const mimeMap: Record<string, string> = {
+      '.jpg': 'image/jpeg',
+      '.jpeg': 'image/jpeg',
+      '.png': 'image/png',
+      '.gif': 'image/gif',
+      '.webp': 'image/webp',
+      '.mp4': 'video/mp4',
+      '.webm': 'video/webm',
+      '.3gp': 'video/3gpp',
+      '.mov': 'video/quicktime',
+      '.avi': 'video/x-msvideo',
+      '.mp3': 'audio/mpeg',
+      '.ogg': 'audio/ogg',
+      '.wav': 'audio/wav',
+      '.m4a': 'audio/mp4',
+      '.aac': 'audio/aac',
+      '.pdf': 'application/pdf',
+      '.doc': 'application/msword',
+      '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      '.xls': 'application/vnd.ms-excel',
+      '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      '.zip': 'application/zip',
+      '.txt': 'text/plain',
+    };
+
+    const ext = filename.toLowerCase().substring(filename.lastIndexOf('.'));
+    return mimeMap[ext] || 'application/octet-stream';
   }
 
   async sendSticker(sessionOrId: string, to: string, bufferOrUrl: string | Buffer) {
     const client = this.getClient(sessionOrId);
     if (!client) throw new Error('Client not running for ' + sessionOrId);
-    try {
-      if (client.sendSticker) return await client.sendSticker(to, bufferOrUrl);
-      if (client.sendImageAsSticker)
-        return await client.sendImageAsSticker(to, bufferOrUrl);
-    } catch (e) { }
-    throw new Error('No sticker send method available');
+    
+    let tempFilePath: string | undefined;
+    let payloadBase64: string | undefined;
+    
+    // Convert buffer to file path or base64 if needed
+    if (Buffer.isBuffer(bufferOrUrl)) {
+      const mimeType = 'image/webp'; // Stickers are usually WebP
+      logger.debug(`[WPP] sendSticker converting buffer (size=${bufferOrUrl.length} bytes)`);
+      
+      // Save buffer to temp file
+      const uploadsDir = path.join(process.env.DATA_DIR || 'data/wpp_data', sessionOrId, 'uploads');
+      await fs.ensureDir(uploadsDir);
+      tempFilePath = path.join(uploadsDir, `temp-sticker-${Date.now()}.webp`);
+      await fs.writeFile(tempFilePath, bufferOrUrl);
+      logger.debug(`[WPP] Saved sticker to temp file: ${tempFilePath}`);
+      
+      const base64 = bufferOrUrl.toString('base64');
+      payloadBase64 = `data:${mimeType};base64,${base64}`;
+    }
+    
+    const tryCalls = [
+      // For buffers, try file path first
+      ...(tempFilePath && Buffer.isBuffer(bufferOrUrl)
+        ? [
+            async () => {
+              if (!client.sendStickerFromPath) return null;
+              logger.debug(`[WPP] Trying sendStickerFromPath for ${tempFilePath}`);
+              return await client.sendStickerFromPath(to, tempFilePath);
+            },
+            async () => {
+              if (!client.sendFileFromPath) return null;
+              logger.debug(`[WPP] Trying sendFileFromPath for sticker`);
+              return await client.sendFileFromPath(to, tempFilePath, 'sticker.webp', '');
+            },
+          ]
+        : []),
+      // Then try Buffer or base64 methods
+      async () => {
+        if (!client.sendSticker) return null;
+        logger.debug(`[WPP] Trying sendSticker`);
+        return await client.sendSticker(to, Buffer.isBuffer(bufferOrUrl) ? payloadBase64 : bufferOrUrl);
+      },
+      async () => {
+        if (!client.sendImageAsSticker) return null;
+        logger.debug(`[WPP] Trying sendImageAsSticker`);
+        return await client.sendImageAsSticker(to, Buffer.isBuffer(bufferOrUrl) ? payloadBase64 : bufferOrUrl);
+      },
+    ];
+    
+    let lastError: Error | undefined;
+    for (const fn of tryCalls) {
+      try {
+        const res = await fn();
+        if (res) {
+          logger.debug(`[WPP] sendSticker succeeded`);
+          // Clean up temp file
+          if (tempFilePath) {
+            fs.unlink(tempFilePath).catch(e => logger.warn(`Failed to clean sticker temp file: ${String(e)}`));
+          }
+          return res;
+        }
+      } catch (e) {
+        logger.warn(`[WPP] sendSticker attempt failed: ${String(e).slice(0, 150)}`);
+        lastError = e as Error;
+      }
+    }
+    
+    // Clean up temp file on failure
+    if (tempFilePath) {
+      fs.unlink(tempFilePath).catch(e => logger.warn(`Failed to clean sticker temp file: ${String(e)}`));
+    }
+    
+    throw lastError || new Error('No sticker send method available');
   }
 
   // send generic JSON payload if client supports "sendMessage" with rich content

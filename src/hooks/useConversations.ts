@@ -111,8 +111,26 @@ export function useConversations() {
       socket.on('conversation:updated', handler);
       socket.on('contact:updated', handler);
       socket.on('messages:read', handler);
+      // Handle incoming messages from WPP
+      socket.on('message:new', (data: any) => {
+        const { conversation_id, message_preview, contact_name, contact_avatar, timestamp } = data;
+        setConversations(prev => prev.map(conv => {
+          if (conv.id === conversation_id) {
+            return {
+              ...conv,
+              lastMessage: message_preview || '[mídia]',
+              lastMessageTime: new Date(timestamp).toLocaleString(),
+              contactName: contact_name || conv.contactName,
+              contactAvatar: contact_avatar || conv.contactAvatar,
+              unreadCount: (conv.unreadCount || 0) + 1,
+            };
+          }
+          return conv;
+        }));
+      });
+      
       // presence updates: patch in-memory without full refetch
-      socket.on('contact:presence', (data: { phone: string; presence: string }) => {
+      socket.on('contact:presence', (data: { phone: string; presence: string; contact_name?: string; contact_avatar?: string }) => {
         const pausedTimers = new Map<string, ReturnType<typeof setTimeout>>();
         setConversations(prev => prev.map(conv => {
           const cp = (conv as any).contactPhone || '';
@@ -120,6 +138,16 @@ export function useConversations() {
           const incomingPhone = (data.phone || '').replace(/\D/g, '');
           if (!matchPhone || !incomingPhone || !matchPhone.endsWith(incomingPhone) && !incomingPhone.endsWith(matchPhone)) return conv;
           const newPresence = data.presence;
+          
+          // Update contact info if provided
+          const updatedConv = {
+            ...conv,
+            _dbPresence: newPresence !== 'paused' ? newPresence : (conv as any)._dbPresence,
+            contactPresence: newPresence,
+            contactName: data.contact_name || conv.contactName,
+            contactAvatar: data.contact_avatar || conv.contactAvatar,
+          };
+          
           if (newPresence === 'paused') {
             // clear existing timer if any
             const key = conv.id;
@@ -130,7 +158,7 @@ export function useConversations() {
             }, 5000);
             pausedTimers.set(key, t);
           }
-          return { ...conv, _dbPresence: newPresence !== 'paused' ? newPresence : (conv as any)._dbPresence, contactPresence: newPresence };
+          return updatedConv;
         }));
       });
     } catch (e) {
@@ -147,6 +175,7 @@ export function useConversations() {
         socket.off('conversation:updated', handler);
         socket.off('contact:updated', handler);
         socket.off('messages:read', handler);
+        socket.off('message:new');
         socket.off('contact:presence');
       } catch (e) {}
     };
