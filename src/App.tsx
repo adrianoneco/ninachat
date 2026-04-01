@@ -10,6 +10,7 @@ import Auth from './pages/Auth';
 import ResetPassword from './pages/ResetPassword';
 import { useAuth, AuthProvider } from './hooks/useAuth';
 import { CompanySettingsProvider, useCompanySettings } from './hooks/useCompanySettings';
+import { useMessageNotifications } from './hooks/useMessageNotifications';
 import { api } from './services/api';
 import Scheduling from './components/Scheduling';
 import Kanban from './components/Kanban';
@@ -21,6 +22,10 @@ import { useOnboardingStatus } from './hooks/useOnboardingStatus';
 // Componente de Layout que envolve a aplicação principal
 const AppLayout: React.FC = () => {
   const auth = (() => { try { return useAuth(); } catch (e) { return null as any; } })();
+  
+  // Ativar notificações de mensagens
+  useMessageNotifications();
+  
   if (!auth?.user) {
     return <Navigate to="/auth" replace />;
   }

@@ -422,7 +422,7 @@ export class WppManagerService implements OnApplicationShutdown {
 
     client.onMessage(async (message: any) => {
       try {
-       const _contact = await getContactByPushName(message.sender.pushname, client).catch(() => null);
+        const _contact = await getContactByPushName(message.sender.pushname, client).catch(() => null);
 
         fs.writeFileSync(`/home/neco/Documentos/nina_chat/test/contact.json`, JSON.stringify(_contact, null, 4));
 
@@ -452,61 +452,51 @@ export class WppManagerService implements OnApplicationShutdown {
           .values(convValues)
           .orIgnore()
           .execute();
+
+
+        const conv = await this.convRepo.findOneBy({ chat_id: `${instance.id}-${message.chatId}` }).catch(() => null);
+        const convId = conv?.id || null;
+
+        this.msgRepo.createQueryBuilder()
+          .insert()
+          .into('messages')
+          .values({
+            instance_id: instance.id,
+            conversation_id: convId,
+            message_id: message.id,
+            from_me: message.fromMe,
+            body: message.body,
+            content: message.content || message.body,
+            type: message.type,
+            media_type: message.mimetype || null
+          })
+          .orIgnore()
+          .execute()
+          .catch(() => { });
+
+        const contactName = contact?.name || contact?.call_name || message.sender?.pushname || 'Novo contato';
+        const contactPhone = contact?.phone_formated || contact?.phone_number || message.from.split('@')[0];
+        const contactAvatar = contact?.profile_picture_url || null;
+
+        this.events.emitTo(session, 'message:new', {
+          instance_id: instance.id,
+          conversation_id: convId,
+          contact_name: contactName,
+          contact_phone: contactPhone,
+          contact_avatar: contactAvatar,
+          message_preview: message.body?.substring(0, 50) || '[mídia]',
+          message_type: message.type,
+          timestamp: new Date().toISOString(),
+        });
+
       } catch (e) {
         logger.warn(`[${instance.name}] onMessage error: ${String(e)}`);
       }
-
-      const conv = await this.convRepo.findOneBy({ chat_id: `${instance.id}-${message.chatId}` }).catch(() => null);
-      const convId = conv?.id || null;
-
-      this.msgRepo.createQueryBuilder()
-        .insert()
-        .into('messages')
-        .values({
-          instance_id: instance.id,
-          conversation_id: convId,
-          message_id: message.id,
-          from_me: message.fromMe,
-          body: message.body,
-          type: message.type,
-          media_type: message.mimetype || null
-        })
-        .orIgnore()
-        .execute()
-        .catch(() => { });
-      
-      this.events.emitTo(session, 'message:new', {
-        instance_id: instance.id,
-        conversation_id: convId,
-        message,
-      });
     });
 
     // ── Presence tracking ──────────────────────────────────────────────────────
-    client.onPresenceChanged?.(async (presence: any) => {
-      try {
-        // WPPConnect shape: { id: '5541...@c.us', status: 'composing'|'recording'|'available'|'unavailable' }
-        const jid: string = presence?.id || presence?.chatId || presence?.from || '';
-        const presenceType: string = presence?.status || presence?.state || presence?.type || presence?.presence || '';
-        if (!jid || !presenceType) return;
-
-        const phone = jid.replace(/@.*$/, '');
-
-        // Update contact presense in DB (match by whatsapp_id OR phone_number)
-        await this.contactRepo.createQueryBuilder()
-          .update()
-          .set({ presense: presenceType })
-          .where('whatsapp_id = :jid OR phone_number = :phone', { jid, phone })
-          .execute()
-          .catch(() => {/* ignore */ });
-
-        // Emit to frontend
-        const payload = { phone, presence: presenceType };
-        this.events.emit('contact:presence', payload);
-        this.events.emitTo(session, 'contact:presence', payload);
-      } catch (e) {
-        console.warn('[WppManager] onPresenceChanged error', e);
-      }
+    client.onPresenceChanged(async (presence: any) => {
+      console.warn(`[${instance.name}] Presence changed: ${JSON.stringify(presence)}`);
     });
 
     client.onStateChange(async (state: string) => {

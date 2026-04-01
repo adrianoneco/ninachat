@@ -1,6 +1,8 @@
 {
+    "name": "EASYDEV-BOT",
     "verifiedName": null,
     "phone_number": "554184146402",
+    "phone_formated": null,
     "isBlocked": false,
     "isBusiness": false,
     "type": "identity",
