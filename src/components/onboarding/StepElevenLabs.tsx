@@ -117,9 +117,9 @@ export const StepElevenLabs: React.FC<StepElevenLabsProps> = ({
         <p className="text-gray-500 dark:text-slate-400 text-sm max-w-md mx-auto">
           Configure o ElevenLabs para que seu agente responda também por áudio.
         </p>
-        <p className="text-xs text-amber-400/80 mt-2">
-          ⚡ Esta configuração é opcional
-        </p>
+        <span className="inline-flex items-center gap-1 mt-3 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-500/15 border border-amber-500/30 text-amber-400">
+          ⚡ Opcional
+        </span>
       </motion.div>
 
       <div className="space-y-6 max-w-md mx-auto">
@@ -215,10 +215,10 @@ export const StepElevenLabs: React.FC<StepElevenLabsProps> = ({
             <div className="space-y-2">
               <div className="flex justify-between text-xs">
                 <span className="text-gray-500 dark:text-slate-400">Estabilidade</span>
-                <span className="text-gray-500 dark:text-slate-500">{(elevenLabsStability * 100).toFixed(0)}%</span>
+                <span className="text-gray-500 dark:text-slate-500">{(Number(elevenLabsStability) * 100).toFixed(0)}%</span>
               </div>
               <Slider
-                value={[elevenLabsStability]}
+                value={[Number(elevenLabsStability)]}
                 onValueChange={([v]) => onStabilityChange(v)}
                 min={0}
                 max={1}
@@ -230,10 +230,10 @@ export const StepElevenLabs: React.FC<StepElevenLabsProps> = ({
             <div className="space-y-2">
               <div className="flex justify-between text-xs">
                 <span className="text-gray-500 dark:text-slate-400">Similaridade</span>
-                <span className="text-gray-500 dark:text-slate-500">{(elevenLabsSimilarityBoost * 100).toFixed(0)}%</span>
+                <span className="text-gray-500 dark:text-slate-500">{(Number(elevenLabsSimilarityBoost) * 100).toFixed(0)}%</span>
               </div>
               <Slider
-                value={[elevenLabsSimilarityBoost]}
+                value={[Number(elevenLabsSimilarityBoost)]}
                 onValueChange={([v]) => onSimilarityBoostChange(v)}
                 min={0}
                 max={1}
@@ -245,10 +245,10 @@ export const StepElevenLabs: React.FC<StepElevenLabsProps> = ({
             <div className="space-y-2">
               <div className="flex justify-between text-xs">
                 <span className="text-gray-500 dark:text-slate-400">Velocidade</span>
-                <span className="text-gray-500 dark:text-slate-500">{elevenLabsSpeed.toFixed(1)}x</span>
+                <span className="text-gray-500 dark:text-slate-500">{Number(elevenLabsSpeed).toFixed(1)}x</span>
               </div>
               <Slider
-                value={[elevenLabsSpeed]}
+                value={[Number(elevenLabsSpeed)]}
                 onValueChange={([v]) => onSpeedChange(v)}
                 min={0.5}
                 max={2}

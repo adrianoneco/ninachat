@@ -12,19 +12,25 @@ export class InstancesService implements OnModuleInit {
     private readonly events: EventsGateway,
     private readonly wpp: WppManagerService,
   ) {}
-  
+
   // register repo so db-updater helper can use it
   // (keeps db-updater decoupled from Nest DI) and start instances
   async onModuleInit() {
     // On application bootstrap, start all configured wppconnect instances.
     try {
       const all = await this.repo.find();
-      const wppInstances = (all || []).filter((i) => i.channel === 'wppconnect');
+      const wppInstances = (all || []).filter(
+        (i) => i.channel === 'wppconnect',
+      );
       for (const inst of wppInstances) {
         try {
           // ensure session dirs exist (force create) before starting instance
-          try { await this.wpp.ensureSessionDirs(inst as Instance); } catch (e) { /* ignore */ }
-          await this.wpp.startInstance(inst as Instance);
+          try {
+            await this.wpp.ensureSessionDirs(inst);
+          } catch (e) {
+            /* ignore */
+          }
+          await this.wpp.startInstance(inst);
         } catch (e) {
           // swallow to avoid breaking bootstrap
         }
@@ -38,16 +44,23 @@ export class InstancesService implements OnModuleInit {
     setInterval(async () => {
       try {
         const all2 = await this.repo.find();
-        const wppInstances2 = (all2 || []).filter((i) => i.channel === 'wppconnect');
+        const wppInstances2 = (all2 || []).filter(
+          (i) => i.channel === 'wppconnect',
+        );
         for (const inst of wppInstances2) {
           try {
             const session = inst.wppconnect_session || inst.id;
             const client = this.wpp.getClient(session);
             if (!client) {
               // attempt to start missing instance
-              console.log(`[InstancesService] Reconciliation starting missing instance ${inst.name || session}`);
-              await this.wpp.startInstance(inst as Instance).catch((err) => {
-                console.warn(`[InstancesService] Failed starting instance ${session}:`, err?.message || err);
+              console.log(
+                `[InstancesService] Reconciliation starting missing instance ${inst.name || session}`,
+              );
+              await this.wpp.startInstance(inst).catch((err) => {
+                console.warn(
+                  `[InstancesService] Failed starting instance ${session}:`,
+                  err?.message || err,
+                );
               });
             }
           } catch (e) {
@@ -72,7 +85,9 @@ export class InstancesService implements OnModuleInit {
       // try to find existing by session or name
       let existing: Instance | null = null;
       if (data.wppconnect_session) {
-        existing = await this.repo.findOneBy({ wppconnect_session: data.wppconnect_session } as any);
+        existing = await this.repo.findOneBy({
+          wppconnect_session: data.wppconnect_session,
+        } as any);
       }
       if (!existing && data.name) {
         existing = await this.repo.findOneBy({ name: data.name } as any);
@@ -80,9 +95,10 @@ export class InstancesService implements OnModuleInit {
 
       if (existing) {
         // update webhook_url if provided
-        if ((data as any).webhook_url) (existing as any).webhook_url = (data as any).webhook_url;
+        if ((data as any).webhook_url)
+          (existing as any).webhook_url = (data as any).webhook_url;
         Object.assign(existing, data as any);
-        const savedExisting = (await this.repo.save(existing)) as Instance;
+        const savedExisting = await this.repo.save(existing);
         this.events.emit('instance:updated', savedExisting);
         try {
           await this.wpp.startInstance(savedExisting);
@@ -152,14 +168,20 @@ export class InstancesService implements OnModuleInit {
   }
 
   // test helper: set status on an instance and notify Postgres + websocket
-  async setStatusForTest(id: string, status: 'connected' | 'disconnected' | 'waiting') {
+  async setStatusForTest(
+    id: string,
+    status: 'connected' | 'disconnected' | 'waiting',
+  ) {
     const inst = await this.repo.findOneBy({ id } as any);
     if (!inst) throw new Error('Not found');
     (inst as any).status = status;
     const saved = await this.repo.save(inst as any);
     try {
       const payload = JSON.stringify(saved);
-      await (this.repo.manager as any).query(`SELECT pg_notify('instance_updated', $1)`, [payload]);
+      await (this.repo.manager as any).query(
+        `SELECT pg_notify('instance_updated', $1)`,
+        [payload],
+      );
     } catch (e) {
       // ignore notify errors but surface via event
     }

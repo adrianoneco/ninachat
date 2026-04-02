@@ -1,4 +1,4 @@
-import { WppProfilePicThumb } from "./WppProfilePic";
+import { WppProfilePicThumb } from './WppProfilePic';
 
 export interface WppContact {
   id: string;

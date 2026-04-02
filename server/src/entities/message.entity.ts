@@ -1,4 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Index } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  Index,
+} from 'typeorm';
 
 @Index(['conversation_id'], { unique: false })
 @Entity('messages')
@@ -12,12 +19,14 @@ export class Message {
   @Column({ type: 'text', nullable: false, unique: true })
   message_id?: string;
 
+  @Column({ type: 'text', nullable: false, default: 'chat' })
+  message_type?: string;
+
   @Column({ type: 'text', nullable: true })
   reply_to_id?: string;
 
   @Column({ type: 'text', nullable: true })
   whatsapp_message_id?: string;
-
 
   @Column({ type: 'text', nullable: true })
   content?: string;
@@ -33,6 +42,7 @@ export class Message {
 
   @Column({ type: 'varchar', default: 'user', nullable: true })
   from_type?: string;
+
   @Column({ type: 'varchar', default: 'sent', nullable: true })
   status?: string;
 

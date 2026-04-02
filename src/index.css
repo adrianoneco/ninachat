@@ -323,8 +323,9 @@
     color: hsl(var(--foreground));
     border-color: hsl(var(--border));
   }
-}
+
   .control-thumb {
     background-color: hsl(var(--card-foreground));
     border: 1px solid hsl(var(--border));
   }
+}

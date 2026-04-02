@@ -30,3 +30,7 @@ server/data/
 *.njsproj
 *.sln
 *.sw?
+server.pid
+bun.lock
+test/
+test

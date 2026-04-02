@@ -6,9 +6,10 @@ import {
   Clock,
   Tag, Bot, User, Pause, Brain, Plus, TrendingUp, Heart,
   Sparkles, RefreshCw, Pencil, FileText, XCircle, CheckCircle, Menu, ChevronLeft, ChevronRight,
-  Download, ZoomIn, ZoomOut, ChevronDown,
+  Download, ZoomIn, ZoomOut, ChevronDown, Square,
   Copy, Share2, Trash2, AtSign, CornerUpLeft,
-  Image, Video, Music, Sticker, File
+  Image, Video, Music, Sticker, File,
+  PhoneIncoming, PhoneOff, VideoIcon
 } from 'lucide-react';
 
 import { Pin, Star, Flag } from 'lucide-react';
@@ -26,10 +27,13 @@ import { CreateDealModal } from './CreateDealModal';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { Sheet, SheetContent, SheetHeader, SheetFooter, SheetTitle, SheetDescription } from './ui/sheet';
 import { MessageImage, MessageVideo, MessageSticker, MessageFile, MessageAudio } from './MediaRenderers';
+import { connectSocket } from '@/lib/socket';
+import { usePresence } from '@/hooks/usePresence';
 
 const ChatInterface: React.FC = () => {
   const { conversations, loading, sendMessage, updateStatus, markAsRead, assignConversation, refetch } = useConversations();
   const { sdrName, companyName } = useCompanySettings();
+  const { isTyping, isRecording, isOnline, getPresence } = usePresence();
   const auth = useAuth();
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
   const [inputText, setInputText] = useState('');
@@ -106,6 +110,12 @@ const ChatInterface: React.FC = () => {
   const audioRefs = useRef<Record<string, HTMLAudioElement>>({});
   const [previewAudioUrl, setPreviewAudioUrl] = useState<string | null>(null);
   const previewAudioRef = useRef<HTMLAudioElement | null>(null);
+  // Audio recording state
+  const [isRecordingAudio, setIsRecordingAudio] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordedChunksRef = useRef<Blob[]>([]);
+  const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [previewVideoUrl, setPreviewVideoUrl] = useState<string | null>(null);
   const previewVideoRef = useRef<HTMLVideoElement | null>(null);
   const [previewDoc, setPreviewDoc] = useState<{ url: string; name?: string } | null>(null);
@@ -126,7 +136,7 @@ const ChatInterface: React.FC = () => {
   const DEFAULT_SEND_WIDTH = 48; // px (w-12)
   const DEFAULT_ICON_GAP = 0; // no gap — icons sit immediately left of send button
   const [iconsRightPx, setIconsRightPx] = useState<number>(DEFAULT_SEND_RIGHT + DEFAULT_SEND_WIDTH - DEFAULT_ICON_GAP);
-  const [isTyping, setIsTyping] = useState(false);
+  const [inputActive, setInputActive] = useState(false);
   const [isInputLifted, setIsInputLifted] = useState(false);
   // shared class for icon buttons to keep styles consistent and polished
   const iconBtnClass = "w-8 h-8 rounded-full bg-slate-800/30 hover:bg-slate-800/50 flex items-center justify-center text-slate-200 dark:text-white shadow-sm transition-transform transform hover:scale-105 ring-1 ring-white/5";
@@ -170,7 +180,15 @@ const ChatInterface: React.FC = () => {
   };
 
   // Helper functions for presence status mapping
-  const getPresenceDotColor = (presense: string | null): string => {
+  const getPresenceDotColor = (presense: string | null, contactId?: string): string => {
+    // Check real-time presence from socket first
+    if (contactId) {
+      if (isTyping(contactId)) return 'bg-amber-400 animate-pulse';
+      if (isRecording(contactId)) return 'bg-amber-400 animate-pulse';
+      if (isOnline(contactId)) return 'bg-emerald-500';
+    }
+    
+    // Fallback to static presence
     if (!presense) return 'bg-gray-400';
     if (presense === 'available') return 'bg-emerald-500';
     if (presense === 'composing' || presense === 'recording') return 'bg-amber-400 animate-pulse';
@@ -179,7 +197,15 @@ const ChatInterface: React.FC = () => {
     return 'bg-gray-400';
   };
 
-  const getPresenceStatusText = (presense: string | null): React.ReactNode => {
+  const getPresenceStatusText = (presense: string | null, contactId?: string): React.ReactNode => {
+    // Check real-time presence from socket first
+    if (contactId) {
+      if (isTyping(contactId)) return <span className="text-amber-400 animate-pulse">Digitando...</span>;
+      if (isRecording(contactId)) return <span className="text-amber-400 animate-pulse">Gravando áudio...</span>;
+      if (isOnline(contactId)) return <span className="text-emerald-400">Online</span>;
+    }
+    
+    // Fallback to static presence
     if (!presense) return null;
     if (presense === 'available') return <span className="text-emerald-400">Online</span>;
     if (presense === 'composing') return <span className="text-amber-400 animate-pulse">Digitando...</span>;
@@ -189,7 +215,15 @@ const ChatInterface: React.FC = () => {
     return null;
   };
 
-  const getPresenceLabel = (presense: string | null): string => {
+  const getPresenceLabel = (presense: string | null, contactId?: string): string => {
+    // Check real-time presence from socket first
+    if (contactId) {
+      if (isTyping(contactId)) return 'Digitando...';
+      if (isRecording(contactId)) return 'Gravando áudio...';
+      if (isOnline(contactId)) return 'Online';
+    }
+    
+    // Fallback to static presence
     if (!presense) return '';
     if (presense === 'available') return 'Online';
     if (presense === 'composing') return 'Digitando...';
@@ -366,6 +400,11 @@ const ChatInterface: React.FC = () => {
     // keep transfer selector in sync with active chat
     setTransferTeamId(activeChat?.assignedTeam || null);
   }, [activeChat?.id]);
+
+  // Load pipeline stages once on mount
+  useEffect(() => {
+    api.fetchPipelineStages().then(setPipelineStages).catch(() => {});
+  }, []);
 
   // Load linked deal when active chat changes
   useEffect(() => {
@@ -634,6 +673,96 @@ const ChatInterface: React.FC = () => {
   useEffect(() => {
     scrollToBottom();
   }, [activeChat?.messages]);
+
+  // Listen for new messages in real-time and reload when active conversation gets a message
+  useEffect(() => {
+    if (!selectedChatId) return;
+    
+    const handleNewMessage = async (data: any) => {
+      console.log('[ChatInterface] message:new event received:', data);
+      const { conversation_id } = data;
+      
+      // If the message is for the active conversation, reload messages
+      if (conversation_id === selectedChatId || conversation_id === activeChat?.id) {
+        console.log('[ChatInterface] Message is for active conversation, refetching messages...');
+        try {
+          // Small delay to ensure message is committed to DB
+          await new Promise(r => setTimeout(r, 300));
+          refetch();
+        } catch (err) {
+          console.error('[ChatInterface] Failed to refetch:', err);
+        }
+      }
+    };
+
+    const socket = connectSocket();
+    if (socket) {
+      socket.on('message:new', handleNewMessage);
+      return () => {
+        socket.off('message:new', handleNewMessage);
+      };
+    }
+  }, [selectedChatId, activeChat?.id, refetch]);
+
+  // Listen for incoming calls and show a rich toast notification
+  useEffect(() => {
+    const socket = connectSocket();
+    if (!socket) return;
+
+    const handleCall = (data: {
+      phone: string;
+      phone_formated: string;
+      contact_name: string | null;
+      contact_avatar: string | null;
+      isVideo: boolean;
+      isGroup: boolean;
+    }) => {
+      const name = data.contact_name || data.phone_formated || data.phone;
+      const avatar = data.contact_avatar
+        || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0ea5e9&color=fff`;
+      const callType = data.isVideo ? 'Vídeo chamada' : 'Chamada de voz';
+      const phone = data.phone_formated || data.phone;
+
+      toast.custom(
+        (toastId) => (
+          <div className="flex items-center gap-3 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl shadow-xl px-4 py-3 min-w-[300px] max-w-sm">
+            {/* Avatar */}
+            <div className="relative flex-shrink-0">
+              <img
+                src={avatar}
+                alt={name}
+                className="w-12 h-12 rounded-full object-cover border-2 border-emerald-400"
+                onError={(e) => { (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0ea5e9&color=fff`; }}
+              />
+              <span className="absolute -bottom-0.5 -right-0.5 bg-emerald-500 rounded-full p-0.5">
+                {data.isVideo
+                  ? <VideoIcon className="w-2.5 h-2.5 text-white" />
+                  : <PhoneIncoming className="w-2.5 h-2.5 text-white" />}
+              </span>
+            </div>
+            {/* Info */}
+            <div className="flex-1 min-w-0">
+              <p className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 uppercase tracking-wide">{callType}</p>
+              <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{name}</p>
+              <p className="text-xs text-gray-500 dark:text-slate-400">{phone}</p>
+            </div>
+            {/* Dismiss */}
+            <button
+              onClick={() => toast.dismiss(toastId)}
+              className="flex-shrink-0 p-1.5 rounded-full hover:bg-red-50 dark:hover:bg-red-900/30 text-gray-400 hover:text-red-500 transition-colors"
+              title="Fechar"
+            >
+              <PhoneOff className="w-4 h-4" />
+            </button>
+          </div>
+        ),
+        { duration: 30_000, position: 'top-right' },
+      );
+    };
+
+    socket.on('instance:call', handleCall);
+    return () => { socket.off('instance:call', handleCall); };
+  }, []);
 
   // Fetch tickets when previous conversations sheet opens
   useEffect(() => {
@@ -975,6 +1104,72 @@ const ChatInterface: React.FC = () => {
       } catch (err) {
         console.error('Failed reading pasted image', err);
       }
+    }
+  };
+
+  // ── Audio recording handlers ──
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
+      recordedChunksRef.current = [];
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) recordedChunksRef.current.push(e.data);
+      };
+      mediaRecorder.onstop = () => {
+        stream.getTracks().forEach(t => t.stop());
+        const blob = new Blob(recordedChunksRef.current, { type: 'audio/webm' });
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const dataUrl = reader.result as string;
+          setAttachments(prev => [
+            { id: (crypto as any).randomUUID?.() || String(Date.now()), dataUrl, name: `audio_${Date.now()}.webm`, type: 'audio/webm' },
+            ...prev,
+          ]);
+        };
+        reader.readAsDataURL(blob);
+      };
+      mediaRecorderRef.current = mediaRecorder;
+      mediaRecorder.start();
+      setIsRecordingAudio(true);
+      setRecordingTime(0);
+      recordingTimerRef.current = setInterval(() => setRecordingTime(t => t + 1), 1000);
+    } catch (err) {
+      console.error('Microphone access denied', err);
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+    }
+    mediaRecorderRef.current = null;
+    setIsRecordingAudio(false);
+    if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
+    recordingTimerRef.current = null;
+    setRecordingTime(0);
+  };
+
+  const cancelRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.ondataavailable = null;
+      mediaRecorderRef.current.onstop = null;
+      mediaRecorderRef.current.stream?.getTracks().forEach(t => t.stop());
+      try { mediaRecorderRef.current.stop(); } catch {}
+    }
+    mediaRecorderRef.current = null;
+    recordedChunksRef.current = [];
+    setIsRecordingAudio(false);
+    if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
+    recordingTimerRef.current = null;
+    setRecordingTime(0);
+  };
+
+  const handleMicClick = () => {
+    if (isRecordingAudio) {
+      stopRecording();
+    } else {
+      startRecording();
     }
   };
 
@@ -1680,8 +1875,8 @@ const ChatInterface: React.FC = () => {
                     {/* Presence indicator dot */}
                     <div className="relative inline-block">
                       <span 
-                        className={`w-2 h-2 rounded-full ${getPresenceDotColor((chat as any).contactPresence)}`}
-                        title={getPresenceLabel((chat as any).contactPresence)}
+                        className={`w-2 h-2 rounded-full ${getPresenceDotColor((chat as any).contactPresence, chat.contact_id)}`}
+                        title={getPresenceLabel((chat as any).contactPresence, chat.contact_id)}
                       ></span>
                     </div>
                     {renderStatusBadge(chat.status)}
@@ -1902,7 +2097,7 @@ const ChatInterface: React.FC = () => {
                 >
                 <div className="relative">
                   <img src={getAvatarUrl(activeChat)} alt={getDisplayName(activeChat)} className="w-9 h-9 rounded-full ring-2 ring-gray-200 dark:ring-slate-800" />
-                  <span className={`absolute bottom-0 right-0 w-2.5 h-2.5 border-2 border-gray-200 dark:border-slate-900 rounded-full ${getPresenceDotColor((activeChat as any).contactPresence)}`} title={getPresenceLabel((activeChat as any).contactPresence)}></span>
+                  <span className={`absolute bottom-0 right-0 w-2.5 h-2.5 border-2 border-gray-200 dark:border-slate-900 rounded-full ${getPresenceDotColor((activeChat as any).contactPresence, activeChat.contact_id)}`} title={getPresenceLabel((activeChat as any).contactPresence, activeChat.contact_id)}></span>
                 </div>
                 <div className="ml-3">
                   <h2 className="text-sm font-bold text-gray-800 dark:text-slate-100 flex items-center gap-2">
@@ -1910,7 +2105,7 @@ const ChatInterface: React.FC = () => {
                     {renderStatusBadge(activeChat.status)}
                   </h2>
                   <p className="text-xs text-cyan-500 font-medium">
-                    {getPresenceStatusText((activeChat as any).contactPresence) || <span>{activeChat.contactPhone}</span>}
+                    {getPresenceStatusText((activeChat as any).contactPresence, activeChat.contact_id) || <span>{activeChat.contactPhone}</span>}
                   </p>
                 </div>
               </div>
@@ -2327,8 +2522,8 @@ const ChatInterface: React.FC = () => {
                             {/* Presence indicator for incoming messages */}
                             {!isOutgoing && (activeChat as any).contactPresence && (
                               <span 
-                                className={`inline-block w-1.5 h-1.5 rounded-full ${getPresenceDotColor((activeChat as any).contactPresence)}`}
-                                title={getPresenceLabel((activeChat as any).contactPresence)}
+                                className={`inline-block w-1.5 h-1.5 rounded-full ${getPresenceDotColor((activeChat as any).contactPresence, activeChat.contact_id)}`}
+                                title={getPresenceLabel((activeChat as any).contactPresence, activeChat.contact_id)}
                               ></span>
                             )}
                             <span className="text-[10px] text-gray-500 dark:text-slate-500 font-medium">{msg.timestamp}</span>
@@ -2660,9 +2855,9 @@ const ChatInterface: React.FC = () => {
                     value={inputText}
                     ref={inputRef}
                     onPaste={handlePaste}
-                    onChange={(e) => { setInputText(e.target.value); setIsTyping(e.target.value.trim().length > 0); setTimeout(adjustInputLayout, 0); }}
-                    onFocus={() => setIsTyping(true)}
-                    onBlur={() => { if (!inputText.trim()) setIsTyping(false); }}
+                    onChange={(e) => { setInputText(e.target.value); setInputActive(e.target.value.trim().length > 0); setTimeout(adjustInputLayout, 0); }}
+                    onFocus={() => setInputActive(true)}
+                    onBlur={() => { if (!inputText.trim()) setInputActive(false); }}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
@@ -2671,7 +2866,7 @@ const ChatInterface: React.FC = () => {
                     }}
                     placeholder={activeChat.status === 'livechat' ? `${sdrName} está respondendo automaticamente...` : 'Digite sua mensagem...'}
                     style={dynamicPaddingRight != null ? { paddingRight: `${dynamicPaddingRight}px` } : undefined}
-                    className={`w-full bg-transparent border-none p-3.5 max-h-32 min-h-[48px] text-sm ${isTyping ? 'text-white' : 'text-gray-700 dark:text-slate-200'} focus:ring-0 resize-none outline-none placeholder:text-gray-400 dark:placeholder:text-slate-600`}
+                    className={`w-full bg-transparent border-none p-3.5 max-h-32 min-h-[48px] text-sm ${inputActive ? 'text-white' : 'text-gray-700 dark:text-slate-200'} focus:ring-0 resize-none outline-none placeholder:text-gray-400 dark:placeholder:text-slate-600`}
                     rows={1}
                   />
 
@@ -2745,12 +2940,20 @@ const ChatInterface: React.FC = () => {
                               </div>
                             </PopoverContent>
                           </Popover>
-                          <button type="button" title="Documento" className={iconBtnClass}>
+                          <button type="button" title="Documento" onClick={() => docInputRef.current?.click()} className={iconBtnClass}>
                             <FileText className="w-4 h-4" />
                           </button>
-                          <button type="button" title="Microfone" className={iconBtnClass}>
-                            <Mic className="w-4 h-4" />
+                          <button type="button" title={isRecordingAudio ? 'Parar gravação' : 'Microfone'} onClick={handleMicClick} className={`${iconBtnClass} ${isRecordingAudio ? '!bg-red-500/70 animate-pulse' : ''}`}>
+                            {isRecordingAudio ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
                           </button>
+                          {isRecordingAudio && (
+                            <>
+                              <span className="text-xs text-red-400 ml-1 tabular-nums">{Math.floor(recordingTime / 60).toString().padStart(2,'0')}:{(recordingTime % 60).toString().padStart(2,'0')}</span>
+                              <button type="button" title="Cancelar gravação" onClick={cancelRecording} className={`${iconBtnClass} !bg-slate-600/50`}>
+                                <X className="w-4 h-4" />
+                              </button>
+                            </>
+                          )}
                           
                         </div>
                       ) : (
@@ -2808,12 +3011,20 @@ const ChatInterface: React.FC = () => {
                               </div>
                             </PopoverContent>
                           </Popover>
-                          <button type="button" title="Documento" className={iconBtnClass}>
+                          <button type="button" title="Documento" onClick={() => docInputRef.current?.click()} className={iconBtnClass}>
                             <FileText className="w-4 h-4" />
                           </button>
-                          <button type="button" title="Microfone" className={iconBtnClass}>
-                            <Mic className="w-4 h-4" />
+                          <button type="button" title={isRecordingAudio ? 'Parar gravação' : 'Microfone'} onClick={handleMicClick} className={`${iconBtnClass} ${isRecordingAudio ? '!bg-red-500/70 animate-pulse' : ''}`}>
+                            {isRecordingAudio ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
                           </button>
+                          {isRecordingAudio && (
+                            <>
+                              <span className="text-xs text-red-400 ml-1 tabular-nums">{Math.floor(recordingTime / 60).toString().padStart(2,'0')}:{(recordingTime % 60).toString().padStart(2,'0')}</span>
+                              <button type="button" title="Cancelar gravação" onClick={cancelRecording} className={`${iconBtnClass} !bg-slate-600/50`}>
+                                <X className="w-4 h-4" />
+                              </button>
+                            </>
+                          )}
                           
                         </div>
                       )
@@ -3005,8 +3216,8 @@ const ChatInterface: React.FC = () => {
                   <div className="w-24 h-24 rounded-full p-1 bg-gradient-to-tr from-cyan-500 to-teal-600 shadow-xl mb-4 relative">
                     <img src={activeChat.contactAvatar} alt={activeChat.contactName} className="w-full h-full rounded-full object-cover border-2 border-gray-200 dark:border-slate-900" />
                     <span 
-                      className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white dark:border-slate-900 ${getPresenceDotColor((activeChat as any).contactPresence)}`}
-                      title={getPresenceLabel((activeChat as any).contactPresence)}
+                      className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white dark:border-slate-900 ${getPresenceDotColor((activeChat as any).contactPresence, activeChat.contact_id)}`}
+                      title={getPresenceLabel((activeChat as any).contactPresence, activeChat.contact_id)}
                     ></span>
                   </div>
                   <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">{activeChat.contactName}</h3>
@@ -3182,12 +3393,30 @@ const ChatInterface: React.FC = () => {
                             ))}
                           </select>
                         ) : (
-                          <button
-                            onClick={() => setEditingDealStatus(true)}
-                            className="px-2.5 py-1 rounded-full text-xs font-medium bg-purple-500/20 text-purple-300 border border-purple-500/30 hover:bg-purple-500/30 transition-colors"
-                          >
-                            {pipelineStages.find((s: any) => s.id === linkedDeal.stageId)?.title || linkedDeal.stage || 'Sem estágio'}
-                          </button>
+                          (() => {
+                            const stage = pipelineStages.find((s: any) => s.id === linkedDeal.stageId);
+                            const colorMap: Record<string, string> = {
+                              'border-slate-500':   'bg-slate-500/20 text-slate-300 border-slate-500/30 hover:bg-slate-500/30',
+                              'border-primary':     'bg-cyan-500/20 text-cyan-300 border-cyan-500/30 hover:bg-cyan-500/30',
+                              'border-violet-500':  'bg-violet-500/20 text-violet-300 border-violet-500/30 hover:bg-violet-500/30',
+                              'border-orange-500':  'bg-orange-500/20 text-orange-300 border-orange-500/30 hover:bg-orange-500/30',
+                              'border-emerald-500': 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/30',
+                              'border-red-500':     'bg-red-500/20 text-red-300 border-red-500/30 hover:bg-red-500/30',
+                              'border-blue-500':    'bg-blue-500/20 text-blue-300 border-blue-500/30 hover:bg-blue-500/30',
+                              'border-yellow-500':  'bg-yellow-500/20 text-yellow-200 border-yellow-500/30 hover:bg-yellow-500/30',
+                              'border-pink-500':    'bg-pink-500/20 text-pink-300 border-pink-500/30 hover:bg-pink-500/30',
+                              'border-indigo-500':  'bg-indigo-500/20 text-indigo-300 border-indigo-500/30 hover:bg-indigo-500/30',
+                            };
+                            const cls = colorMap[stage?.color ?? ''] ?? 'bg-purple-500/20 text-purple-300 border-purple-500/30 hover:bg-purple-500/30';
+                            return (
+                              <button
+                                onClick={() => setEditingDealStatus(true)}
+                                className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${cls}`}
+                              >
+                                {stage?.title || linkedDeal.stage || 'Sem estágio'}
+                              </button>
+                            );
+                          })()
                         )}
                       </div>
                       <div className="flex items-center justify-between">

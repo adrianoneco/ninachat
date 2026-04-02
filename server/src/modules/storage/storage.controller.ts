@@ -1,5 +1,17 @@
-import { Controller, Get, Post, Param, Body, HttpException, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Param,
+  Body,
+  HttpException,
+  HttpStatus,
+  Res,
+  StreamableFile,
+} from '@nestjs/common';
 import { StorageService } from './storage.service';
+import type { Response } from 'express';
+import * as fs from 'fs-extra';
 
 @Controller('storage')
 export class StorageController {
@@ -7,29 +19,66 @@ export class StorageController {
 
   /**
    * Upload a file via data-URL (base64). Used by the existing frontend upload flow.
-   * Body: { filename: string, data: string (data URL), messageId?, conversationId? }
+   * Body: { filename: string, data: string (data URL), messageId?, conversationId?, instanceId?, mediaType? }
    */
   @Post('upload')
   async upload(
-    @Body() body: { filename?: string; data?: string; messageId?: string; conversationId?: string },
+    @Body()
+    body: {
+      filename?: string;
+      data?: string;
+      messageId?: string;
+      conversationId?: string;
+      instanceId?: string;
+      mediaType?: string;
+    },
   ) {
-    const { filename, data, messageId, conversationId } = body || ({} as any);
+    const { filename, data, messageId, conversationId, instanceId, mediaType } = body || ({} as any);
     if (!filename || !data) {
-      throw new HttpException('filename and data are required', HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        'filename and data are required',
+        HttpStatus.BAD_REQUEST,
+      );
     }
     const safeName = filename.replace(/[^a-zA-Z0-9._-]/g, '_');
-    const record = await this.storage.uploadFromDataUrl(data, safeName, messageId, conversationId);
+    const record = await this.storage.uploadFromDataUrl(
+      data,
+      safeName,
+      messageId,
+      conversationId,
+      instanceId,
+      mediaType,
+    );
     // Return a URL path compatible with the frontend — it will resolve via /api/storage/:id/url
-    return { url: `/api/storage/${record.id}/url`, fileId: record.id, s3Key: record.s3_key };
+    return {
+      url: `/api/storage/${record.id}/url`,
+      fileId: record.id,
+      localPath: record.s3_key,
+    };
   }
 
   /**
-   * Get a presigned URL (8h) for a stored file.
+   * Serve the local file directly.
    */
   @Get(':id/url')
-  async getUrl(@Param('id') id: string) {
-    const url = await this.storage.getUrl(id);
-    return { url };
+  async serveFile(@Param('id') id: string, @Res({ passthrough: true }) res: Response) {
+    const record = await this.storage.findById(id);
+    if (!record) {
+      throw new HttpException('File not found', HttpStatus.NOT_FOUND);
+    }
+
+    const localPath = await this.storage.getLocalPath(id);
+    if (!await fs.pathExists(localPath)) {
+      throw new HttpException('File not found on disk', HttpStatus.NOT_FOUND);
+    }
+
+    // Set content type
+    res.setHeader('Content-Type', record.mime_type);
+    res.setHeader('Content-Length', record.size);
+
+    // Stream the file
+    const fileStream = fs.createReadStream(localPath);
+    fileStream.pipe(res);
   }
 
   /**
@@ -38,7 +87,8 @@ export class StorageController {
   @Get(':id')
   async getFile(@Param('id') id: string) {
     const record = await this.storage.findById(id);
-    if (!record) throw new HttpException('File not found', HttpStatus.NOT_FOUND);
+    if (!record)
+      throw new HttpException('File not found', HttpStatus.NOT_FOUND);
     return record;
   }
 }

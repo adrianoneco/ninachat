@@ -1,7 +1,8 @@
 export interface ContactItem {
-  id: string;
+  whatsapp_id: string;
   name: string | null;
   phone_number: string;
+  phone_formated: string;
   isBlocked: boolean;
   isBusiness: boolean;
   type: 'contact';

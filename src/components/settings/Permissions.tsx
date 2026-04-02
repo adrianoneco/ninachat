@@ -17,13 +17,19 @@ const PermissionsScreen: React.FC = () => {
 
   useEffect(() => {
     (async () => {
-      const r = await fetch(`${API_BASE}/roles`);
-      const rolesJson = await r.json();
-      setRoles(rolesJson || []);
-      const p = await fetch(`${API_BASE}/roles/permissions`);
-      const permsJson = await p.json();
-      setPerms(permsJson || []);
-      setSelectedRole((rolesJson || [])[0] || null);
+      try {
+        const r = await fetch(`${API_BASE}/roles`);
+        const rolesJson = r.ok ? await r.json() : [];
+        const rolesData = Array.isArray(rolesJson?.data ?? rolesJson) ? (rolesJson?.data ?? rolesJson) : [];
+        setRoles(rolesData);
+        setSelectedRole(rolesData[0] || null);
+      } catch { setRoles([]); }
+      try {
+        const p = await fetch(`${API_BASE}/roles/permissions`);
+        const permsJson = p.ok ? await p.json() : [];
+        const permsData = Array.isArray(permsJson?.data ?? permsJson) ? (permsJson?.data ?? permsJson) : [];
+        setPerms(permsData);
+      } catch { setPerms([]); }
     })();
   }, []);
 

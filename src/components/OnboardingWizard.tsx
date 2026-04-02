@@ -13,6 +13,7 @@ import { StepVerification } from './onboarding/StepVerification';
 import { StepFinish } from './onboarding/StepFinish';
 import { toast } from 'sonner';
 import PromptGeneratorSheet from './settings/PromptGeneratorSheet';
+import { apiFetch } from '@/services/api';
 import { DEFAULT_LIVECHAT_PROMPT } from '@/prompts/default-livechat-prompt';
 
 interface OnboardingWizardProps {
@@ -108,6 +109,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onCl
   const [isInitializing, setIsInitializing] = useState(false);
   const [showPromptGenerator, setShowPromptGenerator] = useState(false);
   const [verificationPassed, setVerificationPassed] = useState(false);
+  const [hasConnectedWpp, setHasConnectedWpp] = useState(false);
 
   // Form state - Identity
   const [companyName, setCompanyName] = useState('');
@@ -147,9 +149,8 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onCl
       (async () => {
       try {
         // Try backend first
-        const API_BASE = import.meta.env.VITE_API_BASE || '/api';
         try {
-          const res = await fetch(`${API_BASE}/livechat_settings`);
+          const res = await apiFetch('livechat_settings');
           if (res.ok) {
             const json = await res.json();
             const data = json?.data ?? json;
@@ -184,6 +185,15 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onCl
         setIsInitializing(false);
       }
       setActiveStep(0);
+      // Check connected WPP instances
+      try {
+        const ir = await apiFetch('instances');
+        if (ir.ok) {
+          const ij = await ir.json();
+          const ilist: any[] = ij?.data ?? ij ?? [];
+          setHasConnectedWpp(Array.isArray(ilist) && ilist.some((i: any) => i.status === 'connected' || i.status === 'open'));
+        }
+      } catch {}
       })();
     }
   }, [isOpen]);
@@ -196,20 +206,22 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onCl
         if (!sdrName?.trim()) issues.push('Nome do SDR está vazio');
         break;
       case 1:
-        if (!accessToken?.trim()) issues.push('Access Token está vazio');
-        if (!phoneNumberId?.trim()) issues.push('Phone Number ID está vazio');
+        // Skip Cloud API field validation if WPP instance is already connected
+        if (!hasConnectedWpp) {
+          if (!accessToken?.trim()) issues.push('Access Token está vazio');
+          if (!phoneNumberId?.trim()) issues.push('Phone Number ID está vazio');
+        }
         break;
     }
     return { valid: issues.length === 0, issues };
-  }, [companyName, sdrName, accessToken, phoneNumberId]);
+  }, [companyName, sdrName, accessToken, phoneNumberId, hasConnectedWpp]);
 
   const saveSettings = useCallback(async () => {
     setIsSaving(true);
     try {
-      const API_BASE = import.meta.env.VITE_API_BASE || '/api';
       let current: any = {};
       try {
-        const res = await fetch(`${API_BASE}/livechat_settings`);
+        const res = await apiFetch('livechat_settings');
         if (res.ok) { const json = await res.json(); current = json?.data ?? json ?? {}; }
       } catch {}
       if (!current || !Object.keys(current).length) current = {};
@@ -236,11 +248,10 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onCl
         business_days: businessDays?.length > 0 ? businessDays : [1, 2, 3, 4, 5],
         is_active: true,
         auto_response_enabled: true,
-        updated_at: new Date().toISOString(),
       };
       // Persist to backend
       try {
-        const res = await fetch(`${API_BASE}/livechat_settings`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(settings) });
+        const res = await apiFetch('livechat_settings', { method: 'POST', body: JSON.stringify(settings), headers: { 'Content-Type': 'application/json' } });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
       } catch (err) {
         console.error('[OnboardingWizard] Failed to save to backend', err);
@@ -357,7 +368,12 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onCl
                 <Settings2 className="w-5 h-5 text-cyan-400" />
                 <div>
                   <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Configuração Inicial</h2>
-                  <p className="text-xs text-gray-500 dark:text-slate-400">Passo {activeStep + 1} de {STEP_CONFIG.length} — {currentStepConfig.title}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-xs text-gray-500 dark:text-slate-400">Passo {activeStep + 1} de {STEP_CONFIG.length} — {currentStepConfig.title}</p>
+                    {currentStepConfig.isOptional && (
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-500/15 border border-amber-500/30 text-amber-400">Opcional</span>
+                    )}
+                  </div>
                 </div>
               </div>
               <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-200 dark:bg-slate-800 text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:text-white transition-colors">

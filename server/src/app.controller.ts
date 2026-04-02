@@ -17,6 +17,8 @@ export class AppController {
   events(): Observable<any> {
     // emit a ping every 25 seconds to keep the connection alive
     // (most proxies/browsers timeout idle SSE after 30s)
-    return interval(25000).pipe(map(() => ({ data: JSON.stringify({ type: 'ping', ts: Date.now() }) })));
+    return interval(25000).pipe(
+      map(() => ({ data: JSON.stringify({ type: 'ping', ts: Date.now() }) })),
+    );
   }
 }

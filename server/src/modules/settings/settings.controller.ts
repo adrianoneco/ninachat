@@ -1,4 +1,5 @@
-import { Controller, Get, Post, Delete, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Body, Param, Res } from '@nestjs/common';
+import express from 'express';
 import { SettingsService } from './settings.service';
 
 @Controller()
@@ -23,8 +24,11 @@ export class SettingsController {
 
   // ─── LiveChat Settings ────────────────────────────────
   @Get('livechat_settings')
-  getLiveChatSettings() {
-    return this.svc.getLiveChatSettings();
+  async getLiveChatSettings(@Res() res: express.Response) {
+    const data = await this.svc.getLiveChatSettings();
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    return res.json(data);
   }
 
   @Post('livechat_settings')

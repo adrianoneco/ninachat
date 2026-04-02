@@ -1,4 +1,8 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../../entities/user.entity';
@@ -12,7 +16,8 @@ import * as nodemailer from 'nodemailer';
 export class AuthService {
   constructor(
     @InjectRepository(User) private usersRepo: Repository<User>,
-    @InjectRepository(PasswordReset) private resetRepo: Repository<PasswordReset>,
+    @InjectRepository(PasswordReset)
+    private resetRepo: Repository<PasswordReset>,
     @InjectRepository(Role) private roleRepo: Repository<Role>,
   ) {}
 
@@ -20,13 +25,19 @@ export class AuthService {
     const existing = await this.usersRepo.findOne({ where: { email } as any });
     if (existing) throw new BadRequestException('Email already registered');
     const hash = await argon2.hash(password, { type: argon2.argon2id });
-    const user = this.usersRepo.create({ email, password_hash: hash, name } as any);
+    const user = this.usersRepo.create({
+      email,
+      password_hash: hash,
+      name,
+    } as any);
 
     // If this is the first user, assign Administrador role (if exists)
     const total = await this.usersRepo.count();
     if (total === 0) {
       try {
-        const adminRole = await this.roleRepo.findOne({ where: { name: 'Administrador' } as any });
+        const adminRole = await this.roleRepo.findOne({
+          where: { name: 'Administrador' } as any,
+        });
         if (adminRole) {
           (user as any).roles = [adminRole];
         }
@@ -50,7 +61,11 @@ export class AuthService {
     if (!user) throw new NotFoundException('User not found');
     const token = randomBytes(24).toString('hex');
     const expires = new Date(Date.now() + 1000 * 60 * 60); // 1 hour
-    const entry = this.resetRepo.create({ user_id: user.id, token, expires_at: expires } as any);
+    const entry = this.resetRepo.create({
+      user_id: user.id,
+      token,
+      expires_at: expires,
+    } as any);
     await this.resetRepo.save(entry);
     // send email (if SMTP configured)
     const smtpHost = process.env.SMTP_HOST;
@@ -59,7 +74,9 @@ export class AuthService {
         host: process.env.SMTP_HOST,
         port: Number(process.env.SMTP_PORT || 587),
         secure: process.env.SMTP_SECURE === 'true',
-        auth: process.env.SMTP_USER ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS } : undefined,
+        auth: process.env.SMTP_USER
+          ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
+          : undefined,
       });
       const resetUrl = `${process.env.APP_URL || 'http://localhost:4001'}/auth/reset?token=${token}`;
       await transporter.sendMail({
@@ -79,8 +96,11 @@ export class AuthService {
   async resetPassword(token: string, password: string) {
     const entry = await this.resetRepo.findOne({ where: { token } as any });
     if (!entry) throw new NotFoundException('Token not found');
-    if (entry.expires_at && entry.expires_at < new Date()) throw new BadRequestException('Token expired');
-    const user = await this.usersRepo.findOne({ where: { id: entry.user_id } as any });
+    if (entry.expires_at && entry.expires_at < new Date())
+      throw new BadRequestException('Token expired');
+    const user = await this.usersRepo.findOne({
+      where: { id: entry.user_id } as any,
+    });
     if (!user) throw new NotFoundException('User not found');
     const hash = await argon2.hash(password, { type: argon2.argon2id });
     await this.usersRepo.update(user.id, { password_hash: hash } as any);

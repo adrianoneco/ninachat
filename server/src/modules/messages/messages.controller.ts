@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Param, Put, Delete, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Put,
+  Delete,
+  Query,
+} from '@nestjs/common';
 import { MessagesService } from './messages.service';
 import { CreateMessageDto, UpdateMessageDto } from './dto';
 
@@ -7,8 +16,15 @@ export class MessagesController {
   constructor(private readonly svc: MessagesService) {}
 
   @Get()
-  async list(@Query('conversation_id') conversation_id?: string, @Query('limit') limit?: string) {
-    if (conversation_id) return this.svc.findByConversation(conversation_id, limit ? parseInt(limit, 10) : 100);
+  async list(
+    @Query('conversation_id') conversation_id?: string,
+    @Query('limit') limit?: string,
+  ) {
+    if (conversation_id)
+      return this.svc.findByConversation(
+        conversation_id,
+        limit ? parseInt(limit, 10) : 100,
+      );
     return this.svc.findAll();
   }
 
@@ -18,7 +34,9 @@ export class MessagesController {
   }
 
   @Post('forward')
-  async forward(@Body() body: { message_id: string; target_conversation_id: string }) {
+  async forward(
+    @Body() body: { message_id: string; target_conversation_id: string },
+  ) {
     return this.svc.forward(body.message_id, body.target_conversation_id);
   }
 

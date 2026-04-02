@@ -9,7 +9,8 @@ export class WppController {
   @Post('send')
   async send(@Body() body: any) {
     const { session, to, type, content, filename, caption, payload } = body;
-    if (!session || !to || !type) return { status: 'error', message: 'session, to and type are required' };
+    if (!session || !to || !type)
+      return { status: 'error', message: 'session, to and type are required' };
     try {
       switch (type) {
         case 'text':

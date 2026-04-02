@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import ReactDOM from 'react-dom';
 import { Plus, Trash2, Edit, Save, X } from 'lucide-react';
 import { Button } from '../Button';
 import { api } from '@/services/api';
@@ -145,25 +146,42 @@ const MacrosSettings: React.FC = () => {
         </div>
       </div>
 
-      {/* Editor */}
-      {editing && (
-        <div className="card-surface p-4 rounded">
-          <div className="flex items-center justify-between mb-3">
-            <strong className="text-sm">{editing.id ? 'Editar Macro' : 'Nova Macro'}</strong>
-            <div className="flex gap-2">
-              <Button variant="ghost" onClick={handleCancel}><X className="w-4 h-4"/></Button>
+      {/* Macro editor — portal drawer */}
+      {!!editing && ReactDOM.createPortal(
+        <>
+          <div className="fixed inset-0 z-[100] bg-black/60" onClick={handleCancel} />
+          <div className="fixed inset-y-0 right-0 z-[101] w-full sm:w-[440px] bg-white dark:bg-slate-900 shadow-2xl flex flex-col overflow-y-auto">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-slate-800 shrink-0">
+              <h2 className="text-base font-semibold text-gray-900 dark:text-white">{editing?.id ? 'Editar Macro' : 'Nova Macro'}</h2>
+              <button onClick={handleCancel} className="p-1 rounded hover:bg-gray-200/60 dark:hover:bg-slate-800/60"><X className="w-4 h-4 text-gray-500 dark:text-slate-400" /></button>
+            </div>
+            <div className="flex-1 p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Nome</label>
+                <input autoFocus className="w-full bg-gray-100 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500" placeholder="Nome" value={editing.name} onChange={e => setEditing({ ...editing, name: e.target.value })} />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Atalho</label>
+                  <input className="w-full bg-gray-100 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500" placeholder="ex: /meu" value={editing.shortcut} onChange={e => setEditing({ ...editing, shortcut: e.target.value })} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Categoria</label>
+                  <input className="w-full bg-gray-100 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500" placeholder="Categoria (opcional)" value={editing.category || ''} onChange={e => setEditing({ ...editing, category: e.target.value })} />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Conteúdo</label>
+                <textarea className="w-full bg-gray-100 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500" rows={5} placeholder="Conteúdo da macro" value={editing.content} onChange={e => setEditing({ ...editing, content: e.target.value })} />
+              </div>
+            </div>
+            <div className="shrink-0 px-6 py-4 border-t border-gray-200 dark:border-slate-800 flex justify-end gap-3">
+              <button type="button" onClick={handleCancel} className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-slate-800 text-gray-700 dark:text-slate-300 text-sm hover:bg-gray-300 dark:hover:bg-slate-700 transition-colors">Cancelar</button>
+              <button type="button" onClick={handleSave} className="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm hover:bg-emerald-500 transition-colors flex items-center gap-2"><Save className="w-4 h-4" /> Salvar</button>
             </div>
           </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
-            <input className="col-span-2 theme-input px-2 py-2 text-sm" placeholder="Nome" value={editing.name} onChange={e => setEditing({ ...editing, name: e.target.value })} />
-            <input className="theme-input px-2 py-2 text-sm" placeholder="Atalho (ex: /meu)" value={editing.shortcut} onChange={e => setEditing({ ...editing, shortcut: e.target.value })} />
-          </div>
-          <textarea className="w-full theme-input px-2 py-2 text-sm mb-3" rows={4} placeholder="Conteúdo da macro" value={editing.content} onChange={e => setEditing({ ...editing, content: e.target.value })} />
-          <div className="flex items-center justify-end gap-2">
-            <Button variant="ghost" onClick={handleCancel}><X className="w-4 h-4 mr-2"/>Cancelar</Button>
-            <Button variant="primary" onClick={handleSave}><Save className="w-4 h-4 mr-2"/>Salvar</Button>
-          </div>
-        </div>
+        </>,
+        document.body
       )}
     </div>
   );

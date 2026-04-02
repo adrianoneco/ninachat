@@ -2,7 +2,7 @@ import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } f
 import { toast } from 'sonner';
 import { Loader2, Cpu, Eye, EyeOff, Key, Globe } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
-import { api, generateId } from '@/services/api';
+import { api, generateId, apiFetch } from '@/services/api';
 
 const AI_PROVIDERS = [
   { id: 'openai',    name: 'OpenAI',         badge: 'GPT',     models: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-3.5-turbo'],                              defaultModel: 'gpt-4o-mini',              keyPlaceholder: 'sk-...' },
@@ -81,10 +81,9 @@ const AiSettings = forwardRef<AiSettingsRef, { onDirtyChange?: (dirty: boolean) 
   async function loadSettings() {
     setLoading(true);
     try {
-      const API_BASE = import.meta.env.VITE_API_BASE || '/api';
       try {
         // Try backend
-        const res = await fetch(`${API_BASE}/livechat_settings`);
+        const res = await apiFetch('livechat_settings');
         if (res.ok) {
           const json = await res.json();
           const data = json?.data ?? json;
@@ -96,7 +95,7 @@ const AiSettings = forwardRef<AiSettingsRef, { onDirtyChange?: (dirty: boolean) 
           setLoading(false);
           return;
         }
-      } catch {}
+      } catch (_e) {}
       const newSettings = { ...DEFAULTS };
       committedRef.current = JSON.stringify(newSettings);
       setIsDirty(false);
@@ -114,12 +113,11 @@ const AiSettings = forwardRef<AiSettingsRef, { onDirtyChange?: (dirty: boolean) 
   async function handleSave() {
     setSaving(true);
     try {
-      const API_BASE = import.meta.env.VITE_API_BASE || '/api';
       const current = await (async () => {
         try {
-          const res = await fetch(`${API_BASE}/livechat_settings`);
+          const res = await apiFetch('livechat_settings');
           if (res.ok) { const json = await res.json(); return json?.data ?? json ?? {}; }
-        } catch {}
+        } catch (_e) {}
         return {};
       })();
       const merged = {
@@ -155,11 +153,10 @@ const AiSettings = forwardRef<AiSettingsRef, { onDirtyChange?: (dirty: boolean) 
         ai_behavior_api_key: settings.ai_behavior_api_key,
         ai_behavior_model: settings.ai_behavior_model,
         ai_behavior_base_url: settings.ai_behavior_base_url,
-        updated_at: new Date().toISOString(),
       };
       // Try backend first
       try {
-        const res = await fetch(`${API_BASE}/livechat_settings`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(merged) });
+        const res = await apiFetch('livechat_settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(merged) });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
       } catch (err) {
         console.error('[AiSettings] backend save failed', err);

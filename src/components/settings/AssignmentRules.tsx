@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, Trash2, Edit, Save, ToggleRight } from 'lucide-react';
+import ReactDOM from 'react-dom';
+import { Plus, Trash2, Edit, Save, ToggleRight, X } from 'lucide-react';
 import { Button } from '../Button';
 import { api } from '@/services/api';
 
@@ -82,30 +83,41 @@ const AssignmentRules: React.FC = () => {
         ))}
       </div>
 
-      {editing && (
-        <div className="mt-6 card-surface p-4 rounded">
-          <div className="flex items-center justify-between mb-3">
-            <strong>{editing.id ? 'Editar Regra' : 'Nova Regra'}</strong>
-            <div className="flex gap-2">
-              <Button variant="ghost" onClick={() => setEditing(null)}><Save className="w-4 h-4 mr-2"/>Fechar</Button>
+      {!!editing && ReactDOM.createPortal(
+        <>
+          <div className="fixed inset-0 z-[100] bg-black/60" onClick={() => setEditing(null)} />
+          <div className="fixed inset-y-0 right-0 z-[101] w-full sm:w-[420px] bg-white dark:bg-slate-900 shadow-2xl flex flex-col overflow-y-auto">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-slate-800 shrink-0">
+              <h2 className="text-base font-semibold text-gray-900 dark:text-white">{editing?.id ? 'Editar Regra' : 'Nova Regra'}</h2>
+              <button onClick={() => setEditing(null)} className="p-1 rounded hover:bg-gray-200/60 dark:hover:bg-slate-800/60"><X className="w-4 h-4 text-gray-500 dark:text-slate-400" /></button>
+            </div>
+            <div className="flex-1 p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Nome da regra</label>
+                <input autoFocus className="w-full bg-gray-100 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500" placeholder="Nome da regra" value={editing.name} onChange={e => setEditing({ ...editing, name: e.target.value })} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Instância</label>
+                <select className="w-full bg-gray-100 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500" value={editing.instanceId || ''} onChange={e => setEditing({ ...editing, instanceId: e.target.value })}>
+                  <option value="">-- Selecione instância --</option>
+                  {instances.map(i => <option key={i.id} value={i.id}>{i.name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Atribuição fixa (opcional)</label>
+                <select className="w-full bg-gray-100 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500" value={editing.fixedAssignee || ''} onChange={e => setEditing({ ...editing, fixedAssignee: e.target.value })}>
+                  <option value="">-- Selecione atendente --</option>
+                  {team.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+                </select>
+              </div>
+            </div>
+            <div className="shrink-0 px-6 py-4 border-t border-gray-200 dark:border-slate-800 flex justify-end gap-3">
+              <button type="button" onClick={() => setEditing(null)} className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-slate-800 text-gray-700 dark:text-slate-300 text-sm hover:bg-gray-300 dark:hover:bg-slate-700 transition-colors">Cancelar</button>
+              <button type="button" onClick={handleSave} className="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm hover:bg-emerald-500 transition-colors flex items-center gap-2"><Save className="w-4 h-4" /> Salvar</button>
             </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-            <input className="col-span-2 theme-input px-2 py-2 text-sm" placeholder="Nome da regra" value={editing.name} onChange={e => setEditing({ ...editing, name: e.target.value })} />
-            <select className="theme-input px-2 py-2 text-sm" value={editing.instanceId || ''} onChange={e => setEditing({ ...editing, instanceId: e.target.value })}>
-              <option value="">-- Selecione instância --</option>
-              {instances.map(i => <option key={i.id} value={i.id}>{i.name}</option>)}
-            </select>
-            <select className="theme-input px-2 py-2 text-sm" value={editing.fixedAssignee || ''} onChange={e => setEditing({ ...editing, fixedAssignee: e.target.value })}>
-              <option value="">-- Atribuição fixa (opcional) --</option>
-              {team.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
-            </select>
-          </div>
-          <div className="flex justify-end gap-2">
-            <Button variant="ghost" onClick={() => setEditing(null)}>Cancelar</Button>
-            <Button variant="primary" onClick={handleSave}><Save className="w-4 h-4 mr-2"/>Salvar</Button>
-          </div>
-        </div>
+        </>,
+        document.body
       )}
     </div>
   );

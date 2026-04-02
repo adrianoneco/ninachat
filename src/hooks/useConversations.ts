@@ -111,22 +111,60 @@ export function useConversations() {
       socket.on('conversation:updated', handler);
       socket.on('contact:updated', handler);
       socket.on('messages:read', handler);
+
+      // ack:changed — update individual message status in-memory without full refetch
+      socket.on('ack:changed', (data: { message_id: string; status: string }) => {
+        const { message_id, status } = data;
+        if (!message_id || !status) return;
+        const uiStatus = status as 'sent' | 'delivered' | 'read';
+        setConversations(prev => prev.map(conv => {
+          if (!conv.messages?.length) return conv;
+          const idx = conv.messages.findIndex(
+            m => m.whatsappMessageId === message_id || m.id === message_id
+          );
+          if (idx === -1) return conv;
+          const updated = [...conv.messages];
+          updated[idx] = { ...updated[idx], status: uiStatus };
+          // When all outbound messages are read, zero out unreadCount on our side
+          const newUnread = uiStatus === 'read'
+            ? conv.messages.filter(m => m.direction === 'inbound' && m.status !== 'read').length
+            : conv.unreadCount;
+          return { ...conv, messages: updated, unreadCount: newUnread };
+        }));
+      });
       // Handle incoming messages from WPP
       socket.on('message:new', (data: any) => {
-        const { conversation_id, message_preview, contact_name, contact_avatar, timestamp } = data;
-        setConversations(prev => prev.map(conv => {
-          if (conv.id === conversation_id) {
-            return {
-              ...conv,
-              lastMessage: message_preview || '[mídia]',
-              lastMessageTime: new Date(timestamp).toLocaleString(),
-              contactName: contact_name || conv.contactName,
-              contactAvatar: contact_avatar || conv.contactAvatar,
-              unreadCount: (conv.unreadCount || 0) + 1,
-            };
+        console.log('[message:new] received event:', data);
+        const { conversation_id, message_preview, contact_name, contact_phone, contact_avatar, timestamp } = data;
+        
+        setConversations(prev => {
+          const existing = prev.find(conv => conv.id === conversation_id);
+          console.log('[message:new] conversation exists:', !!existing, 'id:', conversation_id);
+          
+          if (!existing) {
+            // Conversation doesn't exist locally, refetch to sync
+            console.log('[message:new] conversation not found, refetching...');
+            fetchConversations();
+            return prev;
           }
-          return conv;
-        }));
+          
+          // Update existing conversation
+          return prev.map(conv => {
+            if (conv.id === conversation_id) {
+              console.log('[message:new] updating conversation:', conversation_id);
+              return {
+                ...conv,
+                lastMessage: message_preview || '[mídia]',
+                lastMessageTime: new Date(timestamp).toLocaleString(),
+                contactName: contact_name || conv.contactName,
+                contactPhone: contact_phone || conv.contactPhone,
+                contactAvatar: contact_avatar || conv.contactAvatar,
+                unreadCount: (conv.unreadCount || 0) + 1,
+              };
+            }
+            return conv;
+          });
+        });
       });
       
       // presence updates: patch in-memory without full refetch
@@ -175,6 +213,7 @@ export function useConversations() {
         socket.off('conversation:updated', handler);
         socket.off('contact:updated', handler);
         socket.off('messages:read', handler);
+        socket.off('ack:changed');
         socket.off('message:new');
         socket.off('contact:presence');
       } catch (e) {}

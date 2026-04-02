@@ -1,4 +1,9 @@
-import { Injectable, Logger, NotFoundException, OnApplicationShutdown } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  OnApplicationShutdown,
+} from '@nestjs/common';
 import { Wpp } from '../../lib/wpp';
 import { Instance } from '../../entities/instance.entity';
 import { EventsGateway } from '../../ws/events.gateway';
@@ -7,18 +12,18 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Contact } from '../../entities/contact.entity';
 import { Message } from '../../entities/message.entity';
 import { Conversation } from '../../entities/conversation.entity';
+import { LiveChatSettings } from '../../entities/livechat-settings.entity';
 import fs from 'fs-extra';
 import path from 'path';
-import { uploadDirToS3 } from '../../lib/s3.client';
+import { randomUUID } from 'crypto';
+
 import * as wppconnect from '@wppconnect-team/wppconnect';
 import { StorageService } from '../storage/storage.service';
 
 import _fs from 'fs';
-import shouldIgnore from '../../utils/shouldIgnore';
-import { syncContacts } from '../sync/contactsSync';
-import e from 'express';
-import { syncConversations } from '../sync/conversationsSync';
 import { getContactByPushName } from '../../utils/getContact';
+import { OnMessageChanged } from '../../core/messages';
+import { OnAckChanged } from '../../core/ack';
 
 const logger = new Logger('WppManager');
 
@@ -34,6 +39,7 @@ export class WppManagerService implements OnApplicationShutdown {
     @InjectRepository(Contact) private contactRepo: Repository<Contact>,
     @InjectRepository(Message) private msgRepo: Repository<Message>,
     @InjectRepository(Conversation) private convRepo: Repository<Conversation>,
+    @InjectRepository(LiveChatSettings) private settingsRepo: Repository<LiveChatSettings>,
     private readonly storageService: StorageService,
   ) {
     // register this instance manager globally for convenience
@@ -44,7 +50,9 @@ export class WppManagerService implements OnApplicationShutdown {
     // register process signal handlers as redundancy to ensure puppeteer sessions close
     const handle = (sig: string) => {
       // allow async cleanup without multiple concurrent runs
-      this.handleProcessSignal(sig).catch((e) => logger.warn(`Error during shutdown handler: ${String(e)}`));
+      this.handleProcessSignal(sig).catch((e) =>
+        logger.warn(`Error during shutdown handler: ${String(e)}`),
+      );
     };
     if (typeof process !== 'undefined' && process && process.on) {
       process.on('SIGINT', () => handle('SIGINT'));
@@ -83,7 +91,10 @@ export class WppManagerService implements OnApplicationShutdown {
       await fs.ensureDir(tokensDir);
       await fs.ensureDir(uploadsDir);
     } catch (e) {
-      logs.warn && logs.warn(`[${instance.name}] Failed ensuring session dirs: ${String(e)}`);
+      logs.warn &&
+        logs.warn(
+          `[${instance.name}] Failed ensuring session dirs: ${String(e)}`,
+        );
     }
     // Cria logger customizado para esta sessão (already declared above)
     // placeholder for status updater; will be assigned below
@@ -110,7 +121,15 @@ export class WppManagerService implements OnApplicationShutdown {
           }
 
           // Try to detect QR payloads when logger receives an object containing QR/base64
-          const qrCandidate = (value && typeof value === 'object') ? (value.qr || value.qrcode || value.code || value.base64 || value.data || null) : null;
+          const qrCandidate =
+            value && typeof value === 'object'
+              ? value.qr ||
+              value.qrcode ||
+              value.code ||
+              value.base64 ||
+              value.data ||
+              null
+              : null;
 
           if (msg) {
             logs.verbose(
@@ -125,36 +144,55 @@ export class WppManagerService implements OnApplicationShutdown {
               try {
                 this.events.emitTo(session, 'wpp:qr', payload);
               } catch (e) {
-                logs.warn && logs.warn(`[${instance.name}] failed emitting wpp:qr: ${String(e)}`);
+                logs.warn &&
+                  logs.warn(
+                    `[${instance.name}] failed emitting wpp:qr: ${String(e)}`,
+                  );
               }
               // also mark waiting state in DB
               setInstanceStatus('waiting').catch(() => { });
-              await this.dbUpdater(instance.name, 'waiting');
-            } else if (typeof msg === 'string' && String(msg).toLowerCase().includes('qr')) {
+            } else if (
+              typeof msg === 'string' &&
+              String(msg).toLowerCase().includes('qr')
+            ) {
               // generic textual 'QR' message: emit lightweight notification with the message
               try {
                 this.events.emitTo(session, 'wpp:qr', { session, qr: msg });
               } catch (e) { }
               setInstanceStatus('waiting').catch(() => { });
-              await this.dbUpdater(instance.name, 'waiting');
             }
             // detect script injection / execution context errors and try a restart
-            else if (typeof msg === 'string' && (String(msg).toLowerCase().includes('wapi.js failed') || String(msg).toLowerCase().includes('execution context was destroyed'))) {
+            else if (
+              typeof msg === 'string' &&
+              (String(msg).toLowerCase().includes('wapi.js failed') ||
+                String(msg)
+                  .toLowerCase()
+                  .includes('execution context was destroyed'))
+            ) {
               try {
                 const attempts = this.restartAttempts.get(session) || 0;
                 if (attempts < 3) {
                   this.restartAttempts.set(session, attempts + 1);
-                  logs.warn && logs.warn(`[${instance.name}] detected wapi/execcontext error, scheduling restart attempt ${attempts + 1}`);
+                  logs.warn &&
+                    logs.warn(
+                      `[${instance.name}] detected wapi/execcontext error, scheduling restart attempt ${attempts + 1}`,
+                    );
                   // schedule restart after short delay
                   setTimeout(async () => {
                     try {
                       await this.restartInstance(instance).catch(() => { });
                     } catch (e) {
-                      logs.warn && logs.warn(`[${instance.name}] restart attempt failed: ${String(e)}`);
+                      logs.warn &&
+                        logs.warn(
+                          `[${instance.name}] restart attempt failed: ${String(e)}`,
+                        );
                     }
                   }, 1500);
                 } else {
-                  logs.warn && logs.warn(`[${instance.name}] reached max restart attempts (${attempts}), not restarting`);
+                  logs.warn &&
+                    logs.warn(
+                      `[${instance.name}] reached max restart attempts (${attempts}), not restarting`,
+                    );
                 }
               } catch (e) { }
             }
@@ -167,26 +205,20 @@ export class WppManagerService implements OnApplicationShutdown {
               const s = String(msg).toLowerCase();
               if (s.includes('authenticated') || s.includes('auth')) {
                 setInstanceStatus('authenticated').catch(() => { });
-                await this.dbUpdater(instance.name, 'authenticated');
               } else if (
                 s.includes('disconnected') ||
                 s.includes('logout') ||
                 s.includes('session_unpaired')
               ) {
                 setInstanceStatus('disconnected').catch(() => { });
-                await this.dbUpdater(instance.name, 'disconnected');
               } else if (s.includes('ready')) {
                 setInstanceStatus('initialized').catch(() => { });
-                await this.dbUpdater(instance.name, 'initialized');
               } else if (s.includes('timeout')) {
                 setInstanceStatus('disconnected').catch(() => { });
-                await this.dbUpdater(instance.name, 'disconnected');
               } else if (s.includes('initializing')) {
                 setInstanceStatus('initializing').catch(() => { });
-                await this.dbUpdater(instance.name, 'initializing');
               } else if (s.includes('MAIN (NORMAL)'.toLocaleLowerCase())) {
                 setInstanceStatus('connected').catch(() => { });
-                await this.dbUpdater(instance.name, 'connected');
               }
             } catch (e) { }
           }
@@ -218,9 +250,10 @@ export class WppManagerService implements OnApplicationShutdown {
       waitForLogin: false,
       headless: true,
       useChrome: false,
-      logger: genericLogger as any,
+      logger: genericLogger,
       logQR: true,
       folderNameToken: tokensDir,
+      debug: true
     };
 
     try {
@@ -339,7 +372,8 @@ export class WppManagerService implements OnApplicationShutdown {
     try {
       if (instance.name) this.instances.set(instance.name, client);
       if (instance.id) this.instances.set(instance.id, client);
-      if (instance.wppconnect_session) this.instances.set(instance.wppconnect_session, client);
+      if (instance.wppconnect_session)
+        this.instances.set(instance.wppconnect_session, client);
     } catch (e) {
       // non-fatal
     }
@@ -354,21 +388,27 @@ export class WppManagerService implements OnApplicationShutdown {
         try {
           if (client.page) {
             const ready = await client.page.evaluate(() => {
-              return typeof (globalThis as any).WPP !== 'undefined' &&
-                typeof (globalThis as any).WPP.chat !== 'undefined';
+              return (
+                typeof (globalThis as any).WPP !== 'undefined' &&
+                typeof (globalThis as any).WPP.chat !== 'undefined'
+              );
             });
             if (ready) {
-              logger.log(`[${instance.name}] page frame stabilized on attempt ${attempt}`);
+              logger.log(
+                `[${instance.name}] page frame stabilized on attempt ${attempt}`,
+              );
               break;
             }
           }
         } catch (e: any) {
           const msg = String(e?.message || e);
           if (msg.includes('detached Frame') || msg.includes('detached')) {
-            logger.warn(`[${instance.name}] frame detached on readiness check attempt ${attempt} — WA may be updating`);
+            logger.warn(
+              `[${instance.name}] frame detached on readiness check attempt ${attempt} — WA may be updating`,
+            );
           }
         }
-        await new Promise(r => setTimeout(r, stabilizeDelay));
+        await new Promise((r) => setTimeout(r, stabilizeDelay));
       }
     })().catch(() => { });
 
@@ -402,171 +442,134 @@ export class WppManagerService implements OnApplicationShutdown {
       const delayMs = 2000;
       for (let attempt = 1; attempt <= maxAttempts; attempt++) {
         try {
-          if (client && typeof (client as any).setAutoDownloadSettings === 'function') {
+          if (
+            client &&
+            typeof (client as any).setAutoDownloadSettings === 'function'
+          ) {
             await Promise.resolve(
-              (client as any).setAutoDownloadSettings({ audio: true, document: true, image: true, video: true })
+              (client as any).setAutoDownloadSettings({
+                audio: true,
+                document: true,
+                image: true,
+                video: true,
+              }),
             );
-            logs.verbose(`[${instance.name}] setAutoDownloadSettings succeeded on attempt ${attempt}`);
+            logs.verbose(
+              `[${instance.name}] setAutoDownloadSettings succeeded on attempt ${attempt}`,
+            );
             break;
           }
         } catch (e: any) {
           const msg = String(e?.message || e || '');
           // WPP not yet injected — keep retrying silently
           if (attempt === maxAttempts) {
-            logs.verbose(`[${instance.name}] setAutoDownloadSettings not available after ${maxAttempts} attempts (ignored): ${msg}`);
+            logs.verbose(
+              `[${instance.name}] setAutoDownloadSettings not available after ${maxAttempts} attempts (ignored): ${msg}`,
+            );
           }
         }
         await new Promise((res) => setTimeout(res, delayMs));
       }
-    })().catch(() => { /* swallow — non-critical */ });
-
-
-
-
+    })().catch(() => {
+      /* swallow — non-critical */
+    });
 
     client.onMessage(async (message: any) => {
-      try {
-        const _contact = await getContactByPushName(message.sender.pushname, client).catch(() => null);
-
-        fs.writeFileSync(`/home/neco/Documentos/nina_chat/test/message.json`, JSON.stringify(message, null, 4));
-
-        // Find contact by whatsapp_id or phone_number
-        const contact = await this.contactRepo.findOne({
-          where: [
-            { whatsapp_id: _contact?.id },
-            { phone_number: _contact?.phone_number }
-          ]
-        }).catch(() => null);
-
-        logger.debug(`[${instance.name}] onMessage: contact found = ${!!contact}, id=${contact?.id}`);
-
-        // Build conversation values
-        const convValues: any = {
-          chat_id: `${instance.id}-${message.chatId}`,
-          instance_id: instance.id,
-          is_group: message.isGroupMsg,
-        };
-
-        // Only add contact_id if found a contact with valid UUID
-        if (contact?.id) {
-          convValues.contact_id = contact.id;
-        }
-
-        const convInsertResult = await this.convRepo.createQueryBuilder()
-          .insert()
-          .into('conversations')
-          .values(convValues)
-          .orIgnore()
-          .execute();
-        
-        logger.debug(`[${instance.name}] conversation insert result:`, JSON.stringify(convInsertResult));
-
-        const conv = await this.convRepo.findOneBy({ chat_id: `${instance.id}-${message.chatId}` }).catch(() => null);
-        const convId = conv?.id || null;
-        
-        logger.debug(`[${instance.name}] conversation found after insert: ${!!conv}, id=${convId}`);
-
-        const msgInsertResult = this.msgRepo.createQueryBuilder()
-          .insert()
-          .into('messages')
-          .values({
-            instance_id: instance.id,
-            conversation_id: convId,
-            message_id: message.id,
-            from_me: message.fromMe,
-            body: message.body,
-            content: message.content || message.body,
-            type: message.type,
-            media_type: message.mimetype || null
-          })
-          .orIgnore()
-          .execute()
-          .catch((e) => {
-            logger.warn(`[${instance.name}] message insert failed: ${String(e)}`);
-          });
-
-        logger.debug(`[${instance.name}] message insert result:`, JSON.stringify(msgInsertResult));
-
-        const contactName = contact?.name || contact?.call_name || message.sender?.pushname || 'Novo contato';
-        const contactPhone = contact?.phone_formated || contact?.phone_number || message.from.split('@')[0];
-        const contactAvatar = contact?.profile_picture_url || null;
-
-        logger.debug(`[${instance.name}] emitting message:new`, { convId, contactName, contactPhone, msg: message.body?.substring(0, 30) });
-
-        this.events.emitTo(session, 'message:new', {
-          instance_id: instance.id,
-          conversation_id: convId,
-          contact_name: contactName,
-          contact_phone: contactPhone,
-          contact_avatar: contactAvatar,
-          message_preview: message.body?.substring(0, 50) || '[mídia]',
-          message_type: message.type,
-          timestamp: new Date().toISOString(),
-        });
-
-      } catch (e) {
-        logger.warn(`[${instance.name}] onMessage error: ${String(e)}`);
-      }
+      OnMessageChanged(
+        message,
+        client,
+        this.convRepo,
+        this.contactRepo,
+        this.msgRepo,
+        instance,
+        this.events,
+        this.storageService,
+        this.settingsRepo,
+      );
     });
 
     // ── Presence tracking ──────────────────────────────────────────────────────
-    client.onPresenceChanged(async (presence: any) => {
+    client.onPresenceChanged(async (presenceData: any) => {
       try {
-        const presenceId = presence?.id || '';
-        const phone = presenceId.split('@')[0]; // Extract phone from JID
-        const state = presence?.state || 'unavailable';
-        const isOnline = presence?.isOnline || false;
-        const isContact = presence?.isContact || false;
+        logger.debug(`[${instance.name}] Presence changed: ${JSON.stringify(presenceData)}`);
 
-        if (!presenceId || !phone) {
-          logger.debug(`[${instance.name}] onPresenceChanged: invalid presence id`);
-          return;
+        const { id, isOnline, isGroup, presence } = presenceData;
+
+        // Extract phone from WID (e.g. "5541999999999@c.us" → "5541999999999")
+        const phone = (id || '').replace(/@.+$/, '');
+
+        const presenceType = presence || (isOnline ? 'available' : 'unavailable');
+        const presenceMap: Record<string, string> = {
+          available: 'online',
+          unavailable: 'offline',
+          composing: 'typing',
+          recording: 'recording',
+          paused: 'paused',
+        };
+        const status = presenceMap[presenceType] || presenceType;
+
+        // Update DB contact presense field
+        let contact: any = null;
+        if (phone) {
+          try {
+            await this.contactRepo.createQueryBuilder()
+              .update('contacts')
+              .set({ presence: status })
+              .where('phone_number = :phone OR whatsapp_id = :id', { phone, id })
+              .execute();
+            logger.log(`[${instance.name}] Presence DB update succeeded for phone: ${phone}, id: ${id}`);
+          } catch (e: any) {
+            logger.warn(`[${instance.name}] Presence DB update failed: ${e}`);
+          }
         }
 
-        // Convert state to user-friendly label
-        const presenceMap: Record<string, string> = {
-          'available': 'online',
-          'unavailable': 'offline',
-          'composing': 'typing',
-          'recording': 'recording',
-          'paused': 'paused',
-        };
-        const presenceLabel = presenceMap[state] || state;
-
-        // Find contact by whatsapp_id or phone_number
-        const contact = await this.contactRepo.findOne({
-          where: [
-            { whatsapp_id: presenceId },
-            { phone_number: phone }
-          ]
-        }).catch(() => null);
-
-        // Build presence event payload matching frontend expectation
-        const presencePayload = {
+        // Emit contact:presence — matches what useConversations listens to
+        const payload = {
           phone,
-          presence: presenceLabel,
-          contact_name: contact?.name || contact?.call_name || phone,
+          presence: status,
+          contact_name: contact?.name || contact?.call_name || null,
           contact_avatar: contact?.profile_picture_url || null,
         };
-
-        // Emit presence event to frontend
-        this.events.emitTo(session, 'contact:presence', presencePayload);
-        this.events.emit('contact:presence', presencePayload);
-
-        logger.debug(
-          `[${instance.name}] presence: ${presenceLabel} from ${phone}`
-        );
-
-        // Update contact presence in DB
-        await this.contactRepo.createQueryBuilder()
-          .update()
-          .set({ presense: presenceLabel })
-          .where('whatsapp_id = :id OR phone_number = :phone', { id: presenceId, phone })
-          .execute()
-          .catch(() => { /* ignore */ });
-
+        this.events.emit('contact:presence', payload);
+        this.events.emitTo(instance.name, 'contact:presence', payload);
       } catch (e) {
-        logger.warn(`[${instance.name}] onPresenceChanged error: ${String(e)}`);
+        logger.warn(`[${instance.name}] Presence handler error: ${String(e)}`);
+      }
+    });
+
+    client.onAck((ack: wppconnect.Ack) => {
+      OnAckChanged(ack, this.msgRepo, instance, this.events);
+    });
+
+    client.onIncomingCall(async (call: wppconnect.IncomingCall) => {
+      try {
+        // Extract phone from peerJid (e.g. "5541999999999@c.us" → "5541999999999")
+        const phone = call.peerJid?.replace(/@.+$/, '') || '';
+        // Look up contact for name/avatar
+        const contact = phone
+          ? await this.contactRepo.findOne({ where: [
+              { phone_number: phone } as any,
+              { phone_formated: phone } as any,
+            ] }).catch(() => null)
+          : null;
+        const payload = {
+          instance_id: instance.id,
+          instance_name: instance.name,
+          call_id: call.id,
+          peerJid: call.peerJid,
+          phone,
+          isVideo: call.isVideo,
+          isGroup: call.isGroup,
+          offerTime: call.offerTime,
+          contact_name: contact?.name || contact?.call_name || null,
+          contact_avatar: contact?.profile_picture_url || null,
+          phone_formated: contact?.phone_formated || phone,
+          timestamp: new Date().toISOString(),
+        };
+        this.events.emit('instance:call', payload);
+        this.events.emitTo(instance.name, 'instance:call', payload);
+      } catch (e) {
+        logger.warn(`[${instance.name}] onIncomingCall emit error: ${String(e)}`);
       }
     });
 
@@ -583,16 +586,14 @@ export class WppManagerService implements OnApplicationShutdown {
         */
 
         logger.debug(`[${instance.name}] state changed -> ${state}`);
+      } else if (state === 'DISCONNECTED') {
+      } else if (state === 'OPENING') {
+      } else if (state === 'PAIRING') {
+      } else if (state === 'TIMEOUT') {
+      } else if (state === 'UNPAIRED') {
+      } else if (state === 'UNPAIRED_IDLE') {
       }
-      else if (state === 'DISCONNECTED') { }
-      else if (state === 'OPENING') { }
-      else if (state === 'PAIRING') { }
-      else if (state === 'TIMEOUT') { }
-      else if (state === 'UNPAIRED') { }
-      else if (state === 'UNPAIRED_IDLE') { }
     });
-
-
 
     // persist session_dir
     instance.session_dir = sessionDir;
@@ -624,7 +625,7 @@ export class WppManagerService implements OnApplicationShutdown {
     // Remove all map entries that reference this client (clean up multiple keys)
     try {
       for (const [k, v] of Array.from(this.instances.entries())) {
-        if (v === client) this.instances.delete(k as string);
+        if (v === client) this.instances.delete(k);
       }
     } catch (e) {
       // fallback: remove by provided key
@@ -668,7 +669,9 @@ export class WppManagerService implements OnApplicationShutdown {
 
   // Close all running Puppeteer/WhatsApp clients when application is shutting down
   async onApplicationShutdown(signal?: string) {
-    logger.log(`Application shutdown (${signal || 'unknown signal'}) - closing ${this.instances.size} instance(s)`);
+    logger.log(
+      `Application shutdown (${signal || 'unknown signal'}) - closing ${this.instances.size} instance(s)`,
+    );
     const keys = Array.from(this.instances.keys());
     for (const k of keys) {
       try {
@@ -700,10 +703,25 @@ export class WppManagerService implements OnApplicationShutdown {
     }
   }
 
+  /** Wrap a promise with a timeout (default 60s) */
+  private withTimeout<T>(promise: Promise<T>, ms = 60_000, label = 'WPP operation'): Promise<T> {
+    return new Promise<T>((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms);
+      promise.then(
+        (val) => { clearTimeout(timer); resolve(val); },
+        (err) => { clearTimeout(timer); reject(err); },
+      );
+    });
+  }
+
   /** Retry helper for transient Puppeteer/WPP errors (e.g. detached Frame).
    *  On detached-frame errors on the last retry, triggers a full instance restart
    *  so the next user attempt gets a fresh client. */
-  private async withRetry<T>(fn: () => Promise<T>, retries = 1, delayMs = 2000): Promise<T> {
+  private async withRetry<T>(
+    fn: () => Promise<T>,
+    retries = 1,
+    delayMs = 2000,
+  ): Promise<T> {
     let lastErr: any;
     for (let i = 0; i <= retries; i++) {
       try {
@@ -711,19 +729,27 @@ export class WppManagerService implements OnApplicationShutdown {
       } catch (e: any) {
         lastErr = e;
         const msg = String(e?.message || e);
-        const isTransient = msg.includes('detached Frame') || msg.includes('detached') ||
-          msg.includes('Target closed') || msg.includes('Session closed') ||
-          msg.includes('not attached') || msg.includes('Execution context');
+        const isTransient =
+          msg.includes('detached Frame') ||
+          msg.includes('detached') ||
+          msg.includes('Target closed') ||
+          msg.includes('Session closed') ||
+          msg.includes('not attached') ||
+          msg.includes('Execution context');
         if (!isTransient || i >= retries) {
           // On final detached-frame failure, schedule a background instance restart
           if (isTransient) {
-            logger.warn('[WPP] persistent detached frame — scheduling instance restart');
+            logger.warn(
+              '[WPP] persistent detached frame — scheduling instance restart',
+            );
             setImmediate(() => this.restartAllDetached().catch(() => { }));
           }
           throw e;
         }
-        logger.warn(`[WPP] transient error (attempt ${i + 1}/${retries + 1}): ${msg.slice(0, 120)}`);
-        await new Promise(r => setTimeout(r, delayMs));
+        logger.warn(
+          `[WPP] transient error (attempt ${i + 1}/${retries + 1}): ${msg.slice(0, 120)}`,
+        );
+        await new Promise((r) => setTimeout(r, delayMs));
       }
     }
     throw lastErr;
@@ -737,7 +763,9 @@ export class WppManagerService implements OnApplicationShutdown {
         if (key.length < 30) continue;
         const inst = await this.instanceRepo.findOneBy({ id: key } as any);
         if (!inst) continue;
-        logger.log(`[WPP] Restarting instance ${inst.name || key} to recover from detached frame`);
+        logger.log(
+          `[WPP] Restarting instance ${inst.name || key} to recover from detached frame`,
+        );
         await this.restartInstance(inst);
         break; // restart one at a time
       } catch (e) {
@@ -746,18 +774,123 @@ export class WppManagerService implements OnApplicationShutdown {
     }
   }
 
-  async sendMessage(sessionOrId: string, to: string, body: string) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  /** sendText — Swagger + internal */
+  async sendTextMessage(sessionOrId: string, to: string, body: string) {
+    if (to && !to.includes('@')) to = `${to}@c.us`;
     const client = this.getClient(sessionOrId);
     if (!client) throw new Error('Client not running for ' + sessionOrId);
-    return this.withRetry(async () => {
-      if (client.sendText) return client.sendText(to, body);
-      if (client.sendMessage) return client.sendMessage(to, { text: body });
-      if (client.sendSimpleText) return client.sendSimpleText(to, body as any);
-      throw new Error('No send method available on client');
-    });
+    return this.withTimeout(client.sendText(to, body), 60_000, 'sendText');
   }
 
-  // generic media/file sender: try multiple client methods for best-effort
+  /** sendImage — accepts Buffer (binary), http(s) URL, or data URI */
+  async sendImageMessage(
+    sessionOrId: string, to: string, bufferOrUrl: Buffer | string,
+    filename?: string, caption?: string, mimeType?: string,
+  ) {
+    if (to && !to.includes('@')) to = `${to}@c.us`;
+    const client = this.getClient(sessionOrId);
+    if (!client) throw new Error('Client not running for ' + sessionOrId);
+    const fname = filename || 'image.jpg';
+    const filePath = await this.resolveToFile(bufferOrUrl, 'image', fname, mimeType);
+    return this.withTimeout(
+      client.sendImage(to, filePath, fname, caption || ''),
+      90_000, 'sendImage',
+    );
+  }
+
+  /** sendVideo — accepts Buffer (binary), http(s) URL, or data URI */
+  async sendVideoMessage(
+    sessionOrId: string, to: string, bufferOrUrl: Buffer | string,
+    filename?: string, caption?: string, mimeType?: string,
+  ) {
+    if (to && !to.includes('@')) to = `${to}@c.us`;
+    const client = this.getClient(sessionOrId);
+    if (!client) throw new Error('Client not running for ' + sessionOrId);
+    const fname = filename || 'video.mp4';
+    const filePath = await this.resolveToFile(bufferOrUrl, 'video', fname, mimeType);
+    return this.withTimeout(
+      client.sendFile(to, filePath, fname, caption || ''),
+      180_000, 'sendVideo',
+    );
+  }
+
+  /** sendAudio — accepts Buffer (binary), http(s) URL, or data URI */
+  async sendAudioMessage(
+    sessionOrId: string, to: string, bufferOrUrl: Buffer | string,
+    filename?: string, mimeType?: string,
+  ) {
+    if (to && !to.includes('@')) to = `${to}@c.us`;
+    const client = this.getClient(sessionOrId);
+    if (!client) throw new Error('Client not running for ' + sessionOrId);
+    const fname = filename || 'audio.mp3';
+    const filePath = await this.resolveToFile(bufferOrUrl, 'audio', fname, mimeType);
+    // isPtt=false → regular audio attachment (not voice note)
+    return this.withTimeout(
+      client.sendPtt(to, filePath, fname, '', undefined, undefined, false),
+      120_000, 'sendAudio',
+    );
+  }
+
+  /** sendPtt (voice note) — accepts Buffer (binary), http(s) URL, or data URI */
+  async sendPttMessage(
+    sessionOrId: string, to: string, bufferOrUrl: Buffer | string,
+    filename?: string, mimeType?: string,
+  ) {
+    if (to && !to.includes('@')) to = `${to}@c.us`;
+    const client = this.getClient(sessionOrId);
+    if (!client) throw new Error('Client not running for ' + sessionOrId);
+    const fname = filename || 'audio.mp3';
+    const filePath = await this.resolveToFile(bufferOrUrl, 'ptt', fname, mimeType);
+    // isPtt=true → voice note waveform UI in WhatsApp
+    return this.withTimeout(
+      client.sendPtt(to, filePath, fname, '', undefined, undefined, true),
+      120_000, 'sendPtt',
+    );
+  }
+
+  /** sendSticker — accepts Buffer (binary), http(s) URL, or data URI */
+  async sendStickerMessage(
+    sessionOrId: string, to: string, bufferOrUrl: Buffer | string,
+    filename?: string, mimeType?: string,
+  ) {
+    if (to && !to.includes('@')) to = `${to}@c.us`;
+    const client = this.getClient(sessionOrId);
+    if (!client) throw new Error('Client not running for ' + sessionOrId);
+    const fname = filename || 'sticker.webp';
+    const filePath = await this.resolveToFile(bufferOrUrl, 'sticker', fname, mimeType);
+    return this.withTimeout(
+      client.sendImageAsSticker(to, filePath),
+      90_000, 'sendSticker',
+    );
+  }
+
+  /** General-purpose text send — used by MessagesService */
+  async sendMessage(sessionOrId: string, to: string, body: string) {
+    if (to && !to.includes('@')) to = `${to}@c.us`;
+    const client = this.getClient(sessionOrId);
+    if (!client) throw new Error('Client not running for ' + sessionOrId);
+    const fn = client.sendText ? client.sendText(to, body)
+      : client.sendMessage ? client.sendMessage(to, { text: body })
+        : null;
+    if (!fn) throw new Error('No send method available on client');
+    return this.withTimeout(fn, 60_000, 'sendMessage');
+  }
+
+  /** General-purpose media send (Buffer or URL) — used by MessagesService */
   async sendMedia(
     sessionOrId: string,
     to: string,
@@ -765,267 +898,100 @@ export class WppManagerService implements OnApplicationShutdown {
     filename?: string,
     caption?: string,
   ) {
+    if (to && !to.includes('@')) to = `${to}@c.us`;
     const client = this.getClient(sessionOrId);
     if (!client) throw new Error('Client not running for ' + sessionOrId);
-    
-    return this.withRetry(async () => {
-      let tempFilePath: string | undefined;
-      let payloadBase64: string | undefined;
-      
-      // If it's a Buffer, prepare file path and base64 as fallbacks
-      if (Buffer.isBuffer(bufferOrUrl)) {
-        const mimeType = this.getMimeTypeFromFilename(filename || 'file');
-        logger.debug(`[WPP] sendMedia buffer: filename=${filename}, mimeType=${mimeType}, size=${bufferOrUrl.length} bytes`);
-        
-        // Save buffer to temp file
-        const uploadsDir = path.join(process.env.DATA_DIR || 'data/wpp_data', sessionOrId, 'uploads');
-        await fs.ensureDir(uploadsDir);
-        tempFilePath = path.join(uploadsDir, `temp-${Date.now()}-${filename || 'file'}`);
-        await fs.writeFile(tempFilePath, bufferOrUrl);
-        logger.debug(`[WPP] Saved buffer to temp file: ${tempFilePath}`);
-        
-        // Prepare base64 as fallback only
-        const base64 = bufferOrUrl.toString('base64');
-        payloadBase64 = `data:${mimeType};base64,${base64}`;
-      }
 
-      const tryCalls = [
-        // For buffers, try file path methods first (most reliable)
-        ...(tempFilePath && Buffer.isBuffer(bufferOrUrl)
-          ? [
-              async () => {
-                if (!client.sendFileFromPath) return null;
-                logger.debug(`[WPP] Trying sendFileFromPath for ${tempFilePath}`);
-                return await client.sendFileFromPath(to, tempFilePath, filename || 'file', caption);
-              },
-              async () => {
-                if (!client.sendMediaFile) return null;
-                logger.debug(`[WPP] Trying sendMediaFile for ${tempFilePath}`);
-                return await client.sendMediaFile(to, tempFilePath, caption);
-              },
-            ]
-          : []),
-        // Then try Buffer methods directly
-        ...(Buffer.isBuffer(bufferOrUrl)
-          ? [
-              async () => {
-                if (!client.sendMedia) return null;
-                logger.debug(`[WPP] Trying sendMedia with Buffer for ${filename}`);
-                return await client.sendMedia(to, bufferOrUrl, { filename, caption });
-              },
-              async () => {
-                if (!client.sendImage) return null;
-                logger.debug(`[WPP] Trying sendImage with Buffer for ${filename}`);
-                return await client.sendImage(to, bufferOrUrl as Buffer, filename || 'image', caption);
-              },
-              async () => {
-                if (!client.sendFile) return null;
-                logger.debug(`[WPP] Trying sendFile with Buffer for ${filename}`);
-                return await client.sendFile(to, bufferOrUrl as Buffer, filename || 'file', caption);
-              },
-              // Fallback to base64 if Buffer methods fail
-              async () => {
-                if (!client.sendFileFromBase64 || !payloadBase64) return null;
-                logger.debug(`[WPP] Trying sendFileFromBase64 for ${filename}`);
-                return await client.sendFileFromBase64(to, payloadBase64, filename || 'file', caption);
-              },
-            ]
-          : []),
-        // For URLs, try image/file from URL methods
-        ...(typeof bufferOrUrl === 'string' && bufferOrUrl.startsWith('http')
-          ? [
-              async () => {
-                if (!client.sendImageFromUrl) return null;
-                logger.debug(`[WPP] Trying sendImageFromUrl for ${bufferOrUrl}`);
-                return await client.sendImageFromUrl(to, bufferOrUrl, caption);
-              },
-              async () => {
-                if (!client.sendFileFromUrl) return null;
-                logger.debug(`[WPP] Trying sendFileFromUrl for ${bufferOrUrl}`);
-                return await client.sendFileFromUrl(to, bufferOrUrl, filename || 'file', caption);
-              },
-            ]
-          : []),
-      ];
-
-      let lastError: Error | undefined;
-      for (const fn of tryCalls) {
-        try {
-          const res = await fn();
-          if (res) {
-            logger.debug(`[WPP] sendMedia succeeded`);
-            // Clean up temp file if created
-            if (tempFilePath) {
-              fs.unlink(tempFilePath).catch(e => logger.warn(`Failed to clean temp file: ${String(e)}`));
-            }
-            return res;
-          }
-        } catch (e) {
-          const errMsg = String(e).slice(0, 150);
-          logger.warn(`[WPP] sendMedia attempt failed: ${errMsg}`);
-          lastError = e as Error;
-        }
-      }
-      
-      // Clean up temp file on failure
-      if (tempFilePath) {
-        fs.unlink(tempFilePath).catch(e => logger.warn(`Failed to clean temp file: ${String(e)}`));
-      }
-      
-      throw lastError || new Error('No media send method succeeded');
-    });
+    const fname = filename || 'file';
+    const filePath = await this.resolveToFile(bufferOrUrl, 'media', fname);
+    return this.withTimeout(
+      client.sendFile(to, filePath, fname, caption || ''),
+      120_000, 'sendMedia',
+    );
   }
 
-  private getMimeTypeFromFilename(filename: string): string {
-    const mimeMap: Record<string, string> = {
-      '.jpg': 'image/jpeg',
-      '.jpeg': 'image/jpeg',
-      '.png': 'image/png',
-      '.gif': 'image/gif',
-      '.webp': 'image/webp',
-      '.mp4': 'video/mp4',
-      '.webm': 'video/webm',
-      '.3gp': 'video/3gpp',
-      '.mov': 'video/quicktime',
-      '.avi': 'video/x-msvideo',
-      '.mp3': 'audio/mpeg',
-      '.ogg': 'audio/ogg',
-      '.wav': 'audio/wav',
-      '.m4a': 'audio/mp4',
-      '.aac': 'audio/aac',
-      '.pdf': 'application/pdf',
-      '.doc': 'application/msword',
-      '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      '.xls': 'application/vnd.ms-excel',
-      '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      '.zip': 'application/zip',
-      '.txt': 'text/plain',
-    };
-
-    const ext = filename.toLowerCase().substring(filename.lastIndexOf('.'));
-    return mimeMap[ext] || 'application/octet-stream';
-  }
-
+  /** Sticker send — used by MessagesService */
   async sendSticker(sessionOrId: string, to: string, bufferOrUrl: string | Buffer) {
+    if (to && !to.includes('@')) to = `${to}@c.us`;
     const client = this.getClient(sessionOrId);
     if (!client) throw new Error('Client not running for ' + sessionOrId);
-    
-    let tempFilePath: string | undefined;
-    let payloadBase64: string | undefined;
-    
-    // Convert buffer to file path or base64 if needed
-    if (Buffer.isBuffer(bufferOrUrl)) {
-      const mimeType = 'image/webp'; // Stickers are usually WebP
-      logger.debug(`[WPP] sendSticker converting buffer (size=${bufferOrUrl.length} bytes)`);
-      
-      // Save buffer to temp file
-      const uploadsDir = path.join(process.env.DATA_DIR || 'data/wpp_data', sessionOrId, 'uploads');
-      await fs.ensureDir(uploadsDir);
-      tempFilePath = path.join(uploadsDir, `temp-sticker-${Date.now()}.webp`);
-      await fs.writeFile(tempFilePath, bufferOrUrl);
-      logger.debug(`[WPP] Saved sticker to temp file: ${tempFilePath}`);
-      
-      const base64 = bufferOrUrl.toString('base64');
-      payloadBase64 = `data:${mimeType};base64,${base64}`;
-    }
-    
-    const tryCalls = [
-      // For buffers, try file path first
-      ...(tempFilePath && Buffer.isBuffer(bufferOrUrl)
-        ? [
-            async () => {
-              if (!client.sendStickerFromPath) return null;
-              logger.debug(`[WPP] Trying sendStickerFromPath for ${tempFilePath}`);
-              return await client.sendStickerFromPath(to, tempFilePath);
-            },
-            async () => {
-              if (!client.sendFileFromPath) return null;
-              logger.debug(`[WPP] Trying sendFileFromPath for sticker`);
-              return await client.sendFileFromPath(to, tempFilePath, 'sticker.webp', '');
-            },
-          ]
-        : []),
-      // Then try Buffer or base64 methods
-      async () => {
-        if (!client.sendSticker) return null;
-        logger.debug(`[WPP] Trying sendSticker`);
-        return await client.sendSticker(to, Buffer.isBuffer(bufferOrUrl) ? payloadBase64 : bufferOrUrl);
-      },
-      async () => {
-        if (!client.sendImageAsSticker) return null;
-        logger.debug(`[WPP] Trying sendImageAsSticker`);
-        return await client.sendImageAsSticker(to, Buffer.isBuffer(bufferOrUrl) ? payloadBase64 : bufferOrUrl);
-      },
-    ];
-    
-    let lastError: Error | undefined;
-    for (const fn of tryCalls) {
-      try {
-        const res = await fn();
-        if (res) {
-          logger.debug(`[WPP] sendSticker succeeded`);
-          // Clean up temp file
-          if (tempFilePath) {
-            fs.unlink(tempFilePath).catch(e => logger.warn(`Failed to clean sticker temp file: ${String(e)}`));
-          }
-          return res;
-        }
-      } catch (e) {
-        logger.warn(`[WPP] sendSticker attempt failed: ${String(e).slice(0, 150)}`);
-        lastError = e as Error;
-      }
-    }
-    
-    // Clean up temp file on failure
-    if (tempFilePath) {
-      fs.unlink(tempFilePath).catch(e => logger.warn(`Failed to clean sticker temp file: ${String(e)}`));
-    }
-    
-    throw lastError || new Error('No sticker send method available');
+    const filePath = await this.resolveToFile(bufferOrUrl, 'sticker', 'sticker.webp', 'image/webp');
+    return this.withTimeout(
+      client.sendImageAsSticker(to, filePath),
+      90_000, 'sendSticker',
+    );
   }
 
-  // send generic JSON payload if client supports "sendMessage" with rich content
+  /** sendRich — forwards arbitrary complex payload (list, poll, buttons, etc.)
+   *  WppConnect doesn't have a single generic method; we try sendListMessage,
+   *  sendPollMessage, and finally fall back to sending the payload as JSON text. */
   async sendRich(sessionOrId: string, to: string, payload: any) {
+    if (to && !to.includes('@')) to = `${to}@c.us`;
     const client = this.getClient(sessionOrId);
     if (!client) throw new Error('Client not running for ' + sessionOrId);
-    if (client.sendMessage) return client.sendMessage(to, payload);
-    throw new Error('No rich send method available');
-  }
-
-  async dbUpdater(instance: string, state: string) {
-    // update status on instances by name
-    try {
-      const inst = await this.instanceRepo.findOneBy({ name: instance } as any);
-      if (inst) {
-        (inst as any).status = state;
-        const saved = await this.instanceRepo.save(inst as any);
-        try {
-          await (this.instanceRepo.manager as any).query(
-            `UPDATE instances SET status = $1 WHERE name = $2`,
-            [state, instance],
-          );
-        } catch (e) {
-          // swallow notify errors
-        }
-        return saved;
-      }
-    } catch (e) {
-      logger.warn(
-        `Failed updating instance status in dbUpdater: ${String(e)} ${e?.stack || ''}`,
-      );
+    // Try structured message types if the client exposes them
+    if (payload?.type === 'list' && client.sendListMessage) {
+      return this.withTimeout(client.sendListMessage(to, payload), 60_000, 'sendRich:list');
     }
-    return null;
+    if (payload?.type === 'poll' && client.sendPollMessage) {
+      return this.withTimeout(client.sendPollMessage(to, payload.name, payload.choices, payload.options), 60_000, 'sendRich:poll');
+    }
+    if (payload?.type === 'buttons' && client.sendButtons) {
+      return this.withTimeout(client.sendButtons(to, payload.title, payload.buttons, payload.description), 60_000, 'sendRich:buttons');
+    }
+    // Generic fallback: send JSON as plain text
+    const text = typeof payload === 'string' ? payload : JSON.stringify(payload, null, 2);
+    return this.withTimeout(client.sendText(to, text), 60_000, 'sendRich:fallback');
   }
 
-  private extFromMime(mime: string): string {
+  private isDataUrl(value: Buffer | string): boolean {
+    return typeof value === 'string' && value.startsWith('data:');
+  }
+
+  /** Resolve any input (Buffer, data URI, HTTP URL) to a file on disk.
+   *  Saves at storage/{type}/{uuid}.{ext} and returns the absolute path. */
+  private async resolveToFile(
+    input: Buffer | string,
+    type: string,
+    fallbackFilename = 'file',
+    fallbackMime?: string,
+  ): Promise<string> {
+    const ext = fallbackFilename.includes('.') ? fallbackFilename.split('.').pop()! : 'bin';
+    const dir = path.resolve('storage', type);
+    await fs.ensureDir(dir);
+    const filePath = path.join(dir, `${randomUUID()}.${ext}`);
+
+    if (Buffer.isBuffer(input)) {
+      await fs.writeFile(filePath, input);
+      return filePath;
+    }
+    if (this.isDataUrl(input)) {
+      // Extract raw base64 from data URI
+      const base64 = input.replace(/^data:[^;]+;base64,/, '');
+      await fs.writeFile(filePath, Buffer.from(base64, 'base64'));
+      return filePath;
+    }
+    // HTTP(s) URL — download server-side
+    try {
+      const res = await fetch(input);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const buf = Buffer.from(await res.arrayBuffer());
+      await fs.writeFile(filePath, buf);
+      return filePath;
+    } catch (e) {
+      throw new Error(`Failed to download ${input}: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+
+  private guessMimeFromFilename(filename: string): string {
+    const ext = filename.split('.').pop()?.toLowerCase();
     const map: Record<string, string> = {
-      'image/png': '.png', 'image/jpeg': '.jpg', 'image/gif': '.gif', 'image/webp': '.webp',
-      'video/mp4': '.mp4', 'video/webm': '.webm', 'video/3gpp': '.3gp',
-      'audio/mpeg': '.mp3', 'audio/ogg': '.ogg', 'audio/ogg; codecs=opus': '.ogg',
-      'audio/wav': '.wav', 'audio/mp4': '.m4a', 'audio/aac': '.aac',
-      'application/pdf': '.pdf', 'application/msword': '.doc',
+      jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png',
+      gif: 'image/gif', webp: 'image/webp',
+      mp4: 'video/mp4', mov: 'video/quicktime',
+      mp3: 'audio/mpeg', ogg: 'audio/ogg', opus: 'audio/ogg',
+      pdf: 'application/pdf',
     };
-    return map[mime] || map[mime.split(';')[0]] || '.bin';
+    return (ext && map[ext]) || 'application/octet-stream';
   }
 }
-// trigger

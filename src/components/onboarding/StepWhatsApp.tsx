@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { MessageSquare, Key, Phone, ExternalLink, Copy, Check, ChevronDown, Building2, Sparkles, RefreshCw } from 'lucide-react';
+import { MessageSquare, Key, Phone, ExternalLink, Copy, Check, ChevronDown, Building2, Sparkles, RefreshCw, Wifi, WifiOff, Loader2, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/Button';
+import { apiFetch } from '@/services/api';
 
 interface StepWhatsAppProps {
   accessToken: string;
@@ -60,6 +61,25 @@ export const StepWhatsApp: React.FC<StepWhatsAppProps> = ({
 }) => {
   const [showWebhook, setShowWebhook] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
+  const [instances, setInstances] = useState<any[]>([]);
+  const [loadingInstances, setLoadingInstances] = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await apiFetch('instances');
+        if (res.ok) {
+          const json = await res.json();
+          const list: any[] = json?.data ?? json ?? [];
+          setInstances(Array.isArray(list) ? list : []);
+        }
+      } catch (_e) {
+        // ignore
+      }
+      setLoadingInstances(false);
+    };
+    load();
+  }, []);
 
   // Auto-generate verify token if empty or default
   useEffect(() => {
@@ -97,6 +117,56 @@ export const StepWhatsApp: React.FC<StepWhatsAppProps> = ({
         <p className="text-muted-foreground text-sm max-w-md mx-auto">
           Conecte sua conta do WhatsApp Business para enviar e receber mensagens.
         </p>
+      </motion.div>
+
+      {/* Connected instances status */}
+      <motion.div variants={itemVariants} className="max-w-md mx-auto mb-2">
+        {loadingInstances ? (
+          <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/30 border border-border text-xs text-muted-foreground">
+            <Loader2 className="w-3 h-3 animate-spin" /> Verificando instâncias...
+          </div>
+        ) : instances.length === 0 ? (
+          <div className="flex items-center gap-2 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/30 text-xs text-yellow-400">
+            <WifiOff className="w-3 h-3" /> Nenhuma instância WPP configurada
+          </div>
+        ) : (() => {
+          const connected = instances.filter((i: any) => i.status === 'connected' || i.status === 'open');
+          const hasConnected = connected.length > 0;
+          return (
+            <div className="space-y-1.5">
+              {hasConnected && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.96 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="flex items-center gap-3 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30"
+                >
+                  <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-emerald-400">Instância já configurada!</p>
+                    <p className="text-xs text-emerald-400/70">Você pode avançar para o próximo passo.</p>
+                  </div>
+                </motion.div>
+              )}
+              {instances.map((inst: any) => {
+                const isConn = inst.status === 'connected' || inst.status === 'open';
+                return (
+                  <div
+                    key={inst.id}
+                    className={`flex items-center gap-2 p-3 rounded-lg border text-xs ${
+                      isConn
+                        ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                        : 'bg-muted/30 border-border text-muted-foreground'
+                    }`}
+                  >
+                    {isConn ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
+                    <span className="font-medium">{inst.name}</span>
+                    <span className="ml-auto capitalize">{isConn ? 'Conectado ✓' : inst.status}</span>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })()}
       </motion.div>
 
       <div className="space-y-6 max-w-md mx-auto">

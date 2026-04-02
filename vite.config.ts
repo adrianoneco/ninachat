@@ -18,19 +18,18 @@ export default defineConfig(({ mode }) => {
       proxy: {
         // Proxy frontend /api requests to backend
         '/api': {
-          target: 'http://localhost:40001',
+          target: `http://192.168.3.39:${env.PORT || '40001'}`,
           changeOrigin: true,
           secure: false,
-          rewrite: (p: string) => p.replace(/^\/api/, ''),
         },
         // Proxy uploads to backend
         '/uploads': {
-          target: 'http://localhost:40001',
+          target: `http://192.168.3.39:${env.PORT || '40001'}`,
           changeOrigin: true,
         },
         // Proxy Socket.IO to backend
         '/socket.io': {
-          target: 'http://localhost:40001',
+          target: `http://192.168.3.39:${env.PORT || '40001'}`,
           changeOrigin: true,
           ws: true,
         },

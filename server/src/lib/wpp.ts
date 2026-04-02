@@ -9,7 +9,7 @@ export class Wpp {
   // Return the raw Map of instances (session -> client)
   static getInstanceMap(): Map<string, any> {
     if (!this.manager) return new Map();
-    return (this.manager as any).instances || new Map();
+    return this.manager.instances || new Map();
   }
 
   // Return an array of client objects

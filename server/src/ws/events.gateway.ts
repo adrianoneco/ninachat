@@ -1,8 +1,22 @@
 import { Logger } from '@nestjs/common';
-import { WebSocketGateway, WebSocketServer, OnGatewayConnection, OnGatewayDisconnect, SubscribeMessage } from '@nestjs/websockets';
+import {
+  WebSocketGateway,
+  WebSocketServer,
+  OnGatewayConnection,
+  OnGatewayDisconnect,
+  SubscribeMessage,
+} from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 
-@WebSocketGateway({ cors: { origin: '*' } })
+@WebSocketGateway({
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"],
+    allowedHeaders: ["*"],
+    credentials: true
+  },
+  transports: ['websocket', 'polling']
+})
 export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
@@ -38,9 +52,10 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   emit(event: string, payload: any) {
     try {
+      this.logger.log(`[WS] Emitting global event: ${event}`);
       this.server.emit(event, payload);
     } catch (e) {
-      // no-op in case server not ready
+      this.logger.error(`[WS] Failed to emit event ${event}:`, e);
     }
   }
 

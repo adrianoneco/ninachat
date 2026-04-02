@@ -15,6 +15,7 @@ import { api } from './services/api';
 import Scheduling from './components/Scheduling';
 import Kanban from './components/Kanban';
 import WebhookListener from './components/WebhookListener';
+import WebSocketMonitor from './components/WebSocketMonitor';
 import { Toaster } from 'sonner';
 import { OnboardingWizard } from './components/OnboardingWizard';
 import { useOnboardingStatus } from './hooks/useOnboardingStatus';
@@ -57,10 +58,13 @@ const AppLayout: React.FC = () => {
         </div>
       </main>
 
-      <OnboardingWizard 
-        isOpen={showOnboarding} 
-        onClose={() => setShowOnboarding(false)} 
+      <OnboardingWizard
+        isOpen={showOnboarding}
+        onClose={() => setShowOnboarding(false)}
       />
+
+      {/* WebSocket Monitor */}
+      <WebSocketMonitor />
     </div>
   );
 };

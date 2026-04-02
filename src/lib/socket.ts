@@ -24,10 +24,40 @@ export function connectSocket(serverUrl?: string): Socket | null {
     // ignore
   }
 
-  socket = io(target || undefined, { transports: ['websocket', 'polling'] });
+  socket = io(target || undefined, {
+    transports: ['websocket', 'polling'],
+    timeout: 5000,
+    forceNew: false,
+    reconnection: true,
+    reconnectionAttempts: 5,
+    reconnectionDelay: 1000
+  });
+
   socket.on('connect', () => console.log('[socket] connected', socket?.id));
   socket.on('disconnect', (reason) => console.log('[socket] disconnected', reason));
+  socket.on('connect_error', (error) => console.log('[socket] connection error', error));
+  socket.on('reconnect', () => console.log('[socket] reconnected'));
+  socket.on('reconnect_error', (error) => console.log('[socket] reconnection error', error));
+
   return socket;
 }
 
 export function getSocket(): Socket | null { return socket; }
+
+export function getSocketStatus() {
+  if (!socket) return null;
+
+  return {
+    connected: socket.connected,
+    id: socket.id,
+    disconnected: socket.disconnected,
+    recovered: socket.recovered
+  };
+}
+
+export function disconnectSocket() {
+  if (socket) {
+    socket.disconnect();
+    socket = null;
+  }
+}

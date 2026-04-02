@@ -1,4 +1,9 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+} from 'typeorm';
 
 @Entity('storage_files')
 export class StorageFile {
@@ -9,7 +14,7 @@ export class StorageFile {
   @Column({ type: 'text' })
   original_name!: string;
 
-  /** The object key inside MinIO/S3 bucket */
+  /** Local file path relative to instance storage folder */
   @Column({ type: 'text', unique: true })
   s3_key!: string;
 
@@ -28,6 +33,14 @@ export class StorageFile {
   /** Optional: linked conversation id */
   @Column({ type: 'uuid', nullable: true })
   conversation_id?: string;
+
+  /** Media type folder: image, video, audio, document */
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  media_type?: string;
+
+  /** Instance ID that owns this file */
+  @Column({ type: 'uuid', nullable: true })
+  instance_id?: string;
 
   @CreateDateColumn()
   created_at!: Date;

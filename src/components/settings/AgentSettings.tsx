@@ -105,12 +105,19 @@ const AgentSettings = forwardRef<AgentSettingsRef, { onDirtyChange?: (dirty: boo
       // Try loading from backend first
       let data: any = null;
       try {
-        const res = await fetch(`${API_BASE}/livechat_settings`);
+        const res = await fetch(`${API_BASE}/livechat_settings`, {
+          cache: 'no-store',
+          headers: { 'Cache-Control': 'no-cache' },
+        });
         if (res.ok) {
           const json = await res.json();
           data = json?.data ?? json;
+        } else {
+          console.error('[AgentSettings] Load failed with status', res.status);
         }
-      } catch {}
+      } catch (e) {
+        console.error('[AgentSettings] Load fetch error', e);
+      }
       if (!data) data = null;
       if (data) {
         const newSettings: AgentSettings = {
@@ -185,7 +192,7 @@ const AgentSettings = forwardRef<AgentSettingsRef, { onDirtyChange?: (dirty: boo
         console.error('[AgentSettings] Failed to save to backend', err);
         throw err;
       }
-      committedRef.current = JSON.stringify(merged);
+      committedRef.current = JSON.stringify(settings);
       setIsDirty(false);
       onDirtyChange?.(false);
       toast.success('Configurações do agente salvas com sucesso!');

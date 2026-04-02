@@ -1,4 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Index } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  Index,
+} from 'typeorm';
 
 @Index(['phone_number'], { unique: true })
 @Entity('contacts')
@@ -21,7 +28,7 @@ export class Contact {
   @Column({ nullable: false })
   phone_formated: string;
 
-  @Column({ nullable: false })
+  @Column({ nullable: false, unique: true })
   whatsapp_id!: string;
 
   @Column({ nullable: true })
@@ -66,6 +73,6 @@ export class Contact {
   @CreateDateColumn()
   created_at!: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ default: () => 'now()' })
   updated_at!: Date;
 }

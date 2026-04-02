@@ -1,4 +1,9 @@
-import { Injectable, OnModuleInit, Logger, OnModuleDestroy } from '@nestjs/common';
+import {
+  Injectable,
+  OnModuleInit,
+  Logger,
+  OnModuleDestroy,
+} from '@nestjs/common';
 import { Client } from 'pg';
 import { EventsGateway } from './events.gateway';
 
@@ -19,7 +24,9 @@ export class PostgresListenerService implements OnModuleInit, OnModuleDestroy {
     this.client = new Client({ host, port, user, password, database });
     try {
       await this.client.connect();
-      log.log(`Connected to Postgres for LISTEN/NOTIFY on ${host}:${port}/${database}`);
+      log.log(
+        `Connected to Postgres for LISTEN/NOTIFY on ${host}:${port}/${database}`,
+      );
       await this.client.query('LISTEN instance_updated');
       this.client.on('notification', (msg) => {
         try {
@@ -28,10 +35,13 @@ export class PostgresListenerService implements OnModuleInit, OnModuleDestroy {
             const payload = msg.payload ? JSON.parse(msg.payload) : null;
             if (payload) {
               const session = payload.wppconnect_session || payload.id;
-              log.verbose(`NOTIFY received for instance ${payload.id} session=${session}`);
+              log.verbose(
+                `NOTIFY received for instance ${payload.id} session=${session}`,
+              );
               try {
                 this.events.emit('instance:updated', payload);
-                if (session) this.events.emitTo(session, 'instance:updated', payload);
+                if (session)
+                  this.events.emitTo(session, 'instance:updated', payload);
               } catch (e) {
                 log.warn('Failed to re-emit instance:updated: ' + String(e));
               }
@@ -44,7 +54,9 @@ export class PostgresListenerService implements OnModuleInit, OnModuleDestroy {
     } catch (e) {
       log.warn('Postgres LISTEN setup failed: ' + String(e));
       if (this.client) {
-        try { await this.client.end(); } catch (err) {}
+        try {
+          await this.client.end();
+        } catch (err) {}
         this.client = null;
       }
     }
@@ -52,7 +64,9 @@ export class PostgresListenerService implements OnModuleInit, OnModuleDestroy {
 
   async onModuleDestroy() {
     if (this.client) {
-      try { await this.client.end(); } catch (e) {}
+      try {
+        await this.client.end();
+      } catch (e) {}
       this.client = null;
     }
   }

@@ -15,6 +15,20 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { toast } from 'sonner';
 import { useCompanySettings } from '@/hooks/useCompanySettings';
 
+const COLUMN_COLORS: Record<string, { outerBg: string; outerBorder: string; headerBg: string; topBorder: string; titleText: string; badgeBg: string; badgeText: string }> = {
+  'border-slate-500':   { outerBg: 'bg-slate-900/30',   outerBorder: 'border-slate-700/50',   headerBg: 'bg-slate-500/10',   topBorder: 'border-t-slate-500',   titleText: 'text-slate-300',   badgeBg: 'bg-slate-800/60',   badgeText: 'text-slate-400' },
+  'border-primary':     { outerBg: 'bg-cyan-950/20',    outerBorder: 'border-cyan-700/50',    headerBg: 'bg-cyan-500/10',    topBorder: 'border-t-cyan-500',    titleText: 'text-cyan-300',    badgeBg: 'bg-cyan-900/50',    badgeText: 'text-cyan-400' },
+  'border-violet-500':  { outerBg: 'bg-violet-950/20',  outerBorder: 'border-violet-700/50',  headerBg: 'bg-violet-500/10',  topBorder: 'border-t-violet-500',  titleText: 'text-violet-300',  badgeBg: 'bg-violet-900/50',  badgeText: 'text-violet-400' },
+  'border-orange-500':  { outerBg: 'bg-orange-950/20',  outerBorder: 'border-orange-700/50',  headerBg: 'bg-orange-500/10',  topBorder: 'border-t-orange-500',  titleText: 'text-orange-300',  badgeBg: 'bg-orange-900/50',  badgeText: 'text-orange-400' },
+  'border-emerald-500': { outerBg: 'bg-emerald-950/30', outerBorder: 'border-emerald-700/50', headerBg: 'bg-emerald-500/15', topBorder: 'border-t-emerald-500', titleText: 'text-emerald-300', badgeBg: 'bg-emerald-900/50', badgeText: 'text-emerald-400' },
+  'border-red-500':     { outerBg: 'bg-red-950/30',     outerBorder: 'border-red-700/50',     headerBg: 'bg-red-500/15',     topBorder: 'border-t-red-500',     titleText: 'text-red-300',     badgeBg: 'bg-red-900/50',     badgeText: 'text-red-400' },
+  'border-blue-500':    { outerBg: 'bg-blue-950/20',    outerBorder: 'border-blue-700/50',    headerBg: 'bg-blue-500/10',    topBorder: 'border-t-blue-500',    titleText: 'text-blue-300',    badgeBg: 'bg-blue-900/50',    badgeText: 'text-blue-400' },
+  'border-yellow-500':  { outerBg: 'bg-yellow-950/20',  outerBorder: 'border-yellow-700/50',  headerBg: 'bg-yellow-500/10',  topBorder: 'border-t-yellow-500',  titleText: 'text-yellow-200',  badgeBg: 'bg-yellow-900/50',  badgeText: 'text-yellow-400' },
+  'border-pink-500':    { outerBg: 'bg-pink-950/20',    outerBorder: 'border-pink-700/50',    headerBg: 'bg-pink-500/10',    topBorder: 'border-t-pink-500',    titleText: 'text-pink-300',    badgeBg: 'bg-pink-900/50',    badgeText: 'text-pink-400' },
+  'border-indigo-500':  { outerBg: 'bg-indigo-950/20',  outerBorder: 'border-indigo-700/50',  headerBg: 'bg-indigo-500/10',  topBorder: 'border-t-indigo-500',  titleText: 'text-indigo-300',  badgeBg: 'bg-indigo-900/50',  badgeText: 'text-indigo-400' },
+};
+const DEFAULT_COL = COLUMN_COLORS['border-slate-500'];
+
 const Kanban: React.FC = () => {
   const { sdrName } = useCompanySettings();
   const [deals, setDeals] = useState<Deal[]>([]);
@@ -301,34 +315,19 @@ const Kanban: React.FC = () => {
           {stages.map((column) => {
             const columnDeals = filteredDeals.filter(d => d.stageId === column.id);
             const totalValue = columnDeals.reduce((acc, curr) => acc + curr.value, 0);
-            const isWonColumn = column.title === 'Ganho';
-            const isLostColumn = column.title === 'Perdido';
+            const cc = COLUMN_COLORS[column.color] ?? DEFAULT_COL;
 
             return (
               <div 
                 key={column.id}
-                className={`w-72 flex flex-col h-full rounded-xl border backdrop-blur-sm ${
-                  isWonColumn 
-                    ? 'bg-emerald-950/40 border-emerald-700/50' 
-                    : isLostColumn 
-                      ? 'bg-red-950/40 border-red-700/50' 
-                      : 'bg-gray-100/30 dark:bg-slate-900/30 border-gray-200/50 dark:border-slate-800/50'
-                }`}
+                className={`w-72 flex flex-col h-full rounded-xl border backdrop-blur-sm ${cc.outerBg} ${cc.outerBorder}`}
                 onDragOver={onDragOver}
                 onDrop={(e) => onDrop(e, column.id)}
               >
                 {/* Column Header */}
-                <div className={`p-3 border-b flex flex-col gap-1 rounded-t-xl ${
-                  isWonColumn 
-                    ? 'bg-emerald-500/20 border-emerald-700/50 border-t-4 border-t-emerald-500' 
-                    : isLostColumn 
-                      ? 'bg-red-500/20 border-red-700/50 border-t-4 border-t-red-500' 
-                      : `border-gray-200/50 dark:border-slate-800/50 border-t-2 ${column.color}`
-                }`}>
+                <div className={`p-3 border-b flex flex-col gap-1 rounded-t-xl border-t-4 ${cc.headerBg} ${cc.outerBorder} ${cc.topBorder}`}>
                   <div className="flex justify-between items-center">
-                    <h3 className={`font-bold text-xs uppercase tracking-wide flex items-center gap-1.5 ${
-                      isWonColumn ? 'text-emerald-300' : isLostColumn ? 'text-red-300' : 'text-gray-700 dark:text-slate-200'
-                    }`}>
+                    <h3 className={`font-bold text-xs uppercase tracking-wide flex items-center gap-1.5 ${cc.titleText}`}>
                       {column.isAiManaged && (
                         <span title="Gerenciado pela IA">
                           <Bot className="w-3 h-3 text-cyan-400" />
@@ -336,16 +335,10 @@ const Kanban: React.FC = () => {
                       )}
                       {column.title}
                     </h3>
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-mono ${
-                      isWonColumn 
-                        ? 'bg-emerald-900/50 text-emerald-400' 
-                        : isLostColumn 
-                          ? 'bg-red-900/50 text-red-400' 
-                          : 'bg-gray-200 dark:bg-slate-800 text-gray-500 dark:text-slate-400'
-                    }`}>{columnDeals.length}</span>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-mono ${cc.badgeBg} ${cc.badgeText}`}>{columnDeals.length}</span>
                   </div>
-                  <div className="text-[10px] text-gray-500 dark:text-slate-500 font-medium">
-                     Total: <span className={isWonColumn ? 'text-emerald-300' : isLostColumn ? 'text-red-300' : 'text-gray-600 dark:text-slate-300'}>{formatCurrency(totalValue)}</span>
+                  <div className="text-[10px] font-medium opacity-70">
+                     Total: <span className={cc.titleText}>{formatCurrency(totalValue)}</span>
                   </div>
                 </div>
 

@@ -6,35 +6,42 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
+import { InstancesModule } from './modules/instances/instances.module';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  app.setGlobalPrefix('api');
   app.enableCors({ origin: true, credentials: true });
   // Increase request body size limits to allow larger payloads (file uploads via form-data/binary)
   // Default was 100kb which caused PayloadTooLargeError for ~200-400kb requests.
-  app.use(bodyParser.json({ limit: '5mb' }));
-  app.use(bodyParser.urlencoded({ limit: '5mb', extended: true }));
+  app.use(bodyParser.json({ limit: '512mb' }));
+  app.use(bodyParser.urlencoded({ limit: '512mb', extended: true }));
   // Serve uploaded files
-  app.useStaticAssets(join(__dirname, '..', 'uploads'), { prefix: '/uploads/' });
+  app.useStaticAssets(join(__dirname, '..', 'uploads'), {
+    prefix: '/uploads/',
+  });
   // Enable validation for incoming requests
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
-  // Setup Swagger at /api-docs
+  // Setup Swagger at /api-docs — only Instâncias + Enviar Mensagens
   try {
     const config = new DocumentBuilder()
-      .setTitle('LiveChat API')
-      .setDescription('APIs de integração WPP e ambiente de testes')
+      .setTitle('Nina Chat API')
+      .setDescription('API para gerenciamento de instâncias WhatsApp e envio de mensagens')
       .setVersion('1.0')
+      .addTag('Instâncias', 'Gerenciamento de instâncias WhatsApp')
+      .addTag('Enviar Mensagens', 'Envio de mensagens de texto, imagem, vídeo e áudio')
       .build();
-    const document = SwaggerModule.createDocument(app, config);
+    const document = SwaggerModule.createDocument(app, config, {
+      include: [InstancesModule],
+    });
     SwaggerModule.setup('api-docs', app, document);
   } catch (e) {
-    // Log full error to help debugging if Swagger fails to initialize
     console.error('Swagger setup failed:', e && (e.stack || e.message || e));
   }
   app.enableShutdownHooks();
 
-  await app.listen(40001);
-  
+  await app.listen(parseInt(process.env.PORT || '40001', 10));
+
   // Graceful shutdown handlers for common signals (reloads, docker stop, nodemon)
   const shutdown = async (sig: string) => {
     try {
@@ -45,11 +52,11 @@ async function bootstrap() {
       process.exit(1);
     }
   };
-  
+
   process.once('SIGINT', () => shutdown('SIGINT'));
   process.once('SIGTERM', () => shutdown('SIGTERM'));
   process.once('SIGHUP', () => shutdown('SIGHUP'));
-  
+
   // For nodemon/bun restart which uses SIGUSR2, close app then re-emit the signal
   process.once('SIGUSR2', async () => {
     try {
@@ -73,7 +80,7 @@ const TRANSIENT_PUPPETEER_MSGS = [
 ];
 process.on('unhandledRejection', (reason: any) => {
   const msg = String(reason?.message || reason || '');
-  if (TRANSIENT_PUPPETEER_MSGS.some(s => msg.includes(s))) {
+  if (TRANSIENT_PUPPETEER_MSGS.some((s) => msg.includes(s))) {
     // swallow — these are expected during WhatsApp Web navigations
     return;
   }

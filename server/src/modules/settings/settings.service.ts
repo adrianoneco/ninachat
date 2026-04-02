@@ -8,7 +8,8 @@ import { LiveChatSettings } from '../../entities/livechat-settings.entity';
 export class SettingsService {
   constructor(
     @InjectRepository(TagDefinition) private tagRepo: Repository<TagDefinition>,
-    @InjectRepository(LiveChatSettings) private livechatRepo: Repository<LiveChatSettings>,
+    @InjectRepository(LiveChatSettings)
+    private livechatRepo: Repository<LiveChatSettings>,
   ) {}
 
   // ─── Tag Definitions ──────────────────────────────
@@ -51,6 +52,6 @@ export class SettingsService {
   async updateLiveChatSettings(data: Partial<LiveChatSettings>) {
     const current = await this.getLiveChatSettings();
     Object.assign(current, data);
-    return this.livechatRepo.save(current as any);
+    return this.livechatRepo.save(current);
   }
 }

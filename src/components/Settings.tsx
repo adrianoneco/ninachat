@@ -111,7 +111,8 @@ const Settings: React.FC = () => {
     (async () => {
       try {
         const res = await fetch(`${API_BASE}/system_settings`);
-        const current = res.ok ? ((await res.json())?.data ?? await res.json() ?? {}) : {};
+        const resJson = res.ok ? await res.json() : null;
+        const current = resJson?.data ?? resJson ?? {};
         await fetch(`${API_BASE}/system_settings`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...current, theme }) });
       } catch (err) { console.error('Failed to persist theme', err); }
     })();

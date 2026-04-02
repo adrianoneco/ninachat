@@ -235,7 +235,7 @@ export function PipelineSettingsModal({ open, onClose, onSave }: PipelineSetting
                   >
                     <GripVertical className="w-5 h-5 text-muted-foreground" />
                     
-                    <div className={`w-3 h-3 rounded-full ${stage.color.replace('border-', 'bg-')}`} />
+                    <div className={`w-3 h-3 rounded-full ${STAGE_COLORS.find(c => c.value === stage.color)?.preview ?? 'bg-slate-500'}`} />
 
                     {editingId === stage.id ? (
                       <div className="flex-1 space-y-2">

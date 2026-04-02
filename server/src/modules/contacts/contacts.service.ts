@@ -44,7 +44,10 @@ export class ContactsService {
       const digits = String(normalized.phone_number).replace(/\D/g, '');
       const byPhone = await this.repo
         .createQueryBuilder('c')
-        .where("REPLACE(REPLACE(REPLACE(c.phone_number, '+', ''), '-', ''), ' ', '') = :digits", { digits })
+        .where(
+          "REPLACE(REPLACE(REPLACE(c.phone_number, '+', ''), '-', ''), ' ', '') = :digits",
+          { digits },
+        )
         .getOne();
       if (byPhone) {
         for (const [key, value] of Object.entries(normalized)) {
@@ -60,7 +63,9 @@ export class ContactsService {
 
     // Try by whatsapp_id
     if (normalized.whatsapp_id) {
-      const byWa = await this.repo.findOneBy({ whatsapp_id: normalized.whatsapp_id } as any);
+      const byWa = await this.repo.findOneBy({
+        whatsapp_id: normalized.whatsapp_id,
+      } as any);
       if (byWa) {
         for (const [key, value] of Object.entries(normalized)) {
           if (key !== 'id' && value !== undefined) {
@@ -79,7 +84,7 @@ export class ContactsService {
     }
 
     // Create new contact
-    const ent = this.repo.create(normalized as any);
+    const ent = this.repo.create(normalized);
     const saved = await this.repo.save(ent);
     this.events.emit('contact:created', saved);
     return saved;
@@ -98,7 +103,7 @@ export class ContactsService {
       this.events.emit('contact:updated', saved);
       return saved;
     }
-    await this.repo.update(id, normalized as any);
+    await this.repo.update(id, normalized);
     const updated = await this.repo.findOneBy({ id } as any);
     this.events.emit('contact:updated', updated);
     return updated;

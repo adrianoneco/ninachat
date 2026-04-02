@@ -1,4 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 @Entity({ name: 'livechat_settings' })
 export class LiveChatSettings {
@@ -7,6 +13,12 @@ export class LiveChatSettings {
 
   @Column({ type: 'boolean', default: true })
   is_active!: boolean;
+
+  @Column({ type: 'text', nullable: true })
+  company_name?: string;
+
+  @Column({ type: 'text', nullable: true })
+  sdr_name?: string;
 
   @Column({ type: 'text', nullable: true })
   system_prompt_override?: string;
@@ -91,6 +103,107 @@ export class LiveChatSettings {
 
   @Column({ type: 'jsonb', nullable: true })
   test_phone_numbers?: any;
+
+  // ─── AI Settings ──────────────────────────────────────
+  @Column({ type: 'boolean', default: false })
+  ai_copilot_enabled!: boolean;
+
+  @Column({ type: 'text', nullable: true, default: 'gpt-4o-mini' })
+  ai_copilot_model?: string;
+
+  @Column({ type: 'text', nullable: true })
+  ai_copilot_system_prompt?: string;
+
+  @Column({ type: 'numeric', default: 0.2 })
+  ai_copilot_temperature!: number;
+
+  @Column({ type: 'boolean', default: true })
+  ai_autosummary_enabled!: boolean;
+
+  @Column({ type: 'text', nullable: true, default: 'short' })
+  ai_summary_length?: string;
+
+  @Column({ type: 'boolean', default: false })
+  ai_behavior_verification_enabled!: boolean;
+
+  @Column({ type: 'jsonb', nullable: true, default: () => "'[]'" })
+  ai_behavior_events?: any;
+
+  @Column({ type: 'integer', default: 50 })
+  ai_behavior_sample_size!: number;
+
+  @Column({ type: 'text', nullable: true, default: 'openai' })
+  ai_global_provider?: string;
+
+  @Column({ type: 'text', nullable: true })
+  ai_global_api_key?: string;
+
+  @Column({ type: 'text', nullable: true, default: 'gpt-4o-mini' })
+  ai_global_model?: string;
+
+  @Column({ type: 'text', nullable: true })
+  ai_global_base_url?: string;
+
+  @Column({ type: 'boolean', default: false })
+  ai_copilot_use_own!: boolean;
+
+  @Column({ type: 'text', nullable: true, default: 'openai' })
+  ai_copilot_provider?: string;
+
+  @Column({ type: 'text', nullable: true })
+  ai_copilot_api_key?: string;
+
+  @Column({ type: 'text', nullable: true })
+  ai_copilot_base_url?: string;
+
+  @Column({ type: 'boolean', default: false })
+  ai_summary_use_own!: boolean;
+
+  @Column({ type: 'text', nullable: true, default: 'openai' })
+  ai_summary_provider?: string;
+
+  @Column({ type: 'text', nullable: true })
+  ai_summary_api_key?: string;
+
+  @Column({ type: 'text', nullable: true, default: 'gpt-4o-mini' })
+  ai_summary_model?: string;
+
+  @Column({ type: 'text', nullable: true })
+  ai_summary_base_url?: string;
+
+  @Column({ type: 'boolean', default: false })
+  ai_behavior_use_own!: boolean;
+
+  @Column({ type: 'text', nullable: true, default: 'openai' })
+  ai_behavior_provider?: string;
+
+  @Column({ type: 'text', nullable: true })
+  ai_behavior_api_key?: string;
+
+  @Column({ type: 'text', nullable: true, default: 'gpt-4o-mini' })
+  ai_behavior_model?: string;
+
+  @Column({ type: 'text', nullable: true })
+  ai_behavior_base_url?: string;
+
+  // ─── Main Agent AI Provider ────────────────────────
+  @Column({ type: 'text', nullable: true, default: 'google' })
+  ai_provider?: string;
+
+  @Column({ type: 'text', nullable: true })
+  ai_api_key?: string;
+
+  @Column({ type: 'text', nullable: true, default: 'gemini-2.0-flash' })
+  ai_model?: string;
+
+  @Column({ type: 'text', nullable: true })
+  ai_base_url?: string;
+
+  @Column({ type: 'boolean', default: true })
+  ai_scheduling_enabled!: boolean;
+
+  @Column({ type: 'text', nullable: true })
+  company_logo?: string;
 
   @CreateDateColumn()
   created_at!: Date;

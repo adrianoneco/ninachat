@@ -20,7 +20,10 @@ export class RolesController {
   @Put(':id/permissions')
   @UseGuards(PermissionsGuard)
   @Permissions('users.manage')
-  async updatePermissions(@Param('id') id: string, @Body() body: { keys: string[] }) {
+  async updatePermissions(
+    @Param('id') id: string,
+    @Body() body: { keys: string[] },
+  ) {
     await this.svc.ensureAdminNotLost(id, body.keys);
     return this.svc.updateRolePermissions(id, body.keys || []);
   }

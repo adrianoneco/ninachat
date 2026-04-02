@@ -1,4 +1,13 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Index, ManyToOne, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  Index,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 import type { Relation } from 'typeorm';
 import { Contact } from './contact.entity';
 
@@ -14,14 +23,18 @@ export class Conversation {
   @Column({ nullable: false })
   contact_id?: string;
 
-  @ManyToOne(() => Contact, { eager: false, nullable: true, onDelete: 'SET NULL' })
+  @ManyToOne(() => Contact, {
+    eager: false,
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
   @JoinColumn({ name: 'contact_id' })
   contact?: Relation<Contact>;
 
   @Column({ nullable: false })
   instance_id?: string;
 
-  @Column({ nullable: false , default: false })
+  @Column({ nullable: false, default: false })
   is_group?: boolean;
 
   @Column({ type: 'boolean', default: true })

@@ -1,4 +1,3 @@
-
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -26,11 +25,11 @@ export class ConversationsService {
       .leftJoinAndSelect('c.contact', 'contact')
       .orderBy('c.updated_at', 'DESC')
       .getMany();
-    
+
     if (convs.length === 0) return [];
 
     // Fetch all messages for these conversations in bulk
-    const convIds = convs.map(c => c.id);
+    const convIds = convs.map((c) => c.id);
     let allMessages: any[] = [];
     if (convIds.length > 0) {
       allMessages = await this.messageRepo
@@ -43,7 +42,7 @@ export class ConversationsService {
     // Group messages by conversation_id
     const msgsByConv = new Map<string, any[]>();
     for (const m of allMessages) {
-      const cid = (m as any).conversation_id;
+      const cid = m.conversation_id;
       if (!msgsByConv.has(cid)) msgsByConv.set(cid, []);
       msgsByConv.get(cid)!.push(m);
     }
@@ -57,7 +56,9 @@ export class ConversationsService {
 
       // Count unread inbound messages
       const unreadCount = (msgsByConv.get(c.id) || []).filter(
-        (m: any) => (m.direction === 'inbound' || m.from_type === 'whatsapp') && m.status !== 'read'
+        (m: any) =>
+          (m.direction === 'inbound' || m.from_type === 'whatsapp') &&
+          m.status !== 'read',
       ).length;
 
       result.push({
@@ -72,10 +73,21 @@ export class ConversationsService {
     return result;
   }
 
-  async getOrCreateActiveConversation(contact_id: string, data: Partial<Conversation> = {}): Promise<Conversation> {
-    let conversation = await this.repo.findOne({ where: { contact_id, is_active: true } });
+  async getOrCreateActiveConversation(
+    contact_id: string,
+    data: Partial<Conversation> = {},
+  ): Promise<Conversation> {
+    const conversation = await this.repo.findOne({
+      where: { contact_id, is_active: true },
+    });
     if (conversation) return conversation;
-    const ent = this.repo.create({ livechat_context: {}, metadata: {}, ...data, contact_id, is_active: true });
+    const ent = this.repo.create({
+      livechat_context: {},
+      metadata: {},
+      ...data,
+      contact_id,
+      is_active: true,
+    });
     const saved = await this.repo.save(ent);
     this.events.emit('conversation:created', saved);
     return saved;
@@ -87,8 +99,8 @@ export class ConversationsService {
       .leftJoinAndSelect('c.contact', 'contact')
       .orderBy('c.updated_at', 'DESC')
       .getMany();
-    
-    return convs.map(c => ({ ...c, contact: c.contact || null }));
+
+    return convs.map((c) => ({ ...c, contact: c.contact || null }));
   }
 
   async createOrUpdate(data: any) {
@@ -121,7 +133,7 @@ export class ConversationsService {
     }
 
     // Create new
-    const ent = this.repo.create(cleanData as any);
+    const ent = this.repo.create(cleanData);
     const saved = await this.repo.save(ent as any);
     const resolvedContact = await this.resolveContact(saved.contact_id);
 
@@ -153,8 +165,12 @@ export class ConversationsService {
       const digits = contactId.replace(/@.*$/, '');
       return (
         (await this.contactRepo.findOneBy({ whatsapp_id: contactId } as any)) ||
-        (await this.contactRepo.findOneBy({ phone_number: contactId } as any)) ||
-        (digits !== contactId ? (await this.contactRepo.findOneBy({ phone_number: digits } as any)) : null) ||
+        (await this.contactRepo.findOneBy({
+          phone_number: contactId,
+        } as any)) ||
+        (digits !== contactId
+          ? await this.contactRepo.findOneBy({ phone_number: digits } as any)
+          : null) ||
         null
       );
     } catch {

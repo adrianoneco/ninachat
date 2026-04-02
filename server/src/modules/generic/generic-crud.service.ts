@@ -11,7 +11,10 @@ export class GenericCrudService {
     private repo: Repository<GenericRecord>,
   ) {}
 
-  async findAll(collection: string, query?: Record<string, string>): Promise<any[]> {
+  async findAll(
+    collection: string,
+    query?: Record<string, string>,
+  ): Promise<any[]> {
     const records = await this.repo.find({
       where: { collection },
       order: { updated_at: 'DESC' },

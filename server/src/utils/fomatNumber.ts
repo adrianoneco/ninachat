@@ -23,4 +23,3 @@ export function formatBR(phone: string): string {
 
   return phone;
 }
-

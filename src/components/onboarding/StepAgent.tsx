@@ -26,6 +26,9 @@ const AI_MODELS = [
   { value: 'pro', label: 'Gemini Pro 2.5', description: 'Mais inteligente' },
   { value: 'pro3', label: 'Gemini Pro 3', description: 'Última geração' },
   { value: 'adaptive', label: 'Modo Adaptativo', description: 'Alterna automaticamente' },
+  { value: 'groq_llama3_8b', label: 'Groq — Llama 3 8B', description: 'Ultra-rápido, leve' },
+  { value: 'groq_llama3_70b', label: 'Groq — Llama 3 70B', description: 'Ultra-rápido, inteligente' },
+  { value: 'groq_mixtral', label: 'Groq — Mixtral 8x7B', description: 'Ultra-rápido, multilíngue' },
 ];
 
 const containerVariants = {

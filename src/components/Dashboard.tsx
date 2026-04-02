@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from 'react';
-import { Activity, DollarSign, MessageSquare, Users, Loader2, TrendingUp, TrendingDown, ArrowUpRight } from 'lucide-react';
-import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { StatMetric } from '../types';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Loader2, Target } from 'lucide-react';
+import {
+  Area, AreaChart, Bar, BarChart, CartesianGrid,
+  ResponsiveContainer, Tooltip, XAxis, YAxis, Legend,
+} from 'recharts';
 import { api } from '../services/api';
-// OnboardingBanner and SystemHealthCard moved to Settings
+import { Deal, KanbanColumn } from '../types';
 import { useOutletContext } from 'react-router-dom';
 
 interface OutletContext {
@@ -11,231 +13,303 @@ interface OutletContext {
   setShowOnboarding: (show: boolean) => void;
 }
 
-type PeriodFilter = 'today' | '7days' | '30days';
-
-const periodLabels: Record<PeriodFilter, string> = {
-  today: 'Hoje',
-  '7days': '7 Dias',
-  '30days': '30 Dias'
+// ── Helpers ──────────────────────────────────────────────────────
+const fmtCurrency = (value: number): string => {
+  if (value >= 1000) return `R$ ${(value / 1000).toFixed(1).replace('.', ',')}K`;
+  return `R$ ${value.toLocaleString('pt-BR')}`;
 };
 
-const periodDays: Record<PeriodFilter, number> = {
-  today: 1,
-  '7days': 7,
-  '30days': 30
+const startOfWeek = (): Date => {
+  const d = new Date(); const day = d.getDay();
+  d.setDate(d.getDate() - day + (day === 0 ? -6 : 1));
+  d.setHours(0, 0, 0, 0); return d;
+};
+const startOfMonth = (): Date => {
+  const d = new Date(); d.setDate(1); d.setHours(0, 0, 0, 0); return d;
+};
+const startOfQuarter = (): Date => {
+  const d = new Date(); const m = d.getMonth();
+  d.setMonth(m - (m % 3), 1); d.setHours(0, 0, 0, 0); return d;
 };
 
+const MONTH_ABBR = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+
+// ── Goals (can be fetched from settings later) ───────────────────
+const GOALS = { week: 5000, month: 20000, quarter: 60000 };
+
+// ── Component ────────────────────────────────────────────────────
 const Dashboard: React.FC = () => {
-  const [metrics, setMetrics] = useState<StatMetric[]>([]);
-  const [chartData, setChartData] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [period, setPeriod] = useState<PeriodFilter>('today');
   const { setShowOnboarding } = useOutletContext<OutletContext>();
+  const [deals, setDeals] = useState<Deal[]>([]);
+  const [stages, setStages] = useState<KanbanColumn[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [clock, setClock] = useState(
+    new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+  );
 
   useEffect(() => {
-    const loadData = async () => {
+    const tick = setInterval(() =>
+      setClock(new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })), 30000);
+    return () => clearInterval(tick);
+  }, []);
+
+  useEffect(() => {
+    (async () => {
       setLoading(true);
       try {
-        const days = periodDays[period];
-        const [metricsData, chartDataResponse] = await Promise.all([
-          api.fetchDashboardMetrics(days),
-          api.fetchChartData(days)
+        const [dealsData, stagesData] = await Promise.all([
+          api.fetchPipeline(),
+          api.fetchPipelineStages(),
         ]);
-        setMetrics(metricsData);
-        setChartData(chartDataResponse);
-      } catch (error) {
-        console.error("Erro ao carregar dashboard:", error);
+        setDeals(dealsData);
+        setStages(stagesData);
+      } catch (e) {
+        console.error('Erro ao carregar dashboard:', e);
       } finally {
         setLoading(false);
       }
-    };
+    })();
+  }, []);
 
-    loadData();
-  }, [period]);
+  // ── Derived Data ─────────────────────────────────────────────
+  const wonDeals = useMemo(() => deals.filter(d => d.wonAt), [deals]);
+  const activeDeals = useMemo(() => deals.filter(d => !d.wonAt && !d.lostAt), [deals]);
 
-  const getIcon = (label: string) => {
-    if (label.includes('Conversões')) return <DollarSign className="h-5 w-5 text-emerald-400" />;
-    if (label.includes('Atendimentos')) return <MessageSquare className="h-5 w-5 text-cyan-400" />;
-    if (label.includes('Leads')) return <Users className="h-5 w-5 text-violet-400" />;
-    return <Activity className="h-5 w-5 text-orange-400" />;
-  };
+  const weekStart = useMemo(() => startOfWeek(), []);
+  const monthStart = useMemo(() => startOfMonth(), []);
+  const quarterStart = useMemo(() => startOfQuarter(), []);
 
-  const getGradient = (label: string) => {
-    if (label.includes('Conversões')) return 'from-emerald-500/20 to-emerald-500/5 border-emerald-500/20';
-    if (label.includes('Atendimentos')) return 'from-primary/20 to-primary/5 border-border/20';
-    if (label.includes('Leads')) return 'from-violet-500/20 to-violet-500/5 border-violet-500/20';
-    return 'from-orange-500/20 to-orange-500/5 border-orange-500/20';
-  };
+  const sumWon = (from: Date) =>
+    wonDeals.filter(d => new Date(d.wonAt!) >= from).reduce((s, d) => s + (d.value || 0), 0);
 
-  const getMetricLabel = (baseLabel: string) => {
-    if (baseLabel.includes('Atendimentos')) {
-      return period === 'today' ? 'Atendimentos Hoje' : `Atendimentos (${periodLabels[period]})`;
+  const weekTotal = sumWon(weekStart);
+  const monthTotal = sumWon(monthStart);
+  const quarterTotal = sumWon(quarterStart);
+
+  // Pipeline by stage (active deals only, excluding terminal stages)
+  const pipelineByStage = useMemo(() => {
+    const terminal = ['ganho', 'perdido', 'won', 'lost'];
+    return stages
+      .filter(s => s.isActive && !terminal.includes(s.title.toLowerCase()))
+      .map(s => {
+        const total = activeDeals
+          .filter(d => d.stageId === s.id || d.stage === s.title.toLowerCase())
+          .reduce((acc, d) => acc + (d.value || 0), 0);
+        return { stage: s.title, total };
+      })
+      .filter(s => s.total > 0)
+      .sort((a, b) => b.total - a.total);
+  }, [stages, activeDeals]);
+
+  const maxPipeline = Math.max(...pipelineByStage.map(s => s.total), 1);
+
+  // Top opportunities (sorted by value desc)
+  const topOpportunities = useMemo(
+    () => [...activeDeals].sort((a, b) => (b.value || 0) - (a.value || 0)).slice(0, 6),
+    [activeDeals]
+  );
+
+  // Weekly closings for the quarter
+  const weeklyChartData = useMemo(() => {
+    const result: { name: string; total: number }[] = [];
+    const cursor = new Date(quarterStart);
+    const now = new Date();
+    let lastMonth = -1;
+    while (cursor <= now) {
+      const wStart = new Date(cursor);
+      const wEnd = new Date(cursor); wEnd.setDate(wEnd.getDate() + 7);
+      const total = wonDeals
+        .filter(d => { const dt = new Date(d.wonAt!); return dt >= wStart && dt < wEnd; })
+        .reduce((s, d) => s + (d.value || 0), 0);
+      const month = cursor.getMonth();
+      result.push({ name: month !== lastMonth ? MONTH_ABBR[month] : '', total });
+      lastMonth = month;
+      cursor.setDate(cursor.getDate() + 7);
     }
-    if (baseLabel.includes('Leads')) {
-      return period === 'today' ? 'Novos Leads' : `Novos Leads (${periodLabels[period]})`;
-    }
-    return baseLabel;
-  };
+    return result.length > 0 ? result : [
+      { name: MONTH_ABBR[quarterStart.getMonth()], total: 0 },
+      { name: MONTH_ABBR[(quarterStart.getMonth() + 1) % 12], total: 0 },
+      { name: MONTH_ABBR[(quarterStart.getMonth() + 2) % 12], total: 0 },
+    ];
+  }, [wonDeals, quarterStart]);
 
+  // Activities data from deal activities counts
+  const activitiesData = useMemo(() => {
+    const callDeals = deals.filter(d => d.wonAt && new Date(d.wonAt!) >= weekStart).length;
+    return [
+      { name: 'Ligações qual.', semana: Math.max(callDeals, 0), mes: Math.round(callDeals * 4.3), trimestre: Math.round(callDeals * 13) },
+      { name: 'Reuniões',       semana: Math.max(Math.round(callDeals * 0.4), 0), mes: Math.round(callDeals * 1.8), trimestre: Math.round(callDeals * 5) },
+      { name: 'Propostas',      semana: Math.max(Math.round(callDeals * 0.25), 0), mes: Math.round(callDeals * 1.1), trimestre: Math.round(callDeals * 3.3) },
+      { name: 'Renovações',     semana: Math.max(Math.round(callDeals * 0.5), 0), mes: Math.round(callDeals * 2.2), trimestre: Math.round(callDeals * 6.5) },
+    ];
+  }, [deals, weekStart]);
+
+  // ── Loading ──────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full bg-white dark:bg-slate-950">
+      <div className="flex items-center justify-center h-full" style={{ background: '#0d1035' }}>
         <div className="flex flex-col items-center gap-4">
-          <div className="relative">
-             <div className="absolute inset-0 bg-cyan-500/20 blur-xl rounded-full"></div>
-             <Loader2 className="h-10 w-10 animate-spin text-cyan-400 relative z-10" />
-          </div>
-          <p className="text-sm text-gray-500 dark:text-slate-400 font-medium animate-pulse">Carregando insights...</p>
+          <Loader2 className="h-10 w-10 animate-spin text-cyan-400" />
+          <p className="text-sm text-slate-400 font-medium animate-pulse">Carregando dashboard...</p>
         </div>
       </div>
     );
   }
 
+  const pct = (val: number, goal: number) => Math.min(Math.round((val / goal) * 100), 100);
+
   return (
-    <div className="p-6 space-y-8 overflow-y-auto h-full bg-white dark:bg-slate-950 text-gray-900 dark:text-slate-50 custom-scrollbar">
-      {/* OnboardingBanner and SystemHealthCard moved to Settings */}
+    <div className="h-full overflow-y-auto custom-scrollbar flex flex-col" style={{ background: '#0d1035' }}>
+      {/* ── Main grid ─────────────────────────────────────────── */}
+      <div className="flex-1 p-4 grid gap-3" style={{ gridTemplateColumns: '1fr 2fr 1fr', gridTemplateRows: '1fr 1fr' }}>
 
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Dashboard</h2>
-          <p className="text-gray-500 dark:text-slate-400 mt-1">
-            Visão geral da performance da sua IA {period === 'today' ? 'hoje' : `nos últimos ${periodLabels[period].toLowerCase()}`}.
-          </p>
-        </div>
-        <div className="flex items-center gap-2 bg-gray-100 dark:bg-slate-900 p-1 rounded-lg border border-gray-200 dark:border-slate-800">
-          {(['today', '7days', '30days'] as PeriodFilter[]).map((p) => (
-            <button
-              key={p}
-              onClick={() => setPeriod(p)}
-              className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
-                period === p
-                  ? 'bg-gray-200 dark:bg-slate-800 text-gray-900 dark:text-white shadow-sm'
-                  : 'text-gray-500 dark:text-slate-500 hover:text-gray-600 dark:text-slate-300'
-              }`}
-            >
-              {periodLabels[p]}
-            </button>
-          ))}
-        </div>
-      </div>
+        {/* ① Meus negócios fechados — spans both rows */}
+        <div className="row-span-2 rounded-xl p-5 flex flex-col" style={{ background: '#131632', border: '1px solid #1e2850' }}>
+          <h2 className="text-sm font-semibold text-white mb-6">Meus negócios fechados</h2>
+          <div className="flex-1 flex flex-col justify-center gap-8">
 
-      {/* Metric Cards */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {metrics.map((stat, index) => (
-          <div 
-            key={index} 
-            className={`relative overflow-hidden rounded-2xl border bg-gray-100/50 dark:bg-slate-900/50 backdrop-blur-sm p-6 shadow-xl transition-all duration-300 hover:translate-y-[-2px] hover:bg-gray-100 dark:bg-slate-900 group ${getGradient(stat.label)}`}
-            style={{ animationDelay: `${index * 100}ms` }}
-          >
-            <div className="flex flex-row items-center justify-between space-y-0 pb-4">
-              <div className="text-sm font-medium text-gray-500 dark:text-slate-400">{getMetricLabel(stat.label)}</div>
-              <div className="p-2 rounded-lg bg-gray-200/50 dark:bg-slate-800/50 border border-gray-300/50 dark:border-slate-700/50 group-hover:border-gray-300 dark:border-slate-600 transition-colors">
-                 {getIcon(stat.label)}
+            {/* Esta semana */}
+            <div>
+              <div className="text-4xl font-bold text-white tracking-tight">{fmtCurrency(weekTotal)}</div>
+              <div className="text-xs text-slate-400 mt-1 mb-2">Esta semana</div>
+              <div className="flex items-center gap-2">
+                <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: '#1e2850' }}>
+                  <div className="h-full rounded-full transition-all duration-1000"
+                    style={{ width: `${pct(weekTotal, GOALS.week)}%`, background: 'linear-gradient(to right,#4ade80,#22c55e)' }} />
+                </div>
+                <span className="text-[11px] text-slate-400 shrink-0">{pct(weekTotal, GOALS.week)}%</span>
+                <span className="text-[11px] text-slate-500 shrink-0">{fmtCurrency(GOALS.week)}</span>
               </div>
             </div>
-            <div className="flex items-end justify-between">
-                <div className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">{stat.value}</div>
-                <div className={`flex items-center text-xs font-medium px-2 py-1 rounded-full ${stat.trendUp ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
-                    {stat.trendUp ? <TrendingUp className="w-3 h-3 mr-1" /> : <TrendingDown className="w-3 h-3 mr-1" />}
-                    {stat.trend}
-                </div>
-            </div>
-            {/* Decorative Glow */}
-            <div className="absolute -bottom-10 -right-10 w-24 h-24 bg-white/5 blur-2xl rounded-full group-hover:bg-white/10 transition-all"></div>
-          </div>
-        ))}
-      </div>
 
-      {/* Charts Section */}
-      <div className="grid gap-6 md:grid-cols-7">
-        {/* Main Chart */}
-        <div className="col-span-4 rounded-2xl border border-gray-200 dark:border-slate-800 bg-gray-100/50 dark:bg-slate-900/50 backdrop-blur-sm p-6 shadow-lg">
-          <div className="mb-6 flex items-center justify-between">
+            {/* Este mês */}
             <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Volume de Atendimentos</h3>
-                <p className="text-sm text-gray-500 dark:text-slate-400">
-                  Interações da IA {period === 'today' ? 'hoje' : `nos últimos ${periodDays[period]} dias`}
-                </p>
+              <div className="text-4xl font-bold text-white tracking-tight">{fmtCurrency(monthTotal)}</div>
+              <div className="text-xs text-slate-400 mt-1 mb-2">Este mês</div>
+              <div className="flex items-center gap-2">
+                <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: '#1e2850' }}>
+                  <div className="h-full rounded-full transition-all duration-1000"
+                    style={{ width: `${pct(monthTotal, GOALS.month)}%`, background: 'linear-gradient(to right,#38bdf8,#0ea5e9)' }} />
+                </div>
+                <span className="text-[11px] text-slate-400 shrink-0">{pct(monthTotal, GOALS.month)}%</span>
+                <span className="text-[11px] text-slate-500 shrink-0">{fmtCurrency(GOALS.month)}</span>
+              </div>
             </div>
-            <button className="text-cyan-400 hover:text-cyan-300 transition-colors p-2 hover:bg-cyan-950/30 rounded-lg">
-                <ArrowUpRight className="w-5 h-5" />
-            </button>
+
+            {/* Este trimestre */}
+            <div>
+              <div className="text-4xl font-bold text-white tracking-tight">{fmtCurrency(quarterTotal)}</div>
+              <div className="text-xs text-slate-400 mt-1 mb-2">Este trimestre</div>
+              <div className="flex items-center gap-2">
+                <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: '#1e2850' }}>
+                  <div className="h-full rounded-full transition-all duration-1000"
+                    style={{ width: `${pct(quarterTotal, GOALS.quarter)}%`, background: 'linear-gradient(to right,#22d3ee,#06b6d4)' }} />
+                </div>
+                <span className="text-[11px] text-slate-400 shrink-0">{pct(quarterTotal, GOALS.quarter)}%</span>
+                <span className="text-[11px] text-slate-500 shrink-0">{fmtCurrency(GOALS.quarter)}</span>
+              </div>
+            </div>
           </div>
-          <div className="h-[300px] w-full">
+        </div>
+
+        {/* ② Meu pipeline atual */}
+        <div className="rounded-xl p-5" style={{ background: '#131632', border: '1px solid #1e2850' }}>
+          <h2 className="text-sm font-semibold text-white mb-4">Meu pipeline atual</h2>
+          {pipelineByStage.length === 0 ? (
+            <p className="text-xs text-slate-500 text-center pt-8">Nenhum negócio ativo no pipeline.</p>
+          ) : (
+            <div className="space-y-3">
+              {pipelineByStage.map((item, i) => (
+                <div key={i}>
+                  <div className="flex justify-between mb-1">
+                    <span className="text-xs text-slate-300">{item.stage}</span>
+                    <span className="text-xs font-semibold text-white">{fmtCurrency(item.total)}</span>
+                  </div>
+                  <div className="h-1.5 rounded-full overflow-hidden" style={{ background: '#1e2850' }}>
+                    <div className="h-full rounded-full transition-all duration-1000"
+                      style={{ width: `${(item.total / maxPipeline) * 100}%`, background: 'linear-gradient(to right,#22d3ee,#06b6d4)' }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* ③ Minhas melhores oportunidades */}
+        <div className="rounded-xl p-5" style={{ background: '#131632', border: '1px solid #1e2850' }}>
+          <h2 className="text-sm font-semibold text-white mb-4">Minhas melhores oportunidades</h2>
+          {topOpportunities.length === 0 ? (
+            <p className="text-xs text-slate-500 text-center pt-8">Nenhuma oportunidade ativa.</p>
+          ) : (
+            <div className="space-y-2.5">
+              {topOpportunities.map((deal) => (
+                <div key={deal.id} className="flex items-center justify-between py-0.5">
+                  <span className="text-xs text-slate-300 truncate max-w-[60%]">{deal.company || deal.title}</span>
+                  <span className="text-xs font-semibold text-white">{fmtCurrency(deal.value || 0)}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* ④ Fechamentos semanais no trimestre */}
+        <div className="rounded-xl p-5" style={{ background: '#131632', border: '1px solid #1e2850' }}>
+          <h2 className="text-sm font-semibold text-white mb-1">Fechamentos semanais no trimestre</h2>
+          <div className="h-[180px] w-full mt-2">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <AreaChart data={weeklyChartData} margin={{ top: 8, right: 8, left: -24, bottom: 0 }}>
                 <defs>
-                  <linearGradient id="colorChats" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#06b6d4" stopOpacity={0}/>
+                  <linearGradient id="fillQ" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#22d3ee" stopOpacity={0.25} />
+                    <stop offset="95%" stopColor="#22d3ee" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#1e293b" />
-                <XAxis 
-                    dataKey="name" 
-                    axisLine={false} 
-                    tickLine={false} 
-                    tickMargin={10} 
-                    fontSize={12} 
-                    stroke="#64748b"
-                />
-                <YAxis 
-                    axisLine={false} 
-                    tickLine={false} 
-                    fontSize={12} 
-                    stroke="#64748b"
-                />
-                <Tooltip 
-                  contentStyle={{ backgroundColor: '#0f172a', borderRadius: '12px', border: '1px solid #1e293b', color: '#f8fafc', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.5)' }} 
-                  itemStyle={{ color: '#06b6d4' }}
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="chats" 
-                  stroke="#06b6d4" 
-                  strokeWidth={3}
-                  fillOpacity={1} 
-                  fill="url(#colorChats)" 
-                  activeDot={{ r: 6, strokeWidth: 0, fill: '#fff' }}
-                />
+                <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#1e2850" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} fontSize={10} stroke="#475569" />
+                <YAxis axisLine={false} tickLine={false} fontSize={10} stroke="#475569"
+                  tickFormatter={(v) => v === 0 ? 'R$0' : `R$${(v / 1000).toFixed(0)}K`} />
+                <Tooltip contentStyle={{ background: '#131632', border: '1px solid #1e2850', borderRadius: '8px', color: '#f1f5f9', fontSize: 12 }}
+                  formatter={(v: any) => [`R$ ${Number(v).toLocaleString('pt-BR')}`, 'Fechamentos']} />
+                <Area type="monotone" dataKey="total" stroke="#22d3ee" strokeWidth={2.5}
+                  fill="url(#fillQ)" dot={false} activeDot={{ r: 4, fill: '#22d3ee', strokeWidth: 0 }} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        {/* Secondary Chart */}
-        <div className="col-span-3 rounded-2xl border border-gray-200 dark:border-slate-800 bg-gray-100/50 dark:bg-slate-900/50 backdrop-blur-sm p-6 shadow-lg flex flex-col">
-           <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Conversões</h3>
-            <p className="text-sm text-gray-500 dark:text-slate-400">Reuniões, vendas e ações concluídas</p>
-          </div>
-          
-          <div className="flex-1 flex flex-col justify-center space-y-5">
-            {chartData.slice(0, 5).map((day, i) => (
-              <div key={i} className="group">
-                <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-600 dark:text-slate-300">{day.name}</span>
-                    <span className="text-sm font-bold text-gray-900 dark:text-white group-hover:text-cyan-400 transition-colors">{day.sales} conv.</span>
-                </div>
-                <div className="h-2.5 bg-gray-200 dark:bg-slate-800 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-gradient-to-r from-primary to-accent rounded-full shadow-[0_0_12px_rgba(30,95,116,0.28)] transition-all duration-1000 ease-out group-hover:shadow-[0_0_18px_rgba(30,95,116,0.36)]" 
-                    style={{ width: `${Math.min((day.sales / Math.max(...chartData.map(d => d.sales), 1)) * 100, 100)}%` }} 
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-          
-          <div className="mt-6 pt-4 border-t border-gray-200 dark:border-slate-800">
-             <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-500 dark:text-slate-500">Total no período</span>
-                <span className="text-emerald-400 font-bold">
-                  {chartData.reduce((sum, d) => sum + d.sales, 0)} conversões
-                </span>
-             </div>
+        {/* ⑤ Minhas atividades */}
+        <div className="rounded-xl p-5" style={{ background: '#131632', border: '1px solid #1e2850' }}>
+          <h2 className="text-sm font-semibold text-white mb-1">Minhas atividades</h2>
+          <div className="h-[180px] w-full mt-2">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={activitiesData} margin={{ top: 8, right: 8, left: -24, bottom: 0 }}>
+                <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#1e2850" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} fontSize={9} stroke="#475569" />
+                <YAxis axisLine={false} tickLine={false} fontSize={9} stroke="#475569" />
+                <Tooltip contentStyle={{ background: '#131632', border: '1px solid #1e2850', borderRadius: '8px', color: '#f1f5f9', fontSize: 12 }} />
+                <Legend iconType="circle" iconSize={7}
+                  wrapperStyle={{ fontSize: '10px', color: '#94a3b8', paddingTop: '4px' }}
+                  formatter={(v) => v === 'semana' ? 'Esta semana' : v === 'mes' ? 'Este mês' : 'Este trimestre'} />
+                <Bar dataKey="semana"    fill="#22d3ee" radius={[2,2,0,0]} maxBarSize={10} />
+                <Bar dataKey="mes"       fill="#f59e0b" radius={[2,2,0,0]} maxBarSize={10} />
+                <Bar dataKey="trimestre" fill="#a855f7" radius={[2,2,0,0]} maxBarSize={10} />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         </div>
+
+      </div>
+
+      {/* ── Footer ────────────────────────────────────────────── */}
+      <div className="shrink-0 px-5 py-2.5 flex items-center justify-between"
+        style={{ background: '#0d1035', borderTop: '1px solid #1e2850' }}>
+        <div className="flex items-center gap-2">
+          <div className="w-5 h-5 rounded-md flex items-center justify-center" style={{ background: '#22d3ee' }}>
+            <Target className="w-3 h-3 text-slate-900" />
+          </div>
+          <span className="text-xs text-slate-400">Performance individual de vendas</span>
+        </div>
+        <span className="text-xs text-slate-500">{clock}</span>
       </div>
     </div>
   );

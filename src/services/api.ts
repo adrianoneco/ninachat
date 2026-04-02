@@ -39,9 +39,41 @@ export function generateId(): string {
 }
 
 
+// Helper to get auth token from localStorage
+function getAuthHeaders(): Record<string, string> {
+  try {
+    const user = JSON.parse(localStorage.getItem('user') || 'null');
+    const token = user?.access_token || user?.token;
+    if (token) {
+      return { Authorization: `Bearer ${token}` };
+    }
+  } catch (e) {
+    // Silently fail if localStorage is not available
+  }
+  return {};
+}
+
+// Enhanced fetch wrapper that automatically includes auth headers
+export async function apiFetch(
+  endpoint: string,
+  options: RequestInit & { baseUrl?: string } = {}
+): Promise<Response> {
+  const { baseUrl = API_BASE, ...fetchOptions } = options;
+  const headers = new Headers(fetchOptions.headers || {});
+  
+  // Merge auth headers
+  const authHeaders = getAuthHeaders();
+  Object.entries(authHeaders).forEach(([key, value]) => {
+    headers.set(key, value);
+  });
+  
+  return fetch(`${baseUrl}/${endpoint}`, { ...fetchOptions, headers });
+}
+
 async function apiGet<T>(endpoint: string, fallback: T = [] as any): Promise<T> {
   try {
-    const res = await fetch(`${API_BASE}/${endpoint}`);
+    const headers = { ...getAuthHeaders() };
+    const res = await fetch(`${API_BASE}/${endpoint}`, { headers });
     if (!res.ok) {
       // try to return fallback if available
       return fallback;
@@ -57,9 +89,10 @@ async function apiGet<T>(endpoint: string, fallback: T = [] as any): Promise<T> 
 
 async function apiPost<T = any>(endpoint: string, body: any): Promise<T> {
   try {
+    const headers = { 'Content-Type': 'application/json', ...getAuthHeaders() };
     const res = await fetch(`${API_BASE}/${endpoint}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify(body),
     });
     if (!res.ok) {
@@ -75,7 +108,8 @@ async function apiPost<T = any>(endpoint: string, body: any): Promise<T> {
 
 async function apiDelete(endpoint: string, id: string): Promise<void> {
   try {
-    const res = await fetch(`${API_BASE}/${endpoint}/${encodeURIComponent(id)}`, { method: 'DELETE' });
+    const headers = getAuthHeaders();
+    const res = await fetch(`${API_BASE}/${endpoint}/${encodeURIComponent(id)}`, { method: 'DELETE', headers });
     if (!res.ok) throw new Error(`DELETE ${endpoint}/${id} failed: ${res.status}`);
   } catch (e) {
     console.error('apiDelete failed', e);
@@ -328,7 +362,8 @@ export const api = {
   },
 
   fetchPipelineStages: async (): Promise<KanbanColumn[]> => {
-    return apiGet<KanbanColumn[]>('pipeline_stages', []);
+    const stages = await apiGet<KanbanColumn[]>('pipeline_stages', []);
+    return stages.sort((a, b) => (a.position ?? 999) - (b.position ?? 999));
   },
 
   createPipelineStage: async (stage: { title: string; color: string; isAiManaged?: boolean; aiTriggerCriteria?: string }): Promise<KanbanColumn> => {
@@ -628,6 +663,96 @@ export const api = {
     return newMsg;
   },
 
+  // ── Direct WPP Send Routes (via /:session/messages/send-*) ──────────
+
+  /** Post multipart form data (binary-first) to a WPP send endpoint */
+  async _wppPostMedia(endpoint: string, to: string, fields: Record<string, string | undefined>, file?: File | Blob) {
+    if (file) {
+      const fd = new FormData();
+      fd.append('to', to);
+      if (file instanceof File) {
+        fd.append('file', file, file.name);
+        if (fields.filename) fd.append('filename', fields.filename);
+      } else {
+        // Blob without a name — use provided filename or default
+        fd.append('file', file, fields.filename || 'blob');
+      }
+      if (fields.caption) fd.append('caption', fields.caption);
+      const res = await apiFetch(endpoint, { method: 'POST', body: fd });
+      if (!res.ok) throw new Error(`POST ${endpoint} failed: ${res.status}`);
+      return res.json().catch(() => null);
+    }
+    // Fallback: JSON with URL
+    return apiPost(endpoint, { to, ...fields });
+  },
+
+  /** Send text directly via WPP session */
+  wppSendText: async (session: string, to: string, body: string) => {
+    return apiPost(`${session}/messages/send-text`, { to, body });
+  },
+
+  /** Send image — binary (File/Blob) first, URL as fallback */
+  wppSendImage: async (
+    session: string,
+    to: string,
+    fileOrUrl: File | Blob | string,
+    filename?: string,
+    caption?: string,
+  ) => {
+    const endpoint = `${session}/messages/send-image`;
+    if (typeof fileOrUrl !== 'string') {
+      return api._wppPostMedia(endpoint, to, { filename, caption }, fileOrUrl);
+    }
+    return apiPost(endpoint, { to, url: fileOrUrl, filename, caption });
+  },
+
+  /** Send video — binary (File/Blob) first, URL as fallback */
+  wppSendVideo: async (
+    session: string,
+    to: string,
+    fileOrUrl: File | Blob | string,
+    filename?: string,
+    caption?: string,
+  ) => {
+    const endpoint = `${session}/messages/send-video`;
+    if (typeof fileOrUrl !== 'string') {
+      return api._wppPostMedia(endpoint, to, { filename, caption }, fileOrUrl);
+    }
+    return apiPost(endpoint, { to, url: fileOrUrl, filename, caption });
+  },
+
+  /** Send audio — binary (File/Blob) first, URL as fallback */
+  wppSendAudio: async (
+    session: string,
+    to: string,
+    fileOrUrl: File | Blob | string,
+    filename?: string,
+  ) => {
+    const endpoint = `${session}/messages/send-audio`;
+    if (typeof fileOrUrl !== 'string') {
+      return api._wppPostMedia(endpoint, to, { filename }, fileOrUrl);
+    }
+    return apiPost(endpoint, { to, url: fileOrUrl });
+  },
+
+  /** Send voice note (PTT) — binary (File/Blob) first, URL as fallback */
+  wppSendPtt: async (session: string, to: string, fileOrUrl: File | Blob | string) => {
+    const endpoint = `${session}/messages/send-ptt`;
+    if (typeof fileOrUrl !== 'string') {
+      return api._wppPostMedia(endpoint, to, {}, fileOrUrl);
+    }
+    return apiPost(endpoint, { to, url: fileOrUrl });
+  },
+
+  /** Send sticker — binary (File/Blob) first, URL as fallback */
+  wppSendSticker: async (session: string, to: string, fileOrUrl: File | Blob | string) => {
+    const endpoint = `${session}/messages/send-sticker`;
+    if (typeof fileOrUrl !== 'string') {
+      return api._wppPostMedia(endpoint, to, {}, fileOrUrl);
+    }
+    return apiPost(endpoint, { to, url: fileOrUrl });
+  },
+
   processIncomingExternal: async (payload: any): Promise<void> => {
     try {
       // Evolution normalization removed — expect payload to already be in a compatible shape
@@ -743,12 +868,12 @@ export const api = {
             if (explicit === 'sticker') msgType = MessageType.STICKER;
             else if (explicit === 'video' || videoExt.some(ext => media.endsWith(ext))) msgType = MessageType.VIDEO;
             else if (explicit === 'image' || imageExt.some(ext => media.endsWith(ext))) msgType = MessageType.IMAGE;
-            else if (explicit === 'audio' || audioExt.some(ext => media.endsWith(ext))) msgType = MessageType.AUDIO;
+            else if (explicit === 'audio' || explicit === 'ptt' || audioExt.some(ext => media.endsWith(ext))) msgType = MessageType.AUDIO;
             else if (explicit === 'file' || explicit === 'document') msgType = MessageType.FILE;
             return {
               id: m.id,
               content: m.content,
-              timestamp: new Date(m.sent_at || m.created_at).toISOString(),
+              timestamp: new Date(m.sent_at || m.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
               direction: m.direction === 'outbound' ? MessageDirection.OUTGOING : MessageDirection.INCOMING,
               type: msgType,
               status: m.status || 'sent',
