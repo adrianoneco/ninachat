@@ -150,7 +150,10 @@ export class MessagesService {
       } as any);
     }
 
-    if (isOutbound) {
+    // Skip WPP send when the frontend already sent via the binary direct endpoint
+    const alreadySentViaWpp = (data as any).wpp_sent === true;
+
+    if (isOutbound && !alreadySentViaWpp) {
       try {
         if (conv && conv.instance_id && conv.contact_id) {
           const client = this.wpp.getClient(conv.instance_id);

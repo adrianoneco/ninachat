@@ -122,6 +122,8 @@ export interface Appointment {
     phone_number: string;
   };
   metadata?: AppointmentMetadata;
+  status?: 'pending' | 'confirmed' | 'cancelled';
+  source?: string;
 }
 
 export interface Deal {

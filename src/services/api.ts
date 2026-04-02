@@ -1,4 +1,23 @@
 // evolution integration removed — use mock in-memory behaviour instead
+
+/** Show "HH:MM" for today, "DD/MM" for this year, "DD/MM/AA" for older */
+function fmtConvTime(dateStr: string | null | undefined): string {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return '';
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const yesterdayStart = new Date(todayStart.getTime() - 86400000);
+  if (d >= todayStart) {
+    return d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  }
+  if (d >= yesterdayStart) return 'ontem';
+  if (d.getFullYear() === now.getFullYear()) {
+    return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+  }
+  return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' });
+}
+
 import {
   Contact,
   StatMetric,
@@ -554,7 +573,7 @@ export const api = {
     return apiGet<any[]>(`messages?conversation_id=${encodeURIComponent(conversationId)}&limit=${limit}`, []);
   },
 
-  sendMessage: async (conversationId: string, content: string, isHumanModeParam?: boolean, attachments?: Array<{ dataUrl?: string; name?: string; type?: string }>): Promise<string> => {
+  sendMessage: async (conversationId: string, content: string, isHumanModeParam?: boolean, attachments?: Array<{ dataUrl?: string; file?: File; name?: string; type?: string }>, wppContext?: { instanceId?: string; contactPhone?: string }): Promise<string> => {
     console.log('[debug] api.sendMessage called', { conversationId, isHumanModeParam });
     const livechatSettings = await apiGet<any>('livechat_settings', {});
 
@@ -584,7 +603,7 @@ export const api = {
 
     // Evolution integration removed: fall back to mock provider
 
-    const API_BASE = (import.meta as any).env?.VITE_API_BASE || '/api';
+    const API_BASE_LOCAL = (import.meta as any).env?.VITE_API_BASE || '/api';
 
     const uploadIfDataUrl = async (val: any, defaultName: string) => {
       if (!val) return val;
@@ -594,13 +613,78 @@ export const api = {
           const mime = m?.[1] || 'application/octet-stream';
           const ext = mime.split('/').pop() || 'bin';
           const filename = `${defaultName.replace(/\s+/g,'_')}-${Date.now()}.${ext}`;
-          const res = await fetch(`${API_BASE}/uploads`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ filename, data: val }) });
+          const res = await fetch(`${API_BASE_LOCAL}/uploads`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ filename, data: val }) });
           const json = await res.json();
           if (json) return json.url || json.thumbUrl || json.avatarUrl || val;
         } catch (e) { console.error('upload failed', e); }
       }
       return val;
     };
+
+    // ── Binary WPP send (like curl multipart/form-data) ──────────────────────
+    // When we have a File reference AND a WPP session context, send directly to the
+    // type-specific WPP endpoint instead of going through the generic messages path.
+    // This avoids base64 encoding overhead and size limits for large media files.
+    const firstFile = attachments?.find(a => a.file instanceof File);
+    if (firstFile?.file && wppContext?.instanceId && wppContext?.contactPhone) {
+      const session = wppContext.instanceId;
+      const to = wppContext.contactPhone.replace(/\D/g, ''); // digits only
+      const file = firstFile.file;
+      const mime = (firstFile.type || file.type || '').toLowerCase();
+      const filename = firstFile.name || file.name;
+      const caption = content || '';
+
+      let wppSendPromise: Promise<any> | null = null;
+      let sentMsgType = 'file';
+
+      if (mime.startsWith('video/')) {
+        wppSendPromise = api.wppSendVideo(session, to, file, filename, caption);
+        sentMsgType = 'video';
+      } else if (mime.startsWith('image/webp') || (mime.startsWith('image/png') && filename.toLowerCase().includes('sticker'))) {
+        wppSendPromise = api.wppSendSticker(session, to, file);
+        sentMsgType = 'sticker';
+      } else if (mime.startsWith('image/')) {
+        wppSendPromise = api.wppSendImage(session, to, file, filename, caption);
+        sentMsgType = 'image';
+      } else if (mime.startsWith('audio/')) {
+        wppSendPromise = api.wppSendAudio(session, to, file, filename);
+        sentMsgType = 'audio';
+      } else {
+        // document / application / any other type
+        wppSendPromise = api.wppSendDocument(session, to, file, filename, caption);
+        sentMsgType = 'file';
+      }
+
+      if (wppSendPromise) {
+        try {
+          await wppSendPromise;
+        } catch (e) {
+          console.error('[wppSend] direct send failed, falling back to messages path', e);
+          // Fall through to regular path on error
+          wppSendPromise = null;
+        }
+      }
+
+      if (wppSendPromise) {
+        // Create a message record for the UI; mark wpp_sent=true so backend skips re-send
+        const id = generateId();
+        const newMsg = {
+          id,
+          message_id: id,
+          conversation_id: conversationId,
+          direction: 'outbound',
+          from_type: isHumanMode ? 'user' : 'livechat',
+          content,
+          created_at: new Date().toISOString(),
+          provider: 'wpp-direct',
+          wpp_sent: true,
+          type: sentMsgType,
+        };
+        await apiPost('messages', newMsg);
+        return id;
+      }
+    }
+    // ── End binary WPP send ──────────────────────────────────────────────────
 
     let attached: any[] = [];
     if (Array.isArray(attachments) && attachments.length > 0) {
@@ -670,14 +754,18 @@ export const api = {
     if (file) {
       const fd = new FormData();
       fd.append('to', to);
+      // Always include url= (empty when sending binary, matching curl behaviour)
+      fd.append('url', '');
       if (file instanceof File) {
         fd.append('file', file, file.name);
-        if (fields.filename) fd.append('filename', fields.filename);
+        fd.append('filename', fields.filename || file.name);
       } else {
-        // Blob without a name — use provided filename or default
-        fd.append('file', file, fields.filename || 'blob');
+        const blobName = fields.filename || 'blob';
+        fd.append('file', file, blobName);
+        fd.append('filename', blobName);
       }
-      if (fields.caption) fd.append('caption', fields.caption);
+      // Always include caption= (empty when not provided)
+      fd.append('caption', fields.caption ?? '');
       const res = await apiFetch(endpoint, { method: 'POST', body: fd });
       if (!res.ok) throw new Error(`POST ${endpoint} failed: ${res.status}`);
       return res.json().catch(() => null);
@@ -751,6 +839,21 @@ export const api = {
       return api._wppPostMedia(endpoint, to, {}, fileOrUrl);
     }
     return apiPost(endpoint, { to, url: fileOrUrl });
+  },
+
+  /** Send document/file — binary (File/Blob) first, URL as fallback */
+  wppSendDocument: async (
+    session: string,
+    to: string,
+    fileOrUrl: File | Blob | string,
+    filename?: string,
+    caption?: string,
+  ) => {
+    const endpoint = `${session}/messages/send-document`;
+    if (typeof fileOrUrl !== 'string') {
+      return api._wppPostMedia(endpoint, to, { filename, caption }, fileOrUrl);
+    }
+    return apiPost(endpoint, { to, url: fileOrUrl, filename, caption });
   },
 
   processIncomingExternal: async (payload: any): Promise<void> => {
@@ -851,9 +954,9 @@ export const api = {
           assignedTeam: c.assigned_team || null,
           assignedUserId: c.assigned_user_id || null,
           assignedUserName: null,
-          instanceId: c.assigned_team || c.instance_id || null,
+          instanceId: c.instance_id || null,
           lastMessage: last?.content || '',
-          lastMessageTime: last ? new Date(last.sent_at || last.created_at).toLocaleString() : (c.last_message_at ? new Date(c.last_message_at).toLocaleString() : ''),
+          lastMessageTime: last ? fmtConvTime(last.sent_at || last.created_at) : fmtConvTime(c.last_message_at),
           unreadCount: c.unread_count || (c.messages || []).filter((m: any) => (m.direction === 'inbound' || m.from_type === 'whatsapp') && m.status !== 'read').length || 0,
           tags: c.tags || [],
           isGroup: c.isGroup || false,

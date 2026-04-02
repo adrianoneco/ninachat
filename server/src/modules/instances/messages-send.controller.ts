@@ -227,6 +227,40 @@ export class MessagesSendController {
       throw new HttpException(this.serializeError(err), HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
+
+  @Post('send-document')
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 512 * 1024 * 1024 } }))
+  @ApiOperation({ summary: 'Enviar documento/arquivo (binário ou URL)' })
+  @ApiParam({ name: 'session', description: 'Nome da sessão/instância', example: 'suporte-ti' })
+  @ApiConsumes('multipart/form-data', 'application/json')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['to'],
+      properties: {
+        to: { type: 'string', example: '5541999999999' },
+        file: { type: 'string', format: 'binary', description: 'Arquivo binário (preferencial)' },
+        url: { type: 'string', example: 'https://example.com/file.pdf', description: 'URL de fallback' },
+        filename: { type: 'string', example: 'documento.pdf' },
+        caption: { type: 'string', example: 'Legenda' },
+      },
+    },
+  })
+  @ApiResponse({ status: 201, description: 'Documento enviado com sucesso' })
+  async sendDocument(
+    @Param('session') session: string,
+    @UploadedFile() file: Express.Multer.File | undefined,
+    @Body() body: { to: string; url?: string; filename?: string; caption?: string },
+  ) {
+    try {
+      const { payload } = this.resolvePayload(file, body.url);
+      const filename = file?.originalname || body.filename || 'document';
+      const result = await this.wpp.sendDocumentMessage(session, body.to, payload, filename, body.caption, file?.mimetype);
+      return { success: true, result };
+    } catch (err) {
+      throw new HttpException(this.serializeError(err), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
 }
 
 

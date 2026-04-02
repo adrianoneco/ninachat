@@ -155,7 +155,7 @@ export function useConversations() {
               return {
                 ...conv,
                 lastMessage: message_preview || '[mídia]',
-                lastMessageTime: new Date(timestamp).toLocaleString(),
+                lastMessageTime: (() => { const d = new Date(timestamp); if (isNaN(d.getTime())) return ''; const now = new Date(); const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()); return d >= today ? d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }); })(),
                 contactName: contact_name || conv.contactName,
                 contactPhone: contact_phone || conv.contactPhone,
                 contactAvatar: contact_avatar || conv.contactAvatar,
@@ -220,23 +220,31 @@ export function useConversations() {
     };
   }, [fetchConversations]);
 
-  const sendMessage = useCallback(async (conversationId: string, content: string, attachments?: Array<{ dataUrl?: string; name?: string; type?: string }>) => {
+  const sendMessage = useCallback(async (conversationId: string, content: string, attachments?: Array<{ dataUrl?: string; file?: File; name?: string; type?: string }>) => {
     if ((!content || !content.trim()) && !(attachments && attachments.length > 0)) return;
     try {
       // optimistic UI update (don't write to local mock storage)
-      setConversations(prev => prev.map(conv => conv.id === conversationId ? { ...conv, lastMessage: content || (attachments && attachments.length > 0 ? '[anexo]' : ''), lastMessageTime: new Date().toLocaleString() } : conv));
+      setConversations(prev => prev.map(conv => conv.id === conversationId ? { ...conv, lastMessage: content || (attachments && attachments.length > 0 ? '[anexo]' : ''), lastMessageTime: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) } : conv));
       // attempt real send via API (which includes copilot step) and let api persist messages
       const localConv = conversations.find(c => c.id === conversationId);
       const isHumanLocal = !!(localConv && localConv.status === 'human');
       console.log('[debug] useConversations.sendMessage', { conversationId, isHumanLocal, localConvStatus: localConv?.status });
-      await api.sendMessage(conversationId, content, isHumanLocal, attachments);
+      // Pass WPP context so api.sendMessage can call the binary endpoint directly
+      // Note: UIConversation stores it as 'instanceId' (camelCase) from fetchConversations
+      const wppContext = localConv ? {
+        instanceId: (localConv as any).instanceId || (localConv as any).instance_id,
+        contactPhone: (localConv as any).contact?.phone_number
+          || ((localConv as any).contact?.whatsapp_id || '').replace(/@.+$/, '')
+          || localConv.contactPhone?.replace(/\D/g, ''),
+      } : undefined;
+      await api.sendMessage(conversationId, content, isHumanLocal, attachments, wppContext);
       // refetch conversations to sync any changes
       fetchConversations();
     } catch (err) {
       console.error('sendMessage failed', err);
       toast.error('Falha ao enviar mensagem');
     }
-  }, []);
+  }, [conversations]);
 
   const updateStatus = useCallback(async (
     conversationId: string, 

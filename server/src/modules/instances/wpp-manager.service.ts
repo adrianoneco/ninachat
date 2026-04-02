@@ -13,6 +13,7 @@ import { Contact } from '../../entities/contact.entity';
 import { Message } from '../../entities/message.entity';
 import { Conversation } from '../../entities/conversation.entity';
 import { LiveChatSettings } from '../../entities/livechat-settings.entity';
+import { GenericRecord } from '../../entities/generic-record.entity';
 import fs from 'fs-extra';
 import path from 'path';
 import { randomUUID } from 'crypto';
@@ -24,6 +25,7 @@ import _fs from 'fs';
 import { getContactByPushName } from '../../utils/getContact';
 import { OnMessageChanged } from '../../core/messages';
 import { OnAckChanged } from '../../core/ack';
+import { syncContacts } from '../sync/contactsSync';
 
 const logger = new Logger('WppManager');
 
@@ -40,6 +42,7 @@ export class WppManagerService implements OnApplicationShutdown {
     @InjectRepository(Message) private msgRepo: Repository<Message>,
     @InjectRepository(Conversation) private convRepo: Repository<Conversation>,
     @InjectRepository(LiveChatSettings) private settingsRepo: Repository<LiveChatSettings>,
+    @InjectRepository(GenericRecord) private genericRecordRepo: Repository<GenericRecord>,
     private readonly storageService: StorageService,
   ) {
     // register this instance manager globally for convenience
@@ -474,6 +477,10 @@ export class WppManagerService implements OnApplicationShutdown {
       /* swallow — non-critical */
     });
 
+    syncContacts(instance, client, this.contactRepo).catch((e) => {
+      logger.warn(`[${instance.name}] syncContacts failed: ${String(e)}`);
+    });
+
     client.onMessage(async (message: any) => {
       OnMessageChanged(
         message,
@@ -485,6 +492,7 @@ export class WppManagerService implements OnApplicationShutdown {
         this.events,
         this.storageService,
         this.settingsRepo,
+        this.genericRecordRepo,
       );
     });
 
@@ -514,7 +522,7 @@ export class WppManagerService implements OnApplicationShutdown {
           try {
             await this.contactRepo.createQueryBuilder()
               .update('contacts')
-              .set({ presence: status })
+              .set({ 'presense': status })
               .where('phone_number = :phone OR whatsapp_id = :id', { phone, id })
               .execute();
             logger.log(`[${instance.name}] Presence DB update succeeded for phone: ${phone}, id: ${id}`);
@@ -907,6 +915,22 @@ export class WppManagerService implements OnApplicationShutdown {
     return this.withTimeout(
       client.sendFile(to, filePath, fname, caption || ''),
       120_000, 'sendMedia',
+    );
+  }
+
+  /** sendDocument — accepts Buffer (binary), http(s) URL, or data URI */
+  async sendDocumentMessage(
+    sessionOrId: string, to: string, bufferOrUrl: Buffer | string,
+    filename?: string, caption?: string, mimeType?: string,
+  ) {
+    if (to && !to.includes('@')) to = `${to}@c.us`;
+    const client = this.getClient(sessionOrId);
+    if (!client) throw new Error('Client not running for ' + sessionOrId);
+    const fname = filename || 'document';
+    const filePath = await this.resolveToFile(bufferOrUrl, 'media', fname, mimeType);
+    return this.withTimeout(
+      client.sendFile(to, filePath, fname, caption || ''),
+      120_000, 'sendDocument',
     );
   }
 

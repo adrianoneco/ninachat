@@ -40,7 +40,7 @@ const ChatInterface: React.FC = () => {
   const [editingModalId, setEditingModalId] = useState<string | null>(null);
   const [editingModalDraft, setEditingModalDraft] = useState('');
   const editingModalRef = useRef<HTMLTextAreaElement | null>(null);
-  const [attachments, setAttachments] = useState<Array<{ id: string; dataUrl: string; name?: string; type?: string }>>([]);
+  const [attachments, setAttachments] = useState<Array<{ id: string; dataUrl: string; file?: File; name?: string; type?: string }>>([]);
   const [showAttachPopup, setShowAttachPopup] = useState(false);
   const [showAttachGrid, setShowAttachGrid] = useState(false);
   const [pastedPreview, setPastedPreview] = useState<string | null>(null);
@@ -985,7 +985,7 @@ const ChatInterface: React.FC = () => {
 
     const content = inputText.trim();
     // prepare attachments payload for API
-    const attachPayload = attachments.map(a => ({ dataUrl: a.dataUrl, name: a.name, type: a.type }));
+    const attachPayload = attachments.map(a => ({ dataUrl: a.dataUrl, file: a.file, name: a.name, type: a.type }));
     setInputText('');
     setAttachments([]);
     setShowAttachGrid(false);
@@ -1119,11 +1119,13 @@ const ChatInterface: React.FC = () => {
       mediaRecorder.onstop = () => {
         stream.getTracks().forEach(t => t.stop());
         const blob = new Blob(recordedChunksRef.current, { type: 'audio/webm' });
+        const audioName = `audio_${Date.now()}.webm`;
+        const audioFile = new File([blob], audioName, { type: 'audio/webm' });
         const reader = new FileReader();
         reader.onloadend = () => {
           const dataUrl = reader.result as string;
           setAttachments(prev => [
-            { id: (crypto as any).randomUUID?.() || String(Date.now()), dataUrl, name: `audio_${Date.now()}.webm`, type: 'audio/webm' },
+            { id: (crypto as any).randomUUID?.() || String(Date.now()), dataUrl, file: audioFile, name: audioName, type: 'audio/webm' },
             ...prev,
           ]);
         };
@@ -1191,12 +1193,12 @@ const ChatInterface: React.FC = () => {
   const handleFileInput = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
-    const picked: Array<{ id: string; dataUrl: string; name?: string; type?: string }> = [];
+    const picked: Array<{ id: string; dataUrl: string; file?: File; name?: string; type?: string }> = [];
     for (let i = 0; i < files.length; i++) {
       const f = files[i];
       try {
         const dataUrl = await readFileAsDataUrl(f);
-        picked.push({ id: (crypto as any).randomUUID?.() || String(Date.now()) + String(i), dataUrl, name: f.name, type: f.type });
+        picked.push({ id: (crypto as any).randomUUID?.() || String(Date.now()) + String(i), dataUrl, file: f, name: f.name, type: f.type });
       } catch (err) {
         console.error('read file failed', err);
       }
@@ -1555,256 +1557,133 @@ const ChatInterface: React.FC = () => {
     <div className="flex h-full bg-white dark:bg-slate-950 rounded-tl-2xl overflow-hidden border-t border-l border-gray-200/50 dark:border-slate-800/50 shadow-2xl">
       
       {/* Left Sidebar: Chat List (desktop) */}
-      <div ref={sidebarRef} style={{ width: sidebarWidth }} className="hidden md:flex border-r-0 flex flex-col bg-gray-100/50 dark:bg-slate-900/50 backdrop-blur-md z-20 flex-shrink-0">
-        {/* Search Header */}
-        <div className="p-3 border-b border-gray-200/50 dark:border-slate-800/50">
-          <div className="flex items-center gap-2 mb-2">
-          <div className="relative group flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-slate-500 group-focus-within:text-primary transition-colors" />
-            <input 
-              type="text" 
-              placeholder="Buscar conversa..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              ref={el => (searchInputRef.current = el)}
-              className="w-full pl-9 pr-12 py-2 bg-white/50 dark:bg-slate-950/50 border border-gray-200 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-ring/50 focus:border-primary/50 outline-none text-gray-700 dark:text-slate-200 placeholder:text-gray-400 dark:text-slate-600 transition-all"
-            />
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <button title="Filtros" className="p-1 rounded-md text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:text-white hover:bg-gray-200/40 dark:bg-slate-800/40 transition-colors">
-                    <Filter className="w-4 h-4" />
-                  </button>
-                </PopoverTrigger>
-                <PopoverContent className="w-80 p-0">
-                  <div className="p-4">
-                    <h4 className="text-lg font-semibold">Filtros Avançados</h4>
-                    <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">Refine sua busca com filtros adicionais</p>
+      <div ref={sidebarRef} style={{ width: sidebarWidth }} className="hidden md:flex border-r-0 flex flex-col bg-white dark:bg-[#111b21] z-20 flex-shrink-0">
 
-                    <div className="mt-4">
-                      <div className="text-xs text-gray-500 dark:text-slate-400 mb-2">Ordenação</div>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <button className="w-full rounded-lg border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 py-2 flex items-center justify-between text-sm text-gray-900 dark:text-slate-100">
-                            <div className="flex items-center gap-2">
-                              <Clock className="w-4 h-4 text-primary" />
-                              <span>{orderBy === 'recent' ? 'Mais Recentes' : 'Mais Antigas'}</span>
-                            </div>
-                            <ChevronDown className="w-4 h-4 text-gray-500" />
-                          </button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-64 p-2">
-                          <div className="space-y-2">
-                            <button onClick={() => setOrderBy('recent')} className={`w-full text-left px-3 py-2 rounded-md ${orderBy === 'recent' ? 'bg-primary text-white' : 'hover:bg-gray-100 dark:hover:bg-slate-800'}`}>
-                              Mais Recentes
-                            </button>
-                            <button onClick={() => setOrderBy('oldest')} className={`w-full text-left px-3 py-2 rounded-md ${orderBy === 'oldest' ? 'bg-primary text-white' : 'hover:bg-gray-100 dark:hover:bg-slate-800'}`}>
-                              Mais Antigas
-                            </button>
-                          </div>
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-
-                    <div className="mt-4">
-                      <div className="text-xs text-gray-500 dark:text-slate-400 mb-2">Status</div>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <button className={`w-full text-left rounded-lg px-3 py-2 text-sm flex items-center justify-between ${statusFilter !== 'all' ? 'bg-primary text-white' : 'bg-white dark:bg-slate-950 text-gray-900 dark:text-slate-100 border border-gray-200 dark:border-slate-800'}`}>
-                            <span>{({ all: 'Todas', livechat: 'IA', human: 'Humano', paused: 'Pausado' } as Record<string,string>)[statusFilter] || 'Todas'}</span>
-                            <ChevronDown className="w-4 h-4" />
-                          </button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-64 p-2">
-                          <div className="p-2">
-                            <input
-                              value={statusSearch}
-                              onChange={e => setStatusSearch(e.target.value)}
-                              placeholder="Buscar status..."
-                              className="w-full mb-2 px-3 py-2 rounded border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-sm outline-none"
-                            />
-                            <div className="max-h-48 overflow-auto">
-                              {Object.entries({ all: 'Todas', livechat: 'IA', human: 'Humano', paused: 'Pausado' })
-                                .filter(([k, v]) => v.toLowerCase().includes(statusSearch.toLowerCase()))
-                                .map(([value, label]) => (
-                                  <button
-                                    key={value}
-                                    type="button"
-                                    onClick={() => setStatusFilter(value)}
-                                    className={`w-full flex items-center justify-between px-3 py-1.5 text-sm rounded hover:bg-gray-100 dark:hover:bg-slate-800 ${statusFilter === value ? 'bg-primary/5 dark:bg-slate-800/40' : ''}`}
-                                  >
-                                    <span className="truncate">{label}</span>
-                                    {statusFilter === value ? <Check className="w-4 h-4 text-primary" /> : <span className="w-4 h-4" />}
-                                  </button>
-                                ))}
-                            </div>
-                          </div>
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-
-                    <div className="mt-4">
-                      <div className="text-xs text-gray-500 dark:text-slate-400 mb-2">Instância</div>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <button className="w-full text-left border border-gray-200 dark:border-slate-800 rounded-md px-3 py-2 text-sm text-gray-700 dark:text-slate-200 flex items-center justify-between">
-                            <span>{selectedInstanceIds.length === 0 ? 'Todas as Instâncias' : `${selectedInstanceIds.length} selecionadas`}</span>
-                            <ChevronDown className="w-4 h-4 text-gray-500" />
-                          </button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-64 p-2">
-                          <div className="p-2">
-                            <input
-                              value={instanceSearch}
-                              onChange={e => setInstanceSearch(e.target.value)}
-                              placeholder="Buscar instância..."
-                              className="w-full mb-2 px-3 py-2 rounded border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-sm outline-none"
-                            />
-                            <div className="max-h-48 overflow-auto">
-                              <div className="py-1">
-                                <button type="button" onClick={() => setSelectedInstanceIds([])} className="w-full text-left px-3 py-1.5 text-sm rounded hover:bg-gray-100 dark:hover:bg-slate-800">Todas as Instâncias</button>
-                              </div>
-                              {instancesList.filter((ins: any) => (ins.name || ins.id || '').toLowerCase().includes(instanceSearch.toLowerCase())).map((ins: any) => {
-                                const active = selectedInstanceIds.includes(ins.id);
-                                return (
-                                  <button
-                                    key={ins.id}
-                                    type="button"
-                                    onClick={() => setSelectedInstanceIds(prev => active ? prev.filter(id => id !== ins.id) : [...prev, ins.id])}
-                                    className={`w-full flex items-center justify-between px-3 py-1.5 text-sm rounded ${active ? 'bg-primary/5 dark:bg-slate-800/40' : 'hover:bg-gray-100 dark:hover:bg-slate-800'}`}
-                                  >
-                                    <span className="truncate">{ins.name || ins.id}</span>
-                                    {active ? <Check className="w-4 h-4 text-primary" /> : <span className="w-4 h-4" />}
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-
-                    <div className="mt-5 flex justify-end gap-3">
-                      <button onClick={() => { setStatusFilter('all'); setUnreadOnly(false); }} className="px-4 py-2 rounded-md border border-gray-300 dark:border-slate-700 text-sm text-gray-700 dark:text-slate-200">Limpar</button>
-                      <button onClick={() => { /* apply filters */ }} className="px-4 py-2 rounded-md bg-primary hover:bg-primary/90 text-white text-sm">Aplicar</button>
+        {/* WhatsApp-style header */}
+        <div className="flex items-center justify-between px-4 py-3 bg-gray-100/80 dark:bg-[#202c33]">
+          <span className="text-base font-semibold text-gray-800 dark:text-[#e9edef]">Conversas</span>
+          <div className="flex items-center gap-1">
+            <Popover>
+              <PopoverTrigger asChild>
+                <button title="Filtros avançados" className="p-2 rounded-full text-gray-500 dark:text-[#aebac1] hover:bg-gray-200/60 dark:hover:bg-[#2a3942] transition-colors">
+                  <Filter className="w-5 h-5" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-72 p-0" align="end">
+                <div className="p-4 space-y-4">
+                  <h4 className="text-sm font-semibold text-gray-800 dark:text-slate-100">Filtros</h4>
+                  <div>
+                    <div className="text-xs text-gray-500 dark:text-slate-400 mb-1.5">Ordenação</div>
+                    <div className="flex gap-2">
+                      <button onClick={() => setOrderBy('recent')} className={`flex-1 py-1.5 rounded-md text-xs font-medium border transition-colors ${orderBy === 'recent' ? 'bg-primary text-white border-primary' : 'border-gray-200 dark:border-slate-700 text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800'}`}>Mais recentes</button>
+                      <button onClick={() => setOrderBy('oldest')} className={`flex-1 py-1.5 rounded-md text-xs font-medium border transition-colors ${orderBy === 'oldest' ? 'bg-primary text-white border-primary' : 'border-gray-200 dark:border-slate-700 text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800'}`}>Mais antigas</button>
                     </div>
                   </div>
-                </PopoverContent>
-              </Popover>
-            </div>
-          </div>
-          <button
-            onClick={() => { setNewConvInstance(instancesList[0]?.id || ''); setIsNewConvOpen(true); }}
-            className="flex-shrink-0 w-9 h-9 rounded-xl bg-primary hover:bg-primary/90 text-white dark:text-white flex items-center justify-center shadow-lg transition-colors"
-            title="Nova conversa"
-          >
-            <Plus className="w-5 h-5" />
-          </button>
+                  <div>
+                    <div className="text-xs text-gray-500 dark:text-slate-400 mb-1.5">Status do atendimento</div>
+                    <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="w-full border border-gray-200 dark:border-slate-700 rounded-md px-3 py-2 text-sm bg-white dark:bg-slate-950 text-gray-900 dark:text-slate-100 outline-none">
+                      <option value="all">Todos</option>
+                      <option value="livechat">IA</option>
+                      <option value="human">Humano</option>
+                      <option value="paused">Na fila</option>
+                    </select>
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-500 dark:text-slate-400 mb-1.5">Instância</div>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <button className="w-full text-left border border-gray-200 dark:border-slate-700 rounded-md px-3 py-2 text-sm text-gray-700 dark:text-slate-200 flex items-center justify-between bg-white dark:bg-slate-950">
+                          <span>{selectedInstanceIds.length === 0 ? 'Todas as instâncias' : `${selectedInstanceIds.length} selecionadas`}</span>
+                          <ChevronDown className="w-4 h-4 text-gray-400" />
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-64 p-2">
+                        <div className="p-2">
+                          <input value={instanceSearch} onChange={e => setInstanceSearch(e.target.value)} placeholder="Buscar instância..." className="w-full mb-2 px-3 py-2 rounded border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-sm outline-none" />
+                          <div className="max-h-48 overflow-auto">
+                            <button type="button" onClick={() => setSelectedInstanceIds([])} className="w-full text-left px-3 py-1.5 text-sm rounded hover:bg-gray-100 dark:hover:bg-slate-800">Todas as instâncias</button>
+                            {instancesList.filter((ins: any) => (ins.name || ins.id || '').toLowerCase().includes(instanceSearch.toLowerCase())).map((ins: any) => {
+                              const active = selectedInstanceIds.includes(ins.id);
+                              return (
+                                <button key={ins.id} type="button" onClick={() => setSelectedInstanceIds(prev => active ? prev.filter(id => id !== ins.id) : [...prev, ins.id])} className={`w-full flex items-center justify-between px-3 py-1.5 text-sm rounded ${active ? 'bg-primary/10 dark:bg-slate-800' : 'hover:bg-gray-100 dark:hover:bg-slate-800'}`}>
+                                  <span className="truncate">{ins.name || ins.id}</span>
+                                  {active && <Check className="w-4 h-4 text-primary" />}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  <div className="flex justify-between pt-1">
+                    <button onClick={() => { setStatusFilter('all'); setUnreadOnly(false); setAwaitingFilter(false); setScheduledFilter(false); setSelectedInstanceIds([]); }} className="text-xs text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200">Limpar filtros</button>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+            <button
+              onClick={() => { setNewConvInstance(instancesList[0]?.id || ''); setIsNewConvOpen(true); }}
+              className="p-2 rounded-full text-gray-500 dark:text-[#aebac1] hover:bg-gray-200/60 dark:hover:bg-[#2a3942] transition-colors"
+              title="Nova conversa"
+            >
+              <Plus className="w-5 h-5" />
+            </button>
           </div>
         </div>
 
-        {/* Resizer was moved out to be a sibling to the sidebar (inserted after sidebar closing) */}
-
-          <div className="sticky top-0 z-20 bg-transparent pt-2">
-            {/* Tabs: hide when searching to free space */}
-            {!searchQuery.trim() && (
-              <div className="relative mb-2">
-                <div className="flex items-center justify-center w-full">
-                  <div className="inline-flex items-center bg-gray-100 dark:bg-slate-900 rounded-full p-1 shadow-sm">
-                    <button
-                      onClick={() => setActiveTab('chats')}
-                      className={`px-4 py-1.5 rounded-full text-sm transition-colors ${activeTab === 'chats' ? 'bg-white dark:bg-slate-950 text-gray-900 dark:text-white font-semibold shadow-sm' : 'text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white'}`}
-                    >
-                      <span className="flex items-center gap-2">
-                        <span>Chats</span>
-                        {chatsUnreadCount > 0 && (
-                          <span className="ml-1 inline-block bg-rose-500 text-white text-[10px] px-2 py-0.5 rounded-full">{chatsUnreadCount}</span>
-                        )}
-                      </span>
-                    </button>
-
-                    <button
-                      onClick={() => setActiveTab('groups')}
-                      className={`px-4 py-1.5 rounded-full text-sm transition-colors ${activeTab === 'groups' ? 'bg-white dark:bg-slate-950 text-gray-900 dark:text-white font-semibold shadow-sm' : 'text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white'}`}
-                    >
-                      <span className="flex items-center gap-2">
-                        <span>Grupos</span>
-                        {groupsUnreadCount > 0 && (
-                          <span className="ml-1 inline-block bg-rose-500 text-white text-[10px] px-2 py-0.5 rounded-full">{groupsUnreadCount}</span>
-                        )}
-                      </span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Filter chips */}
-            <div className="relative mt-1">
-
-              <div className="flex items-center justify-center gap-2 mb-3">
-                <div ref={chipsRef} className="chips-scroll flex flex-nowrap items-center gap-2 overflow-x-auto py-0.5 max-w-full whitespace-nowrap">
-                  <button title={`Todas (${conversations.length})`} onClick={() => setChipFilter('all')} className={`flex flex-shrink-0 whitespace-nowrap items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${chipFilter === 'all' ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-slate-900 text-gray-700 dark:text-slate-300 hover:bg-gray-200/60 dark:hover:bg-slate-800/70'}`}>
-                    <span>Todas</span>
-                    <span className="inline-block bg-gray-100 dark:bg-slate-900 text-gray-700 dark:text-slate-200 text-[10px] px-2 py-0.5 rounded-full">{conversations.length}</span>
-                  </button>
-                  <button title={`Na Fila (${conversations.filter(c => c.status === 'paused').length})`} onClick={() => setChipFilter('queue')} className={`flex flex-shrink-0 whitespace-nowrap items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${chipFilter === 'queue' ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-slate-900 text-gray-700 dark:text-slate-300 hover:bg-gray-200/60 dark:hover:bg-slate-800/70'}`}>
-                    <span>Na Fila</span>
-                    <span className="inline-block bg-gray-100 dark:bg-slate-900 text-gray-700 dark:text-slate-200 text-[10px] px-2 py-0.5 rounded-full">{conversations.filter(c => c.status === 'paused').length}</span>
-                  </button>
-                  <button title={`Aguardando (${conversations.filter(c => (c.tags||[]).includes('aguardando')).length})`} onClick={() => setAwaitingFilter(prev => !prev)} className={`flex flex-shrink-0 whitespace-nowrap items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${awaitingFilter ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-slate-900 text-gray-700 dark:text-slate-300 hover:bg-gray-200/60 dark:hover:bg-slate-800/70'}`}>
-                    <span>Aguardando</span>
-                    <span className="inline-block bg-gray-100 dark:bg-slate-900 text-gray-700 dark:text-slate-200 text-[10px] px-2 py-0.5 rounded-full">{conversations.filter(c => (c.tags||[]).includes('aguardando')).length}</span>
-                  </button>
-                  <button title={`Agendado (${conversations.filter(c => (c.tags||[]).includes('agendado')).length})`} onClick={() => setScheduledFilter(prev => !prev)} className={`flex flex-shrink-0 whitespace-nowrap items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${scheduledFilter ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-slate-900 text-gray-700 dark:text-slate-300 hover:bg-gray-200/60 dark:hover:bg-slate-800/70'}`}>
-                    <span>Agendado</span>
-                    <span className="inline-block bg-gray-100 dark:bg-slate-900 text-gray-700 dark:text-slate-200 text-[10px] px-2 py-0.5 rounded-full">{conversations.filter(c => (c.tags||[]).includes('agendado')).length}</span>
-                  </button>
-                  <button title={`Não lidas (${conversations.filter(c => (c.unreadCount||0) > 0).length})`} onClick={() => setChipFilter('unread')} className={`flex flex-shrink-0 whitespace-nowrap items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${chipFilter === 'unread' ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-slate-900 text-gray-700 dark:text-slate-300 hover:bg-gray-200/60 dark:hover:bg-slate-800/70'}`}>
-                    <span>Não lidas</span>
-                    <span className="inline-block bg-gray-100 dark:bg-slate-900 text-gray-700 dark:text-slate-200 text-[10px] px-2 py-0.5 rounded-full">{conversations.filter(c => (c.unreadCount||0) > 0).length}</span>
-                  </button>
-                </div>
-                <div className="ml-2 flex items-center shrink-0">
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <button title="Filtros" className="p-2 rounded-md text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:text-white hover:bg-gray-200/40 dark:bg-slate-800/40"><Filter className="w-4 h-4" /></button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-64">
-                      <div className="space-y-2">
-                        <div className="text-xs text-gray-500 dark:text-slate-400">Status</div>
-                        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="w-full border border-gray-200 dark:border-slate-800 rounded-md px-2 py-1 text-sm text-gray-900 dark:text-white">
-                          <option value="all">Todos</option>
-                          <option value="livechat">IA</option>
-                          <option value="human">Humano</option>
-                          <option value="paused">Pausado</option>
-                        </select>
-                        <div className="flex items-center gap-2">
-                          <Switch id="unreadOnlyChips" checked={unreadOnly} onCheckedChange={(v: boolean) => setUnreadOnly(Boolean(v))} />
-                          <label htmlFor="unreadOnlyChips" className="text-sm text-gray-600 dark:text-slate-300">Somente não lidas</label>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Switch id="awaitingFilter" checked={awaitingFilter} onCheckedChange={(v: boolean) => setAwaitingFilter(Boolean(v))} />
-                          <label htmlFor="awaitingFilter" className="text-sm text-gray-600 dark:text-slate-300">Aguardando</label>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Switch id="scheduledFilter" checked={scheduledFilter} onCheckedChange={(v: boolean) => setScheduledFilter(Boolean(v))} />
-                          <label htmlFor="scheduledFilter" className="text-sm text-gray-600 dark:text-slate-300">Agendado</label>
-                        </div>
-                        <div className="flex justify-end gap-2 pt-2">
-                          <button onClick={() => { setStatusFilter('all'); setUnreadOnly(false); setAwaitingFilter(false); setScheduledFilter(false); }} className="px-3 py-1 rounded-md bg-gray-200 dark:bg-slate-800 text-sm text-gray-600 dark:text-slate-300">Limpar</button>
-                        </div>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                </div>
-              </div>
- 
-            </div>
+        {/* Search bar — WhatsApp style */}
+        <div className="px-3 py-2 bg-white dark:bg-[#111b21]">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-[#aebac1]" />
+            <input
+              type="text"
+              placeholder="Pesquisar ou começar uma nova conversa"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              ref={el => (searchInputRef.current = el)}
+              className="w-full pl-9 pr-4 py-2 bg-gray-100 dark:bg-[#202c33] rounded-lg text-sm outline-none text-gray-800 dark:text-[#d1d7db] placeholder:text-gray-400 dark:placeholder:text-[#8696a0] border-none focus:bg-gray-100 dark:focus:bg-[#202c33] transition-colors"
+            />
           </div>
+        </div>
+
+        {/* Filter chips — WhatsApp style */}
+        <div className="px-3 pb-2 bg-white dark:bg-[#111b21]">
+          <div ref={chipsRef} className="chips-scroll flex flex-nowrap items-center gap-2 overflow-x-auto py-1 whitespace-nowrap no-scrollbar">
+            {/* Todas */}
+            <button onClick={() => { setChipFilter('all'); setActiveTab('chats'); setAwaitingFilter(false); setScheduledFilter(false); }} className={`flex-shrink-0 px-3 py-1 rounded-full text-[13px] font-medium transition-colors ${chipFilter === 'all' && activeTab === 'chats' && !awaitingFilter && !scheduledFilter ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-[#202c33] text-gray-600 dark:text-[#aebac1] hover:bg-gray-200 dark:hover:bg-[#2a3942]'}`}>
+              Tudo
+            </button>
+            {/* Não lidas */}
+            <button onClick={() => { setChipFilter('unread'); setActiveTab('chats'); setAwaitingFilter(false); setScheduledFilter(false); }} className={`flex-shrink-0 px-3 py-1 rounded-full text-[13px] font-medium transition-colors ${chipFilter === 'unread' ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-[#202c33] text-gray-600 dark:text-[#aebac1] hover:bg-gray-200 dark:hover:bg-[#2a3942]'}`}>
+              Não lidas
+              {conversations.filter(c => (c.unreadCount || 0) > 0).length > 0 && (
+                <span className={`ml-1.5 text-[11px] font-semibold ${chipFilter === 'unread' ? 'text-white/80' : 'text-primary'}`}>{conversations.filter(c => (c.unreadCount || 0) > 0).length}</span>
+              )}
+            </button>
+            {/* Na Fila */}
+            <button onClick={() => { setChipFilter('queue'); setActiveTab('chats'); setAwaitingFilter(false); setScheduledFilter(false); }} className={`flex-shrink-0 px-3 py-1 rounded-full text-[13px] font-medium transition-colors ${chipFilter === 'queue' ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-[#202c33] text-gray-600 dark:text-[#aebac1] hover:bg-gray-200 dark:hover:bg-[#2a3942]'}`}>
+              Na fila
+              {conversations.filter(c => c.status === 'paused').length > 0 && (
+                <span className={`ml-1.5 text-[11px] font-semibold ${chipFilter === 'queue' ? 'text-white/80' : 'text-primary'}`}>{conversations.filter(c => c.status === 'paused').length}</span>
+              )}
+            </button>
+            {/* Aguardando */}
+            <button onClick={() => { setChipFilter('all'); setActiveTab('chats'); setAwaitingFilter(prev => !prev); setScheduledFilter(false); }} className={`flex-shrink-0 px-3 py-1 rounded-full text-[13px] font-medium transition-colors ${awaitingFilter ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-[#202c33] text-gray-600 dark:text-[#aebac1] hover:bg-gray-200 dark:hover:bg-[#2a3942]'}`}>
+              Aguardando
+            </button>
+            {/* Grupos */}
+            <button onClick={() => { setChipFilter('all'); setActiveTab(activeTab === 'groups' ? 'chats' : 'groups'); setAwaitingFilter(false); setScheduledFilter(false); }} className={`flex-shrink-0 px-3 py-1 rounded-full text-[13px] font-medium transition-colors ${activeTab === 'groups' ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-[#202c33] text-gray-600 dark:text-[#aebac1] hover:bg-gray-200 dark:hover:bg-[#2a3942]'}`}>
+              Grupos
+              {groupsCount > 0 && (
+                <span className={`ml-1.5 text-[11px] font-semibold ${activeTab === 'groups' ? 'text-white/80' : 'text-gray-400 dark:text-[#8696a0]'}`}>{groupsCount}</span>
+              )}
+            </button>
+          </div>
+        </div>
 
         {/* Conversation List */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar">
+        <div className="flex-1 overflow-y-auto custom-scrollbar bg-white dark:bg-[#111b21]">
           {filteredAndApplied.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-gray-500 dark:text-slate-500 p-8 text-center">
               <MessageSquare className="w-12 h-12 mb-4 opacity-50" />
@@ -1816,87 +1695,92 @@ const ChatInterface: React.FC = () => {
               <div 
                 key={chat.id}
                 onClick={() => setSelectedChatId(chat.id)}
-                className={`flex items-center p-4 cursor-pointer transition-all duration-200 border-b border-gray-300/30 dark:border-slate-800/30 hover:bg-gray-200/50 dark:bg-slate-800/50 ${
+                className={`group relative flex items-center px-3 py-3 cursor-pointer transition-colors duration-150 ${
                   selectedChatId === chat.id 
-                    ? 'bg-gray-200/80 dark:bg-slate-800/80 border-l-2 border-l-cyan-500' 
-                    : 'border-l-2 border-l-transparent'
+                    ? 'bg-gray-100 dark:bg-[#2a3942]' 
+                    : 'hover:bg-gray-50 dark:hover:bg-[#182229]'
                 }`}
               >
-                <div className="relative">
-                  <div className="w-12 h-12 rounded-full p-0.5 bg-gradient-to-tr from-gray-300 to-gray-400 dark:from-slate-700 dark:to-slate-900">
-                    <img 
-                      src={getAvatarUrl(chat)} 
-                      alt={getDisplayName(chat)} 
-                      className="w-full h-full rounded-full object-cover border border-gray-200 dark:border-slate-800" 
-                    />
-                  </div>
-                  {chat.unreadCount > 0 ? (
-                    <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-cyan-500 border-2 border-gray-200 dark:border-slate-900 rounded-full animate-pulse"></span>
-                  ) : (
-                    <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-gray-300 dark:bg-slate-600 border-2 border-gray-200 dark:border-slate-900 rounded-full"></span>
+                {/* Avatar */}
+                <div className="relative flex-shrink-0">
+                  <img 
+                    src={getAvatarUrl(chat)} 
+                    alt={getDisplayName(chat)} 
+                    className="w-12 h-12 rounded-full object-cover" 
+                  />
+                  {chat.unreadCount > 0 && (
+                    <span className="absolute bottom-0 right-0 w-3 h-3 bg-primary border-2 border-white dark:border-[#111b21] rounded-full"></span>
                   )}
                 </div>
                 
-                <div className="ml-3 flex-1 min-w-0">
-                  <div className="flex justify-between items-baseline mb-1">
-                    <h3 className={`text-sm font-semibold truncate ${selectedChatId === chat.id ? 'text-gray-900 dark:text-white' : 'text-gray-600 dark:text-slate-300'}`}>
+                <div className="ml-3 flex-1 min-w-0 border-b border-gray-100 dark:border-[#2a3942] pb-3 -mb-3">
+                  <div className="flex justify-between items-center mb-0.5">
+                    <h3 className="text-sm font-medium text-gray-900 dark:text-[#e9edef] truncate pr-2">
                       {getDisplayName(chat)}
                     </h3>
-                    <span className="text-[10px] text-gray-500 dark:text-slate-500 font-medium">{chat.lastMessageTime}</span>
+                    <span className={`text-[11px] flex-shrink-0 ${chat.unreadCount > 0 ? 'text-primary font-medium' : 'text-gray-400 dark:text-[#8696a0]'}`}>
+                      {chat.lastMessageTime}
+                    </span>
                   </div>
-                  <div className="text-xs text-gray-500 dark:text-slate-500 truncate flex items-center gap-2">
+                  <div className="flex items-center justify-between gap-1">
+                    <div className="text-[13px] text-gray-500 dark:text-[#8696a0] truncate flex-1">
                     {(() => {
                       const last = chat.messages[chat.messages.length - 1];
-                      if (!last) return <span className="truncate">Sem mensagens</span>;
-                      if (last.type === MessageType.IMAGE && (last.mediaUrl || last.content)) {
-                        return (
-                            <img
-                              src={last.mediaUrl || last.content}
-                              alt="thumb"
-                              className="w-14 h-10 object-cover rounded-md border border-gray-200 dark:border-slate-800 cursor-pointer"
-                              onError={(e) => {(e.target as HTMLImageElement).src = 'https://placehold.co/56x40/1e293b/cbd5e1?text=Img'}}
-                              onClick={(ev) => { ev.stopPropagation(); const imgs = (chat.messages || []).filter((mm: any) => mm.type === MessageType.IMAGE && (mm.mediaUrl || mm.content)).map((mm: any) => mm.mediaUrl || mm.content); const idx = imgs.indexOf(last.mediaUrl || last.content); if (imgs.length) openGallery(imgs, idx); }}
-                            />
-                          );
+                      if (!last) return <span className="truncate opacity-60">Sem mensagens</span>;
+                      const isOut = last.direction === 'outbound' || last.fromType === 'user' || last.fromType === 'livechat';
+                      // ✓ sent  ✓✓ gray=delivered  ✓✓ primary=read (only when client actually reads)
+                      const checkIcon = isOut ? (
+                        last.status === 'read'
+                          ? <span className="mr-0.5 flex-shrink-0 text-primary text-[11px]">✓✓</span>
+                          : last.status === 'delivered'
+                          ? <span className="mr-0.5 flex-shrink-0 text-gray-400 dark:text-[#8696a0] text-[11px]">✓✓</span>
+                          : <span className="mr-0.5 flex-shrink-0 text-gray-400 dark:text-[#8696a0] text-[11px]">✓</span>
+                      ) : null;
+                      if (last.type === MessageType.IMAGE) {
+                        return <span className="flex items-center gap-1 truncate">{isOut && checkIcon}<span className="truncate">📷 Foto</span></span>;
                       }
-                      if (last.type === MessageType.AUDIO && (last.mediaUrl)) {
-                        return (
-                          <button onClick={(e) => { e.stopPropagation(); togglePreviewAudio(last.mediaUrl); }} className="flex items-center gap-2 text-gray-600 dark:text-slate-300">
-                            <Play className="w-4 h-4 text-cyan-400" />
-                            <span className="text-xs truncate">Áudio</span>
-                          </button>
-                        );
+                      if (last.type === MessageType.VIDEO) {
+                        return <span className="flex items-center gap-1 truncate">{isOut && checkIcon}<span className="truncate">🎥 Vídeo</span></span>;
                       }
-                      return <span className="truncate">{chat.lastMessage || 'Sem mensagens'}</span>;
+                      if (last.type === MessageType.AUDIO) {
+                        return <span className="flex items-center gap-1 truncate">{isOut && checkIcon}<span className="truncate">🎤 Áudio</span></span>;
+                      }
+                      if (last.type === MessageType.FILE) {
+                        return <span className="flex items-center gap-1 truncate">{isOut && checkIcon}<span className="truncate">📎 Arquivo</span></span>;
+                      }
+                      const txt = chat.lastMessage || last.content || '';
+                      return <span className="flex items-center gap-1 truncate">{isOut && checkIcon}<span className="truncate">{txt || <span className="opacity-50">Sem mensagens</span>}</span></span>;
                     })()}
-                  </div>
-                  
-                  <div className="flex items-center mt-2 gap-1.5">
-                    {/* Presence indicator dot */}
-                    <div className="relative inline-block">
-                      <span 
-                        className={`w-2 h-2 rounded-full ${getPresenceDotColor((chat as any).contactPresence, chat.contact_id)}`}
-                        title={getPresenceLabel((chat as any).contactPresence, chat.contact_id)}
-                      ></span>
                     </div>
-                    {renderStatusBadge(chat.status)}
-                    {chat.tags.slice(0, 1).map(tag => (
-                      <span key={tag} className="px-2 py-0.5 bg-gray-200/80 dark:bg-slate-800/80 border border-gray-300 dark:border-slate-700 text-gray-500 dark:text-slate-400 text-[10px] rounded-md font-medium">
-                        {tag}
-                      </span>
-                    ))}
-                    {chat.unreadCount > 0 && (
-                      <span className="ml-auto bg-gradient-to-r from-primary to-accent text-white text-[10px] font-bold px-1.5 h-4 min-w-[1rem] flex items-center justify-center rounded-full shadow-lg shadow-[0_6px_18px_rgba(30,95,116,0.18)]">
-                        {chat.unreadCount}
-                      </span>
-                    )}
+                    <div className="flex flex-col items-end gap-1 flex-shrink-0 ml-1">
+                      {/* Unread count — WhatsApp style */}
+                      {chat.unreadCount > 0 && (
+                        <span className="bg-primary text-white text-[11px] font-semibold min-w-[18px] h-[18px] flex items-center justify-center rounded-full px-1">
+                          {chat.unreadCount}
+                        </span>
+                      )}
+                      {/* Status — tiny colored pill, no icon */}
+                      {chat.status === 'livechat' && (
+                        <span className="text-[10px] font-medium text-violet-500 dark:text-violet-400">IA</span>
+                      )}
+                      {chat.status === 'human' && (
+                        <span className="text-[10px] font-medium text-emerald-500 dark:text-emerald-400">Humano</span>
+                      )}
+                      {chat.status === 'paused' && (
+                        <span className="text-[10px] font-medium text-amber-500 dark:text-amber-400">Fila</span>
+                      )}
+                    </div>
                   </div>
                 </div>
-                <div className="ml-2 flex-shrink-0">
+                {/* WhatsApp-style hover menu — overlays right side, doesn't push layout */}
+                <div className="absolute top-0 right-0 h-full flex items-start justify-end pt-2 pr-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none">
+                  <div className="w-12 h-full absolute top-0 right-0 bg-gradient-to-l from-gray-50 dark:from-[#182229] to-transparent group-hover:from-gray-50 dark:group-hover:from-[#182229] pointer-events-none rounded-r-none" />
+                </div>
+                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-20">
                   <Popover>
                     <PopoverTrigger asChild>
-                      <button onClick={(e) => e.stopPropagation()} className="p-1 rounded-md text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:text-white hover:bg-gray-200/40 dark:bg-slate-800/40">
-                        <Menu className="w-4 h-4" />
+                      <button onClick={(e) => e.stopPropagation()} className="p-0.5 rounded-full text-gray-500 dark:text-[#8696a0] hover:text-gray-700 dark:hover:text-white transition-colors pointer-events-auto">
+                        <ChevronDown className="w-4 h-4" />
                       </button>
                     </PopoverTrigger>
                       <PopoverContent className="w-64 rounded-lg bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 p-2 shadow-lg">

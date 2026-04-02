@@ -6,6 +6,7 @@ import { Appointment, Contact } from '../types';
 import { api } from '../services/api';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from './ui/sheet';
 import { toast } from 'sonner';
+import { getSocket } from '../lib/socket';
 
 type ViewMode = 'month' | 'week' | 'day';
 
@@ -65,7 +66,39 @@ const Scheduling: React.FC = () => {
 
     loadData();
 
-    // No realtime in mock mode
+    // Real-time: listen for AI-created appointments
+    const socket = getSocket();
+    const handleAppointmentCreated = (data: any) => {
+      const newAppt: Appointment = {
+        id: data.id,
+        title: data.title || 'Agendamento solicitado',
+        date: data.scheduled_at
+          ? new Date(data.scheduled_at).toISOString().split('T')[0]
+          : new Date().toISOString().split('T')[0],
+        time: data.scheduled_at
+          ? new Date(data.scheduled_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+          : '09:00',
+        duration: 60,
+        type: 'demo',
+        description: data.notes || '',
+        attendees: [],
+        contact_id: data.contact_id,
+        status: 'pending',
+        source: 'ai_detected',
+      };
+      setAppointments((prev) => [newAppt, ...prev]);
+      toast.info(`📅 Novo agendamento solicitado pelo cliente: ${newAppt.title}`);
+    };
+
+    if (socket) {
+      socket.on('appointment:created', handleAppointmentCreated);
+    }
+
+    return () => {
+      if (socket) {
+        socket.off('appointment:created', handleAppointmentCreated);
+      }
+    };
   }, []);
 
   // Navigation Logic

@@ -34,3 +34,15 @@ server.pid
 bun.lock
 test/
 test
+server/storage/audio/6dab3675-c572-40f8-91b9-13669c3fb4d8.mp3
+server/storage/image/fdcb7eb1-60eb-410d-b625-276177f105ab.bin
+server/storage/video/4c511e1a-b56f-465f-a2a4-620b0e7bf542.mp4
+server/storage/video/7f30822b-57b5-4c8c-9b5e-ea22adcae644.mp4
+server/storage/video/25a3601b-897c-4525-b19a-b61a9fc9b852.bin
+server/storage/video/81aed208-72d3-4b7b-a250-6f30e3e4b4ec.mp4
+server/storage/video/21381fa0-9e54-4ed2-8be4-9a6fe7c6d275.mp4
+server/storage/video/ce71eb39-54b9-4abf-8807-317a0f62ecf1.mp4
+server/storage/video/d577ba02-a97a-48b6-967c-4cc00920799f.mp4
+server/storage/video/e03c0817-cd05-4257-9073-07d82f4a0755.mp4
+server/storage/video/ee0a04be-f323-4c15-99aa-188a512d9e87.mp4
+server/storage/video/f2aa9aeb-26c2-46f3-9b54-b7a271045b4f.bin

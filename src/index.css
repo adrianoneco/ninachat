@@ -272,6 +272,15 @@
     -webkit-overflow-scrolling: touch;
   }
 
+  /* Hide scrollbar but keep scroll functionality */
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
   /* Ensure composer is comfortably tall */
   textarea {
     font-size: 15px;

@@ -10,6 +10,7 @@ import { EventsGateway } from '../ws/events.gateway';
 import { StorageService } from '../modules/storage/storage.service';
 import { Logger } from '@nestjs/common';
 import { LiveChatSettings } from '../entities/livechat-settings.entity';
+import { GenericRecord } from '../entities/generic-record.entity';
 import { processAiAgentMessage } from './ai-agent';
 
 const logger = new Logger('OnMessageChanged');
@@ -27,6 +28,7 @@ export async function OnMessageChanged(
   events: EventsGateway,
   storageService?: StorageService,
   settingsRepo?: Repository<LiveChatSettings>,
+  genericRecordRepo?: Repository<GenericRecord>,
 ) {
   const contact: ContactItem =
     ((await getContactByPushName(
@@ -211,6 +213,7 @@ export async function OnMessageChanged(
         settingsRepo,
         events,
         contact?.name ?? undefined,
+        genericRecordRepo,
       ).catch((e) =>
         logger.warn(`[AiAgent] processAiAgentMessage error: ${String(e)}`),
       );

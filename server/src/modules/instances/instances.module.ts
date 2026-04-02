@@ -11,11 +11,12 @@ import { Contact } from '../../entities/contact.entity';
 import { Message } from '../../entities/message.entity';
 import { Conversation } from '../../entities/conversation.entity';
 import { LiveChatSettings } from '../../entities/livechat-settings.entity';
+import { GenericRecord } from '../../entities/generic-record.entity';
 import { StorageModule } from '../storage/storage.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Instance, Contact, Message, Conversation, LiveChatSettings]),
+    TypeOrmModule.forFeature([Instance, Contact, Message, Conversation, LiveChatSettings, GenericRecord]),
     StorageModule,
   ],
   controllers: [InstancesController, WppController, MessagesSendController],
